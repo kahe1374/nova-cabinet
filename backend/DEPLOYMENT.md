@@ -1,23 +1,24 @@
 # NOVA CABINET backend setup
 
-The public website is hosted on GitHub Pages (static hosting). It cannot run a database or protect admin credentials. The backend scaffold in this repository uses Supabase PostgreSQL and an Edge Function.
+The public website is hosted on GitHub Pages (static hosting). Supabase provides the PostgreSQL database and the server-side lead function.
 
-## Current status
-- Database foundation: `database/001_core_schema.sql`
-- Lead API source: `supabase/functions/create-lead/index.ts`
-- Supabase project: not connected
-- Database migration: not executed
-- Edge Function: not deployed
-- Admin panel/authentication: not deployed
+## Live infrastructure status
+- Supabase project: `nova-cabinet` (`sjapgxjllnlttrhjxkez`), region `eu-central-1`
+- Database migration: applied; eight public tables verified
+- Row Level Security: enabled on all eight tables; no public policies yet, so direct browser table access remains blocked by default
+- Edge Function: `create-lead`, version 2, status ACTIVE, JWT gateway verification disabled because this endpoint validates public form input itself
+- Website form: connected to the Edge Function; WhatsApp contact link remains available
+- Admin panel/authentication: not implemented
+- Real request submission: not yet end-to-end tested from a browser
 
-## Required one-time setup
-1. Create a Supabase project in the region appropriate for your business.
-2. In the SQL Editor, run `database/001_core_schema.sql`.
-3. Install the Supabase CLI and link this repository to the new project.
-4. Set the Edge Function secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Never put the service-role key in website JavaScript or GitHub.
-5. Deploy the function: `supabase functions deploy create-lead`.
-6. Add the project URL and public anon key to the website configuration, then connect the form to the function.
-7. Test a real submission, verify one customer and one order row, then test invalid input and unauthorized database reads.
+## Function configuration
+The function uses the project's built-in `SUPABASE_URL` and prefers `SUPABASE_SECRET_KEYS` (default secret key), falling back to `SUPABASE_SERVICE_ROLE_KEY`. These are available server-side in Supabase Edge Functions. Never put a secret/service-role key in website JavaScript or GitHub.
 
-## Important
-Do not publish an admin dashboard until authentication and role-based access control are configured. The service-role key must remain server-side. The current website form continues to use WhatsApp until the backend is deployed and verified. No database has been provisioned and no customer data is being stored yet.
+## Security and next steps
+1. Configure Supabase Auth before adding any customer or manager access policies.
+2. Add request rate limiting / abuse protection before promoting the public form.
+3. Run a real browser submission and verify one customer and one order row are created.
+4. Build the owner and factory-manager panels only after authentication, role checks, and audit logging are implemented.
+5. Configure backups and monitoring.
+
+The schema intentionally has RLS enabled without permissive policies. This keeps browser clients from reading or writing customer and order data until the access model is implemented. The Edge Function uses a server-side secret to perform the initial lead insert.
