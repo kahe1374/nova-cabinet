@@ -20,18 +20,13 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
   <section id="login" class="card">
     <div class="tag">NOVA CABINET / SECURE ACCESS</div>
     <h1>پنل <span>مدیریت</span></h1>
-    <p>ورود مدیر اصلی با لینک یک‌بارمصرف ایمیل انجام می‌شود.</p>
+    <p>ورود مدیر اصلی با لینک امن و یک‌بارمصرف ایمیل انجام می‌شود.</p>
     <form id="loginForm">
       <label for="email">ایمیل مدیر اصلی</label>
       <input id="email" type="email" value="Vahiiidk74@gmail.com" readonly>
-      <button id="sendLink" type="submit">ارسال کد ورود</button>
+      <button id="sendLink" type="submit">ارسال لینک ورود</button>
     </form>
-    <form id="verifyForm" class="hidden">
-      <label for="emailCode">کد شش‌رقمی ارسال‌شده به ایمیل</label>
-      <input id="emailCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="مثلاً 123456" required>
-      <button id="verifyCode" type="submit">تأیید کد و ورود</button>
-    </form>
-    <div id="loginStatus" class="status" role="status" aria-live="polite">برای ورود، کد یک‌بارمصرف به ایمیل مدیر ارسال می‌شود.</div>
+    <div id="loginStatus" class="status" role="status" aria-live="polite">برای ورود، لینک امن به ایمیل مدیر ارسال می‌شود.</div>
   </section>
 
   <section id="dashboard" class="hidden">
@@ -53,7 +48,7 @@ const SUPABASE_URL = 'https://sjapgxjllnlttrhjxkez.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
 const OWNER_EMAIL = 'vahiiidk74@gmail.com';
 const REDIRECT_URL = 'https://kahe1374.github.io/nova-cabinet/admin/';
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
 const $ = (id) => document.getElementById(id);
 const statusLabels = {
   new:'جدید', under_review:'در حال بررسی', awaiting_quote_approval:'در انتظار تأیید پیش‌فاکتور',
@@ -116,27 +111,20 @@ async function checkSession() {
   $('identity').textContent=session.user.email+' · '+(role==='owner'?'مدیر اصلی':'مدیر کارخانه');
   await loadOrders();
 }
+// نمایش خطاهای بازگشتی از لینک ایمیل، به‌جای صفحه سفید یا خطای نامفهوم
+const callbackParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+const callbackError = callbackParams.get('error_description') || new URLSearchParams(window.location.search).get('error_description');
+if (callbackError) showMessage('loginStatus', 'ورود از طریق ایمیل ناموفق بود: ' + callbackError);
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
-  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال کد امن...');
+  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال لینک امن...');
   const { error }=await supabase.auth.signInWithOtp({
     email:OWNER_EMAIL,
-    options:{shouldCreateUser:false}
+    options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}
   });
   button.disabled=false;
-  if(error){showMessage('loginStatus','ارسال کد انجام نشد: '+error.message);return;}
-  $('verifyForm').classList.remove('hidden');
-  showMessage('loginStatus','کد شش‌رقمی به ایمیل ارسال شد. کد آخرین ایمیل را وارد کن؛ لینک‌های قدیمی را باز نکن.');
-});
-$('verifyForm').addEventListener('submit',async(event)=>{
-  event.preventDefault();
-  const button=$('verifyCode'); button.disabled=true;
-  showMessage('loginStatus','در حال بررسی کد...');
-  const token=$('emailCode').value.trim();
-  const {data,error}=await supabase.auth.verifyOtp({email:OWNER_EMAIL,token,type:'email'});
-  button.disabled=false;
-  if(error){showMessage('loginStatus','کد پذیرفته نشد: '+error.message+'؛ کد جدید درخواست کن.');return;}
-  if(data?.session){showMessage('loginStatus','ورود موفق بود؛ پنل در حال باز شدن است.');await checkSession();}
+  if(error){showMessage('loginStatus','ارسال لینک انجام نشد: '+error.message);return;}
+  showMessage('loginStatus','لینک ورود به ایمیل ارسال شد. فقط آخرین ایمیل را باز کن و لینک را یک‌بار بزن؛ سپس باید پنل باز شود.');
 });
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
 $('refresh').addEventListener('click',loadOrders);
