@@ -22,12 +22,77 @@ footer{padding:28px 0;border-top:1px solid var(--line);color:#9f9789;font-size:1
 @keyframes slowzoom{from{transform:scale(1)}to{transform:scale(1.08)}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(max-width:800px){.links{display:none}.hero{min-height:590px}.hero:before{background-position:60% center;opacity:.48}.grid{grid-template-columns:1fr 1fr}.project{min-height:290px}.project img{min-height:290px}.about,.contact-grid{grid-template-columns:1fr;gap:30px}.steps{grid-template-columns:1fr 1fr}.service-grid{grid-template-columns:1fr}.section{padding:70px 0}}
 @media(max-width:520px){.grid{grid-template-columns:1fr}.project,.project img{min-height:330px}.section-head{display:block}.section-head p{margin-top:12px}.form{grid-template-columns:1fr}.form textarea,.form button{grid-column:auto}.nav{height:66px}.brand{font-size:19px}.hero-inner{padding:70px 0}}
+
+/* NOVA premium editorial redesign */
+:root{--bg:#11110f;--panel:#1c1b18;--cream:#f1ede4;--muted:#b4aa98;--gold:#c7a56b;--gold2:#e0c18b;--line:#c9aa7130}
+body{background:#11110f;color:var(--cream);letter-spacing:-.12px}
+.top{background:#11110fe8;border-bottom:1px solid #c7a56b35}
+.nav{height:82px}.brand{font-size:24px;letter-spacing:1.5px}.brand span{font-weight:400;color:var(--gold2)}
+.links{gap:32px;font-size:13px}.links a{position:relative;padding:8px 0}.links a:after{content:"";position:absolute;right:0;bottom:0;width:0;height:1px;background:var(--gold);transition:width .3s}.links a:hover:after{width:100%}
+.btn{border-radius:0;padding:13px 25px;gap:12px;background:linear-gradient(120deg,#d7b77e,#b38b4e);border-color:#d2b47c;box-shadow:0 8px 24px #0003}.btn:hover{transform:translateY(-3px);box-shadow:0 14px 32px #c6a66b38}.btn.ghost{background:transparent;border-color:#c7a56b80;color:var(--cream);box-shadow:none}
+.hero{min-height:690px;background:#11110f;overflow:hidden;isolation:isolate}
+.hero:before{display:none}.hero:after{width:500px;height:500px;left:-260px;bottom:-300px;border-color:#c7a56b2b;box-shadow:0 0 0 45px #c7a56b08,0 0 0 95px #c7a56b06;z-index:-1}
+.hero-layout{min-height:630px;display:grid;grid-template-columns:1fr 1fr;align-items:center;position:relative}
+.hero-inner{max-width:590px;padding:85px 0 75px;grid-column:1;grid-row:1}
+.eyebrow{display:flex;align-items:center;gap:12px;color:var(--gold2);font-size:11px;letter-spacing:2.5px}
+.eyebrow-line{display:inline-block;width:36px;height:1px;background:var(--gold)}
+.hero h1{font-size:clamp(37px,5.2vw,65px);line-height:1.45;letter-spacing:-1.8px;margin:25px 0 18px;font-weight:600}
+.hero h1 em{color:var(--gold2);font-weight:400}
+.hero p{color:#c9c1b4;font-size:16px;line-height:2.2;max-width:490px}
+.hero .actions{margin-top:32px;gap:14px}.hero .actions .btn{min-width:160px}
+.hero-proof{display:flex;align-items:center;gap:14px;margin-top:58px;color:#a99e8c;font-size:11px}.hero-proof i{width:3px;height:3px;background:var(--gold);border-radius:50%}
+.hero-visual{grid-column:2;grid-row:1;position:relative;height:520px;margin:40px 0 40px 18px;background:url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=90') center/cover;box-shadow:0 35px 80px #0009;overflow:visible;animation:visualFloat 8s ease-in-out infinite}
+.hero-visual:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#11110f20,transparent 45%),linear-gradient(0deg,#11110f90,transparent 45%);pointer-events:none}
+.visual-frame{position:absolute;inset:18px -18px -18px 18px;border:1px solid #c7a56b80;pointer-events:none}
+.visual-caption{position:absolute;right:26px;bottom:26px;left:26px;display:flex;justify-content:space-between;align-items:end;color:#fff;font-size:12px}
+.visual-caption span{color:var(--gold2);letter-spacing:2px;font-size:10px}.visual-caption b{font-size:16px;font-weight:500}
+.visual-seal{position:absolute;top:26px;left:-24px;width:62px;height:62px;border:1px solid #d0b27a;background:#151512;color:var(--gold2);display:grid;place-items:center;font-size:27px;font-weight:300;transform:rotate(-8deg)}
+.visual-seal span{font-size:12px;margin:0 2px}
+.hero-side-note{position:absolute;right:-35px;top:48%;writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;letter-spacing:3px;color:#8d806d}
+.hero-bottom{display:flex;justify-content:space-between;border-top:1px solid #ffffff18;padding:17px 0;color:#8e8577;font-size:10px;letter-spacing:1px}
+.section{padding:115px 0}.section-head{margin-bottom:42px}.kicker{font-size:10px;letter-spacing:3px;color:var(--gold2)}.section h2{font-size:clamp(29px,3.8vw,43px);font-weight:500;letter-spacing:-1px}.section-head p{font-size:13px;line-height:2;color:#a99f90}
+#projects{background:linear-gradient(180deg,#151512,#11110f)}
+#projects .grid{grid-template-columns:1.15fr .85fr .85fr;align-items:stretch;gap:14px}
+.project{min-height:410px;border:0;background:#24221c}.project:first-child{min-height:480px}.project img{min-height:410px;filter:saturate(.78) brightness(.82)}.project:first-child img{min-height:480px}
+.project:after{inset:25% 0 0;background:linear-gradient(transparent,#080807eF)}
+.project-info{right:25px;bottom:25px}.project-info small{font-size:10px;letter-spacing:1px;color:var(--gold2)}.project-info h3{font-size:22px;font-weight:500}
+.project:hover{transform:translateY(-7px);box-shadow:0 24px 60px #0009}.project:hover img{transform:scale(1.045);filter:saturate(.95) brightness(.95)}
+.services{background:#1a1916;position:relative}.services:before{content:"NOVA";position:absolute;left:2%;top:3%;font-size:clamp(90px,17vw,220px);font-weight:800;color:#ffffff05;letter-spacing:12px;pointer-events:none}
+.service-grid{background:#ffffff18;border:0;gap:1px}.service{background:#1a1916;padding:38px 32px;min-height:220px}.service:hover{background:#242119}.num{font-size:42px;color:var(--gold2);font-family:Georgia,serif}.service h3{font-size:18px;font-weight:500}.service p{font-size:13px;line-height:2;color:#aaa193}
+.about{gap:75px}.about-art{min-height:480px;background:#28251f}.about-art:before{inset:25px -18px -18px 25px;border:1px solid #c7a56b80;background-image:url('https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1000&q=90');filter:saturate(.75) brightness(.85)}.about-art:after{font-size:100px;bottom:-28px;color:#ffffff12}
+.about h2{margin:12px 0 22px}.about p{font-size:14px;line-height:2.25;color:#b7ad9d}
+.steps{gap:25px}.step{border-top:1px solid #c7a56b70;padding:24px 5px}.step b{font-family:Georgia,serif;font-size:36px;color:var(--gold2)}.step h3{font-size:17px;font-weight:500}.step p{font-size:12px;line-height:2;color:#aaa193}
+.contact{background:radial-gradient(ellipse at 10% 10%,#4c3b2350,transparent 45%),#191815;border-top:1px solid #c7a56b28}.contact h2{line-height:1.6}.contact p{font-size:13px;line-height:2.3}.form{gap:12px}.form input,.form select,.form textarea{background:#11110f;border:1px solid #ffffff24;border-radius:0;padding:15px;color:#f1ede4}.form input:focus,.form textarea:focus,.form select:focus{border-color:var(--gold)}.form button{border-radius:0}.note{color:#a99f90}
+footer{background:#10100e;border-color:#ffffff18;padding:32px 0}.foot{font-size:11px;letter-spacing:.4px}
+.reveal{transform:translateY(32px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+@keyframes visualFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@media(max-width:900px){.hero-layout{grid-template-columns:1fr 1fr}.hero-visual{height:440px}.hero h1{font-size:clamp(34px,5vw,52px)}.hero-side-note{display:none}.links{gap:16px}.nav{height:72px}#projects .grid{grid-template-columns:1fr 1fr}#projects .project:first-child{grid-row:span 2}}
+@media(max-width:650px){.nav{height:68px}.brand{font-size:20px}.links{display:none}.top .btn{padding:9px 13px;font-size:11px}.hero{min-height:0}.hero-layout{display:flex;flex-direction:column-reverse;align-items:stretch;padding-top:25px}.hero-visual{height:300px;margin:0 12px 20px 0;animation:none}.visual-frame{inset:12px -12px -12px 12px}.visual-seal{width:48px;height:48px;left:-14px;font-size:21px}.hero-inner{padding:35px 0 42px}.hero h1{font-size:39px;margin:18px 0 12px}.hero p{font-size:14px}.hero-proof{margin-top:30px;gap:9px;font-size:10px}.hero-bottom{font-size:9px}.section{padding:75px 0}.section-head{margin-bottom:28px}#projects .grid{grid-template-columns:1fr}#projects .project:first-child{grid-row:auto}.project,.project:first-child,.project img,.project:first-child img{min-height:330px}.about{gap:42px}.about-art{min-height:320px}.steps{grid-template-columns:1fr 1fr;gap:15px}.service{padding:27px 22px;min-height:0}.contact-grid{gap:25px}.form{grid-template-columns:1fr}.form textarea,.form button{grid-column:auto}.hero .actions{gap:9px}.hero .actions .btn{min-width:0;padding:12px 15px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.hero-visual{animation:none}}
+
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap nav"><a class="brand" href="#home">NOVA <span>CABINET</span></a><nav class="links"><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس</a></nav><a class="btn" href="#contact">درخواست مشاوره</a></div></header>
 <main>
-<section class="hero" id="home"><div class="wrap"><div class="hero-inner"><div class="eyebrow">طراحی · ساخت · اجرای اختصاصی</div><h1>آشپزخانه‌ای که<br><em>امضای خانه شماست</em></h1><p>در نوا کابینت، زیبایی با دقت ساخت همراه می‌شود؛ از انتخاب متریال تا اجرای جزئیات، برای فضایی که هر روز از آن لذت ببرید.</p><div class="actions"><a class="btn" href="#projects">دیدن نمونه‌کارها</a><a class="btn ghost" href="#contact">درخواست مشاوره</a></div><div class="scrollhint">برای کشف جزئیات، کمی پایین‌تر بروید ↓</div></div></div></section>
+<section class="hero" id="home">
+  <div class="wrap hero-layout">
+    <div class="hero-inner">
+      <div class="eyebrow"><span class="eyebrow-line"></span> NOVA CABINET · طراحی و اجرای اختصاصی</div>
+      <h1>فراتر از یک آشپزخانه؛<br><em>امضای شما در خانه</em></h1>
+      <p>از انتخاب متریال تا آخرین جزئیات اجرا؛ فضایی می‌سازیم که زیبایی، کیفیت و آرامش در آن کنار هم قرار بگیرند.</p>
+      <div class="actions"><a class="btn" href="#contact">شروع طراحی پروژه <span>↙</span></a><a class="btn ghost" href="#projects">مشاهده پروژه‌ها</a></div>
+      <div class="hero-proof"><span>طراحی اختصاصی</span><i></i><span>ساخت دقیق</span><i></i><span>اجرای حرفه‌ای</span></div>
+    </div>
+    <div class="hero-visual" aria-label="فضای آشپزخانه مدرن و لوکس">
+      <div class="visual-frame"></div>
+      <div class="visual-caption"><span>01 / 03</span><b>جزئیات، تفاوت را می‌سازند.</b></div>
+      <div class="visual-seal">N<span>·</span></div>
+    </div>
+    <div class="hero-side-note">CRAFTED FOR YOUR LIFESTYLE — NOVA CABINET</div>
+  </div>
+  <div class="hero-bottom wrap"><span>خاوران، تهران</span><span>برای دیدن جزئیات اسکرول کنید　↓</span><span>EST. NOVA</span></div>
+</section>
 <section class="section" id="projects"><div class="wrap"><div class="section-head"><div><div class="kicker">SELECTED WORKS</div><h2>نمونه‌کارهای منتخب</h2></div><p>چند تصویر نمایشی برای نمایش سبک بصری سایت. در نسخه نهایی، عکس‌های واقعی پروژه‌های شما جایگزین می‌شوند.</p></div><div class="grid">
 <article class="project reveal"><img loading="lazy" src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=85" alt="آشپزخانه مدرن با کابینت چوبی"><div class="project-info"><small>مدرن و مینیمال</small><h3>گرمای چوب طبیعی</h3></div></article>
 <article class="project reveal"><img loading="lazy" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=85" alt="آشپزخانه روشن و مدرن"><div class="project-info"><small>مینیمال روشن</small><h3>سادگی ماندگار</h3></div></article>
