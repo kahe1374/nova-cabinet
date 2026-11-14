@@ -24,9 +24,14 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
     <form id="loginForm">
       <label for="email">ایمیل مدیر اصلی</label>
       <input id="email" type="email" value="Vahiiidk74@gmail.com" readonly>
-      <button id="sendLink" type="submit">ارسال لینک ورود</button>
+      <button id="sendLink" type="submit">ارسال کد ورود</button>
     </form>
-    <div id="loginStatus" class="status" role="status" aria-live="polite">لینک ورود فقط برای حساب موجود ارسال می‌شود؛ ثبت‌نام عمومی غیرفعال است.</div>
+    <form id="verifyForm" class="hidden">
+      <label for="emailCode">کد شش‌رقمی ارسال‌شده به ایمیل</label>
+      <input id="emailCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="مثلاً 123456" required>
+      <button id="verifyCode" type="submit">تأیید کد و ورود</button>
+    </form>
+    <div id="loginStatus" class="status" role="status" aria-live="polite">برای ورود، کد یک‌بارمصرف به ایمیل مدیر ارسال می‌شود.</div>
   </section>
 
   <section id="dashboard" class="hidden">
@@ -113,13 +118,25 @@ async function checkSession() {
 }
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
-  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال لینک امن...');
+  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال کد امن...');
   const { error }=await supabase.auth.signInWithOtp({
     email:OWNER_EMAIL,
-    options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}
+    options:{shouldCreateUser:false}
   });
   button.disabled=false;
-  showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'اگر حساب مدیر موجود باشد، لینک ورود به ایمیل ارسال شده است. صندوق ورودی و پوشه Spam را بررسی کنید.');
+  if(error){showMessage('loginStatus','ارسال کد انجام نشد: '+error.message);return;}
+  $('verifyForm').classList.remove('hidden');
+  showMessage('loginStatus','کد شش‌رقمی به ایمیل ارسال شد. کد آخرین ایمیل را وارد کن؛ لینک‌های قدیمی را باز نکن.');
+});
+$('verifyForm').addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const button=$('verifyCode'); button.disabled=true;
+  showMessage('loginStatus','در حال بررسی کد...');
+  const token=$('emailCode').value.trim();
+  const {data,error}=await supabase.auth.verifyOtp({email:OWNER_EMAIL,token,type:'email'});
+  button.disabled=false;
+  if(error){showMessage('loginStatus','کد پذیرفته نشد: '+error.message+'؛ کد جدید درخواست کن.');return;}
+  if(data?.session){showMessage('loginStatus','ورود موفق بود؛ پنل در حال باز شدن است.');await checkSession();}
 });
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
 $('refresh').addEventListener('click',loadOrders);
