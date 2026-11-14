@@ -86,10 +86,15 @@ async function loadOrders() {
       const save = document.createElement('button'); save.textContent='ذخیره وضعیت';
       save.addEventListener('click', async () => {
         save.disabled=true;
-        const { error: updateError } = await supabase.from('orders').update({status:select.value,updated_at:new Date().toISOString()}).eq('id',order.id);
+        const nextStatus=select.value;
+        if(nextStatus===order.status){save.disabled=false;showMessage('dashStatus','وضعیت سفارش تغییری نکرده است.');return;}
+        const { error: updateError } = await supabase.from('orders').update({status:nextStatus,updated_at:new Date().toISOString()}).eq('id',order.id);
+        if (updateError) { save.disabled=false; showMessage('dashStatus','ذخیره انجام نشد: '+updateError.message); return; }
+        const { error: historyError } = await supabase.from('order_status_history').insert({order_id:order.id,old_status:order.status,new_status:nextStatus,note:'تغییر وضعیت از پنل مدیریت'});
         save.disabled=false;
-        if (updateError) showMessage('dashStatus','ذخیره انجام نشد: '+updateError.message);
-        else { showMessage('dashStatus','وضعیت سفارش به‌روزرسانی شد.'); await loadOrders(); }
+        if(historyError) showMessage('dashStatus','وضعیت سفارش ذخیره شد، اما ثبت سابقه با خطا روبه‌رو شد: '+historyError.message);
+        else showMessage('dashStatus','وضعیت سفارش و سابقه تغییر با موفقیت ذخیره شد.');
+        await loadOrders();
       });
       action.append(select,save);
     }
