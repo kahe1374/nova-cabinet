@@ -1,24 +1,28 @@
 # NOVA CABINET backend setup
 
-The public website is hosted on GitHub Pages (static hosting). Supabase provides the PostgreSQL database and the server-side lead function.
+The public website is hosted on GitHub Pages (static hosting). Supabase provides PostgreSQL and the server-side lead function.
 
 ## Live infrastructure status
 - Supabase project: `nova-cabinet` (`sjapgxjllnlttrhjxkez`), region `eu-central-1`
-- Database migration: applied; eight public tables verified
-- Row Level Security: enabled on all eight tables; no public policies yet, so direct browser table access remains blocked by default
-- Edge Function: `create-lead`, version 2, status ACTIVE, JWT gateway verification disabled because this endpoint validates public form input itself
-- Website form: connected to the Edge Function; WhatsApp contact link remains available
-- Admin panel/authentication: not implemented
-- Real request submission: not yet end-to-end tested from a browser
+- Database: eight core public tables exist; RLS is enabled on all eight
+- Access control: an `admin_allowlist` table and `current_app_role()` function are installed
+- Owner allowlist: `vahiiidk74@gmail.com` is registered as `owner`
+- Policies: owner-only access policies are installed; factory-manager policies allow operational reads and limited order/status updates
+- Factory-manager order updates are additionally restricted by a database trigger to status, assignment, and updated timestamp fields
+- Admin identity: no Supabase Auth user currently exists for the owner email; invite/confirmation is still required before the owner can sign in
+- Edge Function: `create-lead` is deployed with JWT gateway verification disabled for the public lead form; its server-side implementation must validate inputs and keep service secrets server-side
+- Website: GitHub Pages static site; public form still needs a real browser end-to-end submission test
 
 ## Function configuration
-The function uses the project's built-in `SUPABASE_URL` and prefers `SUPABASE_SECRET_KEYS` (default secret key), falling back to `SUPABASE_SERVICE_ROLE_KEY`. These are available server-side in Supabase Edge Functions. Never put a secret/service-role key in website JavaScript or GitHub.
+The function should use the project's built-in `SUPABASE_URL` and server-side `SUPABASE_SECRET_KEYS` (or legacy `SUPABASE_SERVICE_ROLE_KEY`) as appropriate. Never put a secret/service-role key in website JavaScript, public repository files, or client-visible settings.
 
-## Security and next steps
-1. Configure Supabase Auth before adding any customer or manager access policies.
-2. Add request rate limiting / abuse protection before promoting the public form.
-3. Run a real browser submission and verify one customer and one order row are created.
-4. Build the owner and factory-manager panels only after authentication, role checks, and audit logging are implemented.
-5. Configure backups and monitoring.
+## Remaining setup and verification
+1. In Supabase Dashboard → Authentication → Users, invite `vahiiidk74@gmail.com`; complete the email confirmation flow. Do not share passwords or one-time codes in chat.
+2. Configure the production email provider/SMTP and the exact GitHub Pages redirect URL for Auth.
+3. Add the factory manager's email only after it is supplied and verified; assign the `factory_manager` role through the protected allowlist, not client-side metadata.
+4. Build and connect the authenticated admin UI; verify owner and factory-manager permissions with separate accounts.
+5. Add rate limiting / abuse protection to the public lead endpoint.
+6. Submit a real test lead from a browser and verify the customer/order rows and audit trail.
+7. Configure backups and monitoring.
 
-The schema intentionally has RLS enabled without permissive policies. This keeps browser clients from reading or writing customer and order data until the access model is implemented. The Edge Function uses a server-side secret to perform the initial lead insert.
+The database remains protected by RLS. The allowlist does not itself create an Auth user or send an invitation. The public lead function is separate from the authenticated admin interface.
