@@ -74,7 +74,8 @@ async function loadOrders() {
   $('ordersBody').replaceChildren();
   for (const order of data ?? []) {
     const tr = document.createElement('tr');
-    const customer = Array.isArray(order.customers) ? order.customers[0] : order.customers;\n    const customerCell = [customer?.full_name,customer?.mobile].filter(Boolean).join(' · ') || '—';\n    for (const value of [order.order_number,customerCell,order.title,statusLabels[order.status] ?? order.status,new Date(order.created_at).toLocaleString('fa-IR')]) {
+    const customer = Array.isArray(order.customers) ? order.customers[0] : order.customers;
+    const customerCell = [customer?.full_name,customer?.mobile].filter(Boolean).join(' · ') || '—';\n    for (const value of [order.order_number,customerCell,order.title,statusLabels[order.status] ?? order.status,new Date(order.created_at).toLocaleString('fa-IR')]) {
       const td = document.createElement('td'); td.textContent = value ?? '—'; tr.append(td);
     }
     const action = document.createElement('td');
