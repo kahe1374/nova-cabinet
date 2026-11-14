@@ -118,3 +118,15 @@ CREATE INDEX audit_log_actor_time_idx ON audit_log(actor_user_id, created_at DES
 -- 3) Enforce role-based authorization on every API route and customer ownership on reads.
 -- 4) Store uploaded files outside the public web root; persist opaque file keys only.
 -- 5) Payment processing, SMS, AI generation, and production integrations are separate modules.
+
+
+-- Lock down all exposed tables by default. Add role/ownership policies
+-- only after Supabase Auth identities and the admin/customer role model exist.
+ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workshop_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_status_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_files ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
