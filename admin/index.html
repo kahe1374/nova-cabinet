@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171716">
+<title>پنل مدیریت | NOVA CABINET</title>
+<style>
+:root{color-scheme:dark;--bg:#171716;--panel:#24231f;--gold:#c6a66b;--text:#eee9df;--muted:#aaa394;--line:#ffffff20}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0,#51412a55,transparent 45%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.8}
+main{width:min(1050px,94%);margin:7vh auto}.card{background:#22221feF;border:1px solid var(--line);padding:26px;border-radius:12px;box-shadow:0 20px 60px #0005}
+h1,h2{margin-top:0}h1 span{color:var(--gold)}p,.muted{color:var(--muted)}input,button,select{font:inherit}input,select{background:#151514;color:var(--text);border:1px solid var(--line);padding:12px;border-radius:6px;width:100%;margin:8px 0}
+button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding:11px 18px;border-radius:6px;font-weight:bold;cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.hidden{display:none!important}.status{padding:12px;background:#151514;border-radius:6px;color:var(--muted);margin:14px 0}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:700px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}th{color:var(--gold);font-weight:600}td select{min-width:190px}.tag{color:var(--gold);font-size:13px}.top{margin-bottom:18px}
+@media(max-width:600px){main{margin:3vh auto}.card{padding:18px}}
+</style>
+</head>
+<body>
+<main>
+  <section id="login" class="card">
+    <div class="tag">NOVA CABINET / SECURE ACCESS</div>
+    <h1>پنل <span>مدیریت</span></h1>
+    <p>ورود مدیر اصلی با لینک یک‌بارمصرف ایمیل انجام می‌شود.</p>
+    <form id="loginForm">
+      <label for="email">ایمیل مدیر اصلی</label>
+      <input id="email" type="email" value="Vahiiidk74@gmail.com" readonly>
+      <button id="sendLink" type="submit">ارسال لینک ورود</button>
+    </form>
+    <div id="loginStatus" class="status" role="status" aria-live="polite">لینک ورود فقط برای حساب موجود ارسال می‌شود؛ ثبت‌نام عمومی غیرفعال است.</div>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="row top">
+      <div><div class="tag">NOVA CABINET</div><h1>مدیریت سفارش‌ها</h1><div id="identity" class="muted"></div></div>
+      <button id="logout">خروج امن</button>
+    </div>
+    <div class="card">
+      <div class="row"><h2>سفارش‌ها</h2><button id="refresh" class="hidden">به‌روزرسانی</button></div>
+      <div id="dashStatus" class="status">در حال بارگذاری...</div>
+      <div class="table-wrap"><table><thead><tr><th>شماره سفارش</th><th>عنوان</th><th>وضعیت</th><th>تاریخ ثبت</th><th>اقدام</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
+    </div>
+  </section>
+</main>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
+
+const SUPABASE_URL = 'https://sjapgxjllnlttrhjxkez.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
+const OWNER_EMAIL = 'vahiiidk74@gmail.com';
+const REDIRECT_URL = 'https://kahe1374.github.io/nova-cabinet/admin/';
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const $ = (id) => document.getElementById(id);
+const statusLabels = {
+  new:'جدید', under_review:'در حال بررسی', awaiting_quote_approval:'در انتظار تأیید پیش‌فاکتور',
+  awaiting_payment:'در انتظار پرداخت', approved_for_production:'تأیید تولید', in_production:'در حال تولید',
+  quality_control:'کنترل کیفیت', ready_for_delivery:'آماده تحویل', delivered:'تحویل شده',
+  completed:'تکمیل شده', cancelled:'لغو شده'
+};
+const allowedStatuses = Object.keys(statusLabels);
+let currentRole = null;
+
+function showMessage(id, message) { $(id).textContent = message; }
+function showLogin(message) {
+  $('login').classList.remove('hidden');
+  $('dashboard').classList.add('hidden');
+  if (message) showMessage('loginStatus', message);
+}
+async function loadOrders() {
+  showMessage('dashStatus','در حال دریافت سفارش‌ها...');
+  const { data, error } = await supabase.from('orders')
+    .select('id,order_number,title,status,created_at,assigned_to')
+    .order('created_at',{ascending:false}).limit(100);
+  if (error) { showMessage('dashStatus','دریافت سفارش‌ها ناموفق بود: '+error.message); return; }
+  $('ordersBody').replaceChildren();
+  for (const order of data ?? []) {
+    const tr = document.createElement('tr');
+    for (const value of [order.order_number,order.title,statusLabels[order.status] ?? order.status,new Date(order.created_at).toLocaleString('fa-IR')]) {
+      const td = document.createElement('td'); td.textContent = value ?? '—'; tr.append(td);
+    }
+    const action = document.createElement('td');
+    if (currentRole === 'owner' || currentRole === 'factory_manager') {
+      const select = document.createElement('select');
+      for (const [value,label] of Object.entries(statusLabels)) {
+        const option = document.createElement('option'); option.value=value; option.textContent=label; option.selected=value===order.status; select.append(option);
+      }
+      const save = document.createElement('button'); save.textContent='ذخیره وضعیت';
+      save.addEventListener('click', async () => {
+        save.disabled=true;
+        const { error: updateError } = await supabase.from('orders').update({status:select.value,updated_at:new Date().toISOString()}).eq('id',order.id);
+        save.disabled=false;
+        if (updateError) showMessage('dashStatus','ذخیره انجام نشد: '+updateError.message);
+        else { showMessage('dashStatus','وضعیت سفارش به‌روزرسانی شد.'); await loadOrders(); }
+      });
+      action.append(select,save);
+    }
+    tr.append(action); $('ordersBody').append(tr);
+  }
+  showMessage('dashStatus',data?.length ? 'آخرین '+data.length+' سفارش نمایش داده شده است.' : 'هنوز سفارشی ثبت نشده است.');
+}
+async function checkSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { showLogin(); return; }
+  const { data: role, error } = await supabase.rpc('get_my_app_role');
+  if (error || !['owner','factory_manager'].includes(role)) {
+    await supabase.auth.signOut();
+    showLogin('این حساب دسترسی مدیریتی ندارد یا ایمیل آن هنوز تأیید نشده است.');
+    return;
+  }
+  currentRole=role;
+  $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden');
+  $('identity').textContent=session.user.email+' · '+(role==='owner'?'مدیر اصلی':'مدیر کارخانه');
+  await loadOrders();
+}
+$('loginForm').addEventListener('submit',async (event)=>{
+  event.preventDefault();
+  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال لینک امن...');
+  const { error }=await supabase.auth.signInWithOtp({
+    email:OWNER_EMAIL,
+    options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}
+  });
+  button.disabled=false;
+  showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'اگر حساب مدیر موجود باشد، لینک ورود به ایمیل ارسال شده است. صندوق ورودی و پوشه Spam را بررسی کنید.');
+});
+$('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
+$('refresh').addEventListener('click',loadOrders);
+supabase.auth.onAuthStateChange((_event,session)=>{if(session) setTimeout(checkSession,0);});
+checkSession();
+</script>
+</body>
+</html>
