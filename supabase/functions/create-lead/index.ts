@@ -35,7 +35,18 @@ Deno.serve(async (req) => {
     }
 
     const url = Deno.env.get("SUPABASE_URL");
-    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // Prefer the modern secret API key; fall back to the legacy service-role key.
+    const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
+    let secretKey: string | undefined;
+    if (secretKeysRaw) {
+      try {
+        const secretKeys = JSON.parse(secretKeysRaw);
+        secretKey = secretKeys.default;
+      } catch {
+        console.error("invalid_secret_keys_environment");
+      }
+    }
+    const key = secretKey ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!url || !key) return reply(503, { error: "backend_not_configured" });
 
     const db = createClient(url, key, { auth: { persistSession: false } });
