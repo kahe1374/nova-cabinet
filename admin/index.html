@@ -108,7 +108,119 @@ async function loadOrders() {
   await loadAiRequests();
 }
 
-async function loadAiRequests(){showMessage('aiDashStatus','در حال دریافت درخواست‌های طراحی...');const {data,error}=await supabase.from('ai_design_requests').select('id,request_number,full_name,mobile,design_mode,style,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at').order('created_at',{ascending:false}).limit(100);if(error){showMessage('aiDashStatus','دریافت درخواست‌ها ناموفق بود: '+error.message);return;}const body=$('aiRequestsBody');body.replaceChildren();for(const item of data??[]){const tr=document.createElement('tr');const vals=[item.request_number,item.full_name+' · '+item.mobile,item.style+' · '+(item.design_mode==='preserve'?'حفظ ساختار':'طراحی آزاد')];for(const val of vals){const td=document.createElement('td');td.textContent=val??'—';tr.append(td);}const fileCell=document.createElement('td');if(item.file_key){const link=document.createElement('button');link.type='button';link.textContent=item.upload_completed_at?'مشاهده فایل':'فایل ثبت نشده';link.disabled=!item.upload_completed_at;link.addEventListener('click',async()=>{const {data:linkData,error:linkError}=await supabase.storage.from('nova-ai-designs').createSignedUrl(item.file_key,300);if(linkError){showMessage('aiDashStatus','دریافت لینک فایل ناموفق بود: '+linkError.message);return;}window.open(linkData.signedUrl,'_blank','noopener');});fileCell.append(link);}else fileCell.textContent='—';tr.append(fileCell);const pay=document.createElement('td');const paySelect=document.createElement('select');for(const [v,l] of Object.entries(paymentLabels)){const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===item.payment_status;paySelect.append(o);}pay.append(paySelect);tr.append(pay);const stat=document.createElement('td');const statusSelect=document.createElement('select');for(const [v,l] of Object.entries(aiStatusLabels)){const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===item.status;statusSelect.append(o);}stat.append(statusSelect);tr.append(stat);const note=document.createElement('td');const noteInput=document.createElement('input');noteInput.value=item.admin_note??'';noteInput.placeholder='یادداشت داخلی';note.append(noteInput);tr.append(note);const action=document.createElement('td');const save=document.createElement('button');save.type='button';save.textContent='ذخیره';save.addEventListener('click',async()=>{save.disabled=true;const {error:saveError}=await supabase.from('ai_design_requests').update({payment_status:paySelect.value,status:statusSelect.value,admin_note:noteInput.value,updated_at:new Date().toISOString()}).eq('id',item.id);save.disabled=false;if(saveError){showMessage('aiDashStatus','ذخیره تغییرات ناموفق بود: '+saveError.message);return;}showMessage('aiDashStatus','تغییرات درخواست '+item.request_number+' ذخیره شد.');await loadAiRequests();});action.append(save);tr.append(action);body.append(tr);}showMessage('aiDashStatus',data?.length?'تعداد '+data.length+' درخواست طراحی نمایش داده شده است.':'هنوز درخواست طراحی هوشمندی ثبت نشده است.');}
+async function loadAiRequests() {
+  showMessage('aiDashStatus','در حال دریافت درخواست‌های طراحی...');
+  const { data, error } = await supabase.from('ai_design_requests')
+    .select('id,request_number,full_name,mobile,design_mode,style,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at')
+    .order('created_at',{ascending:false}).limit(100);
+  if (error) {
+    showMessage('aiDashStatus','دریافت درخواست‌ها ناموفق بود: '+error.message);
+    return;
+  }
+  const body = $('aiRequestsBody');
+  body.replaceChildren();
+  for (const item of data ?? []) {
+    const tr = document.createElement('tr');
+    const customer = [item.full_name,item.mobile].filter(Boolean).join(' · ');
+    const mode = item.design_mode === 'preserve' ? 'حفظ ساختار' : 'طراحی آزاد';
+    for (const value of [item.request_number,customer,item.style+' · '+mode]) {
+      const td = document.createElement('td');
+      td.textContent = value || '—';
+      tr.append(td);
+    }
+
+    const fileCell = document.createElement('td');
+    if (item.file_key) {
+      const link = document.createElement('button');
+      link.type = 'button';
+      link.textContent = item.upload_completed_at ? 'مشاهده فایل' : 'بارگذاری ناقص';
+      link.disabled = !item.upload_completed_at;
+      link.addEventListener('click', async () => {
+        const { data: linkData, error: linkError } = await supabase.storage
+          .from('nova-ai-designs').createSignedUrl(item.file_key,300);
+        if (linkError) {
+          showMessage('aiDashStatus','دریافت لینک فایل ناموفق بود: '+linkError.message);
+          return;
+        }
+        window.open(linkData.signedUrl,'_blank','noopener');
+      });
+      fileCell.append(link);
+    } else {
+      fileCell.textContent = '—';
+    }
+    tr.append(fileCell);
+
+    const payCell = document.createElement('td');
+    const statusCell = document.createElement('td');
+    const noteCell = document.createElement('td');
+    const actionCell = document.createElement('td');
+
+    let paySelect = null;
+    let statusSelect = null;
+    let noteInput = null;
+
+    if (currentRole === 'owner') {
+      paySelect = document.createElement('select');
+      for (const [value,label] of Object.entries(paymentLabels)) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        option.selected = value === item.payment_status;
+        paySelect.append(option);
+      }
+      payCell.append(paySelect);
+
+      statusSelect = document.createElement('select');
+      for (const [value,label] of Object.entries(aiStatusLabels)) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        option.selected = value === item.status;
+        statusSelect.append(option);
+      }
+      statusCell.append(statusSelect);
+
+      noteInput = document.createElement('input');
+      noteInput.value = item.admin_note ?? '';
+      noteInput.placeholder = 'یادداشت داخلی';
+      noteCell.append(noteInput);
+
+      const save = document.createElement('button');
+      save.type = 'button';
+      save.textContent = 'ذخیره';
+      save.addEventListener('click', async () => {
+        save.disabled = true;
+        const { error: saveError } = await supabase.from('ai_design_requests')
+          .update({
+            payment_status: paySelect.value,
+            status: statusSelect.value,
+            admin_note: noteInput.value,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id',item.id);
+        save.disabled = false;
+        if (saveError) {
+          showMessage('aiDashStatus','ذخیره تغییرات ناموفق بود: '+saveError.message);
+          return;
+        }
+        showMessage('aiDashStatus','تغییرات درخواست '+item.request_number+' ذخیره شد.');
+        await loadAiRequests();
+      });
+      actionCell.append(save);
+    } else {
+      payCell.textContent = paymentLabels[item.payment_status] ?? item.payment_status ?? '—';
+      statusCell.textContent = aiStatusLabels[item.status] ?? item.status ?? '—';
+      noteCell.textContent = item.admin_note || '—';
+      actionCell.textContent = 'فقط مشاهده';
+    }
+
+    tr.append(payCell,statusCell,noteCell,actionCell);
+    body.append(tr);
+  }
+  showMessage('aiDashStatus',data?.length
+    ? 'تعداد '+data.length+' درخواست طراحی نمایش داده شده است.'
+    : 'هنوز درخواست طراحی هوشمندی ثبت نشده است.');
+}
 async function checkSession() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { showLogin(); return; }
