@@ -233,6 +233,117 @@ main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
 .nova-request-group>.nova-panel{margin:0}
 #nova-services-gallery{margin:0 auto 34px}
 @media(max-width:650px){.nova-studio-heading,.nova-request-heading{padding:4px 8px 10px}.nova-extra{gap:16px;margin-bottom:30px}.nova-request-group{gap:16px;margin-bottom:30px}}
+
+/* NOVA visual refresh — image-led, editorial rhythm, less text-heavy */
+:root{--nova-ink:#0b0907;--nova-panel:#17120e;--nova-gold:#e3b873;--nova-glow:#d7a65c}
+body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807 100%);background-attachment:fixed}
+.hero{min-height:min(820px,94vh);min-height:max(690px,92svh);grid-template-columns:1.12fr .88fr;background:radial-gradient(ellipse at 28% 48%,#604022 0%,#24180f 34%,#100d0a 72%);isolation:isolate}
+.hero:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(90deg,#09070500 25%,#0b0907a8 58%,#0b0907 100%),radial-gradient(ellipse at 12% 80%,#d6a35a22,transparent 38%)}
+.hero:after{height:115px;background:linear-gradient(transparent,var(--bg))}
+.hero-gallery{width:70%;height: min(690px,82vh);left:-2%;top:51%;filter:drop-shadow(0 28px 45px #0009)}
+.gallery-ring{width:min(570px,52vw);height:min(420px,39vw);animation-duration:145s}
+.gallery-card{border-radius:24px;border:1px solid #e9c487bb;box-shadow:0 35px 80px #000c}
+.gallery-card img{filter:saturate(1.05) contrast(1.08)}
+.hero-copy{padding:40px 5% 80px 7%;max-width:690px}
+.hero-copy .eyebrow{display:inline-flex;padding:7px 14px;border:1px solid #e4bd7c66;border-radius:30px;background:#120e0bb8;letter-spacing:4px}
+.hero h1{font-size:clamp(42px,5.2vw,76px);line-height:1.42;text-shadow:0 8px 32px #0008;margin:20px 0 12px}
+.hero p{font-size:clamp(15px,1.35vw,18px);line-height:2.15;color:#f0e4d3;max-width:500px}
+.hero-actions{gap:25px;flex-wrap:wrap}
+.hero-actions .btn{padding:13px 25px;box-shadow:0 12px 34px #d39a4b35}
+.side-note{backdrop-filter:blur(12px);box-shadow:0 14px 38px #0007}
+.trust{margin:12px auto 58px;gap:12px}
+.trust-item{min-height:76px;border-radius:18px;background:linear-gradient(145deg,#211910,#100d0a);box-shadow:0 12px 28px #0003;transition:transform .3s,border-color .3s}
+.trust-item:hover{transform:translateY(-5px);border-color:#e7c17d}
+.nova-panel{background:linear-gradient(145deg,#1c1712 0%,#100e0c 58%,#1b140e 100%);border:1px solid #d9ad6c55;box-shadow:0 25px 65px #0006}
+.nova-panel:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,transparent,#e8c17e,transparent);opacity:.7;pointer-events:none}
+.nova-panel-head{margin-bottom:30px;max-width:820px}
+.nova-panel-head .eyebrow{display:inline-block;padding:5px 12px;border:1px solid #d9ad6c55;border-radius:20px;background:#0b090780;letter-spacing:3px}
+.nova-panel-head h2{font-size:clamp(25px,3.4vw,38px);margin:9px 0 5px;line-height:1.5}
+.nova-panel-head p{font-size:13px;line-height:2;color:#d2c3b0}
+#nova-services-gallery{padding-top:42px;padding-bottom:42px}
+.nova-service-grid{gap:18px}
+.nova-service-card{min-height:clamp(280px,27vw,390px);border-radius:20px;border:1px solid #e1b87588;background-position:center;background-size:cover;box-shadow:0 22px 48px #0007;transition:transform .5s cubic-bezier(.2,.75,.25,1),box-shadow .5s}
+.nova-service-card:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#080604f2 0%,#08060435 46%,#08060405 100%);transition:opacity .4s}
+.nova-service-card:after{content:"مشاهده جزئیات  ←";position:absolute;left:18px;bottom:20px;color:#f4d49e;font-size:11px;opacity:0;transform:translateY(8px);transition:.35s}
+.nova-service-card:hover{transform:translateY(-9px) scale(1.012);box-shadow:0 30px 60px #0009,0 0 0 1px #e5bd7c}
+.nova-service-card:hover:after{opacity:1;transform:none}
+.nova-service-card span,.nova-service-card b,.nova-service-card small{position:relative;z-index:1}
+.nova-service-card span{font:italic 16px Georgia;color:#f2cf91}
+.nova-service-card b{font-size:clamp(20px,2vw,25px)}
+.nova-service-card small{font-size:12px}
+.projects{grid-template-columns:repeat(3,minmax(0,1fr)) 280px;gap:16px;padding:18px;background:linear-gradient(110deg,#1c1711,#0c0a08);border-radius:24px;margin-bottom:54px}
+.project{height:clamp(210px,20vw,300px);border-radius:18px}
+.project-intro h2{font-size:clamp(24px,2.4vw,34px);line-height:1.5}
+.project-intro p{font-size:13px;line-height:2}
+#nova-process{background:linear-gradient(120deg,#21190f,#110e0b 55%,#24190f)}
+.nova-process-grid{gap:12px}
+.nova-process-grid>div{position:relative;min-height:175px;padding:20px 16px;border-radius:17px;background:linear-gradient(145deg,#211a13,#100d0a);transition:transform .3s,border-color .3s}
+.nova-process-grid>div:hover{transform:translateY(-6px);border-color:#e5bd7c}
+.nova-process-grid i{font-size:31px;margin-bottom:20px}
+.nova-process-grid b{font-size:14px}
+.nova-process-grid p{font-size:12px;line-height:2}
+.nova-extra{gap:30px}
+#nova-compare .nova-compare-stage{height:clamp(280px,48vw,540px);border-radius:20px;box-shadow:0 22px 50px #0008}
+#nova-compare .nova-compare-label{font-size:12px;padding:8px 14px;backdrop-filter:blur(10px)}
+#nova-materials .nova-material{padding:13px;border-radius:17px;background:linear-gradient(145deg,#211a13,#0d0b09)}
+#nova-materials .nova-material-swatch{height:94px;border-radius:12px}
+#nova-configurator .nova-config-photo{min-height:390px;border-radius:20px;box-shadow:0 22px 48px #0007}
+#nova-configurator .nova-config-photo img{min-height:390px}
+.nova-request-group{padding:12px 0 0}
+.nova-request-heading{margin-bottom:10px}
+#nova-assistant,#nova-estimator,#nova-visit{background:linear-gradient(145deg,#1c1712,#100d0a 62%,#21170e)}
+#nova-assistant .nova-concierge-intro{background:radial-gradient(circle at 12% 15%,#b17b3a44,transparent 55%),#100d0a}
+#nova-estimator .nova-estimate-result,#nova-assistant .nova-assistant-result{border-radius:14px;background:#080706}
+#contact{padding:38px 22px 28px;border-top:1px solid #d9ad6c88;background:radial-gradient(ellipse at 50% 0,#38251666,transparent 70%)}
+#contact h2{font-size:clamp(25px,3vw,36px);color:var(--gold2)}
+.btn{transition:transform .25s,box-shadow .25s,filter .25s}
+.btn:hover{transform:translateY(-3px);filter:brightness(1.08);box-shadow:0 15px 35px #d39a4b55}
+@media(max-width:950px){
+ .hero{min-height:760px;grid-template-columns:1fr}
+ .hero-gallery{width:100%;height:440px;left:0;top:36%;opacity:.9}
+ .gallery-ring{width:440px;height:310px}
+ .hero-copy{grid-column:1;align-self:end;text-align:center;padding:390px 7% 95px;max-width:none}
+ .hero-copy .eyebrow{margin:auto}
+ .hero p{margin:0 auto 22px}
+ .hero-actions{justify-content:center}
+ .projects{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .project-intro{grid-column:1/-1;grid-row:1;text-align:center}
+ .nova-process-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:650px){
+ .hero{min-height:760px;min-height:88svh;padding-top:60px}
+ .hero-gallery{top:28%;height:380px;width:110%;left:-5%}
+ .gallery-ring{width:310px;height:230px}
+ .gallery-card{border-radius:16px}
+ .hero-copy{padding:350px 7% 72px}
+ .hero h1{font-size:clamp(34px,9vw,46px);margin:12px 0 7px}
+ .hero p{font-size:13px;line-height:2}
+ .hero-actions{gap:13px}
+ .hero-actions .btn{padding:11px 18px}
+ .trust{margin:8px auto 34px}
+ .trust-item{min-height:64px;border-radius:13px;font-size:10px}
+ #nova-services-gallery{padding:25px 14px}
+ .nova-service-grid{gap:12px}
+ .nova-service-card{min-height:235px;border-radius:16px}
+ .projects{padding:12px;gap:9px;margin-bottom:34px}
+ .project{height:145px;border-radius:13px}
+ .project-intro h2{font-size:23px}
+ .nova-panel{padding:22px 16px;border-radius:19px}
+ .nova-panel-head{margin-bottom:20px}
+ .nova-panel-head h2{font-size:23px}
+ .nova-panel-head p{font-size:11px}
+ .nova-process-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .nova-process-grid>div{min-height:150px;padding:14px 11px}
+ #nova-compare .nova-compare-stage{height:270px}
+ #nova-materials .nova-material-swatch{height:72px}
+ #nova-configurator .nova-config-photo,#nova-configurator .nova-config-photo img{min-height:260px}
+ #contact{padding:25px 14px 20px}
+}
+@media(prefers-reduced-motion:reduce){
+ .trust-item,.nova-service-card,.nova-process-grid>div,.btn{transition:none}
+ .nova-service-card:hover,.nova-process-grid>div:hover,.btn:hover{transform:none}
+}
+
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
