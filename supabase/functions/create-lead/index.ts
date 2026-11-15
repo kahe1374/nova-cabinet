@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
 
     const name = String(body.name ?? "").trim().slice(0, 160);
     const mobile = String(body.phone ?? "").replace(/[\s-]/g, "");
-    const type = String(body.type ?? "").trim().slice(0, 30);
+    const type = String(body.type ?? "").trim().slice(0, 80);
     const city = String(body.city ?? "").trim().slice(0, 100);
     const details = String(body.details ?? "").trim().slice(0, 3000);
 
