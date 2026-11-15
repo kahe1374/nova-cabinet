@@ -47,7 +47,7 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
     </div>
     <div class="card">
       <div class="row"><h2>سفارش‌ها</h2><button id="refresh">به‌روزرسانی</button></div>
-      <div id="dashStatus" class="status">در حال بارگذاری...</div><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><button id="refreshAi" type="button">به‌روزرسانی درخواست‌ها</button></div><div id="aiDashStatus" class="status">در حال بارگذاری...</div><div class="table-wrap"><table><thead><tr><th>کد پیگیری</th><th>مشتری / تماس</th><th>سبک و حالت</th><th>فایل</th><th>پرداخت</th><th>وضعیت</th><th>یادداشت مدیر</th><th>ذخیره</th></tr></thead><tbody id="aiRequestsBody"></tbody></table></div>
+      <div id="dashStatus" class="status">در حال بارگذاری...</div><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><button id="refreshAi" type="button">به‌روزرسانی درخواست‌ها</button></div><div id="aiDashStatus" class="status">در حال بارگذاری...</div><div class="table-wrap"><table><thead><tr><th>کد پیگیری</th><th>مشتری / تماس</th><th>سبک و حالت</th><th>فایل ورودی</th><th>خروجی طراحی</th><th>پرداخت</th><th>وضعیت</th><th>یادداشت مدیر</th><th>ذخیره</th></tr></thead><tbody id="aiRequestsBody"></tbody></table></div>
       <div class="table-wrap"><table><thead><tr><th>شماره سفارش</th><th>مشتری / تماس</th><th>عنوان</th><th>وضعیت</th><th>تاریخ ثبت</th><th>اقدام</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
     </div>
   </section>
@@ -122,7 +122,7 @@ async function loadOrders() {
 async function loadAiRequests() {
   showMessage('aiDashStatus','در حال دریافت درخواست‌های طراحی...');
   const { data, error } = await supabase.from('ai_design_requests')
-    .select('id,request_number,full_name,mobile,design_mode,style,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at')
+    .select('id,request_number,full_name,mobile,design_mode,style,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at,fal_request_id,output_file_key,output_description')
     .order('created_at',{ascending:false}).limit(100);
   if (error) {
     showMessage('aiDashStatus','دریافت درخواست‌ها ناموفق بود: '+error.message);
@@ -161,6 +161,32 @@ async function loadAiRequests() {
     }
     tr.append(fileCell);
 
+    const outputCell = document.createElement('td');
+    if (item.output_file_key) {
+      const outputButton = document.createElement('button');
+      outputButton.type = 'button';
+      outputButton.textContent = 'مشاهده پیش‌نمایش';
+      outputButton.addEventListener('click', async () => {
+        const { data: outputLink, error: outputError } = await supabase.storage
+          .from('nova-ai-designs').createSignedUrl(item.output_file_key, 300);
+        if (outputError) {
+          showMessage('aiDashStatus', 'دریافت خروجی طراحی ناموفق بود: ' + outputError.message);
+          return;
+        }
+        window.open(outputLink.signedUrl, '_blank', 'noopener');
+      });
+      outputCell.append(outputButton);
+      if (item.output_description) {
+        const desc = document.createElement('div');
+        desc.className = 'muted';
+        desc.textContent = item.output_description.slice(0, 180);
+        outputCell.append(desc);
+      }
+    } else {
+      outputCell.textContent = 'هنوز آماده نیست';
+    }
+    tr.append(outputCell);
+
     const payCell = document.createElement('td');
     const statusCell = document.createElement('td');
     const noteCell = document.createElement('td');
@@ -195,6 +221,36 @@ async function loadAiRequests() {
       noteInput.value = item.admin_note ?? '';
       noteInput.placeholder = 'یادداشت داخلی';
       noteCell.append(noteInput);
+
+      const generate = document.createElement('button');
+      generate.type = 'button';
+      generate.textContent = item.output_file_key ? 'تولید انجام شد' : item.fal_request_id ? 'بررسی نتیجه طراحی' : 'شروع طراحی هوشمند';
+      generate.disabled = item.output_file_key || item.payment_status !== 'paid' || !item.upload_completed_at;
+      generate.title = item.payment_status !== 'paid' ? 'ابتدا پرداخت را تأیید و ذخیره کنید' : !item.upload_completed_at ? 'فایل مشتری هنوز کامل بارگذاری نشده است' : '';
+      generate.addEventListener('click', async () => {
+        generate.disabled = true;
+        showMessage('aiDashStatus', item.fal_request_id ? 'در حال بررسی وضعیت طراحی...' : 'در حال ارسال تصویر برای طراحی هوشمند...');
+        const functionName = item.fal_request_id ? 'check-ai-design' : 'start-ai-design';
+        const { data: result, error: generationError } = await supabase.functions.invoke(functionName, {
+          body: { request_id: item.id }
+        });
+        generate.disabled = false;
+        if (generationError || !result?.ok) {
+          showMessage('aiDashStatus', 'عملیات طراحی انجام نشد: ' + (result?.error || generationError?.message || 'خطای نامشخص'));
+          return;
+        }
+        if (result.status === 'preview_ready') {
+          showMessage('aiDashStatus', 'پیش‌نمایش طراحی درخواست ' + item.request_number + ' آماده شد.');
+        } else if (!item.fal_request_id) {
+          showMessage('aiDashStatus', 'درخواست طراحی به صف هوش مصنوعی ارسال شد. چند لحظه بعد «بررسی نتیجه طراحی» را بزن.');
+        } else {
+          showMessage('aiDashStatus', result.status === 'queued'
+            ? 'در صف طراحی است' + (result.queue_position != null ? '؛ جایگاه صف: ' + result.queue_position : '') + '.'
+            : 'طراحی هنوز در حال انجام است؛ کمی بعد دوباره بررسی کن.');
+        }
+        await loadAiRequests();
+      });
+      actionCell.append(generate);
 
       const save = document.createElement('button');
       save.type = 'button';
