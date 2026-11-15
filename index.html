@@ -344,6 +344,42 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
  .nova-service-card:hover,.nova-process-grid>div:hover,.btn:hover{transform:none}
 }
 
+
+/* NOVA portfolio — real image gallery, filters and accessible lightbox */
+.nova-work-showcase{display:block!important;padding:clamp(18px,3vw,34px)!important;background:linear-gradient(145deg,#211910,#100d0a 60%,#21170f)!important;border:1px solid #d9ad6c66!important}
+.nova-work-heading{display:flex;align-items:end;justify-content:space-between;gap:22px;margin:0 0 22px}
+.nova-work-heading .eyebrow{font-size:10px;letter-spacing:3px;color:var(--gold2)}
+.nova-work-heading h2{font-size:clamp(25px,3.2vw,38px);line-height:1.5;color:var(--gold2);margin:7px 0}
+.nova-work-heading p{color:#cbbba6;font-size:13px;line-height:1.9;margin:0}
+.nova-work-all{flex:none;color:#f5d49c;border:1px solid #d9ad6c88;border-radius:30px;padding:11px 17px;font-size:12px}
+.nova-work-filters{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 18px}
+.nova-work-filters button{border:1px solid #d9ad6c55;border-radius:30px;background:#100d0a;color:#dfd0bd;padding:9px 16px;font:inherit;font-size:12px;cursor:pointer;transition:.25s}
+.nova-work-filters button.is-active,.nova-work-filters button:hover{background:linear-gradient(120deg,#d7ae70,#9a6c38);color:#160f08;border-color:#f0cc91}
+.nova-work-filters button span{opacity:.7;margin-right:5px}
+.nova-work-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:clamp(175px,19vw,245px);gap:13px}
+.nova-work-card{position:relative;display:block;padding:0;border:1px solid #d9ad6c44;border-radius:16px;overflow:hidden;background:#17110c;text-align:right;cursor:zoom-in;min-width:0}
+.nova-work-card.nova-work-feature{grid-column:span 2;grid-row:span 2}
+.nova-work-card[hidden]{display:none}
+.nova-work-card img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;transition:transform .65s cubic-bezier(.2,.7,.2,1),filter .4s;filter:saturate(.9) brightness(.85)}
+.nova-work-card:after{content:"";position:absolute;inset:25% 0 0;background:linear-gradient(transparent,#090705e8);pointer-events:none}
+.nova-work-card:hover img,.nova-work-card:focus-visible img{transform:scale(1.07);filter:saturate(1.08) brightness(.98)}
+.nova-work-caption{position:absolute;z-index:1;right:16px;bottom:14px;left:40px;display:grid;gap:4px;color:#fff}
+.nova-work-caption small{color:#f0c987;font-size:10px;letter-spacing:1px}
+.nova-work-caption b{font-size:clamp(13px,1.25vw,17px);font-weight:600}
+.nova-work-card>i{position:absolute;z-index:2;left:13px;top:13px;width:30px;height:30px;border:1px solid #fff8;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;background:#100d0a66}
+.nova-work-note{font-size:10px;color:#9e907e;margin:14px 2px 0;line-height:1.9}
+.nova-lightbox{position:fixed;z-index:1000;inset:0;background:#050403f2;display:flex;align-items:center;justify-content:center;padding:55px 70px;backdrop-filter:blur(12px)}
+.nova-lightbox[hidden]{display:none}
+.nova-lightbox figure{margin:0;max-width:min(1100px,90vw);max-height:85vh;display:grid;gap:12px;text-align:center}
+.nova-lightbox figure img{max-width:100%;max-height:76vh;object-fit:contain;border-radius:12px;box-shadow:0 25px 80px #000}
+.nova-lightbox figcaption{color:#f0d4a4;font-size:14px}
+.nova-lightbox button{position:absolute;border:1px solid #d9ad6c88;background:#17110c;color:#f4d49e;border-radius:50%;width:44px;height:44px;font-size:27px;cursor:pointer}
+.nova-lightbox-close{top:22px;left:22px}.nova-lightbox-prev{right:18px;top:50%;transform:translateY(-50%)}.nova-lightbox-next{left:18px;top:50%;transform:translateY(-50%)}
+.nova-work-card:focus-visible,.nova-work-filters button:focus-visible,.nova-lightbox button:focus-visible{outline:2px solid #f4d49e;outline-offset:3px}
+@media(max-width:850px){.nova-work-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:190px}.nova-work-card.nova-work-feature{grid-row:span 2}.nova-work-heading{align-items:start;flex-direction:column}}
+@media(max-width:560px){.nova-work-showcase{padding:18px 13px!important}.nova-work-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:155px;gap:9px}.nova-work-card.nova-work-feature{grid-column:span 2;grid-row:span 1;height:225px}.nova-work-caption{right:10px;bottom:10px}.nova-work-caption b{font-size:12px}.nova-work-filters{gap:6px}.nova-work-filters button{padding:8px 11px;font-size:11px}.nova-work-all{font-size:11px}.nova-lightbox{padding:55px 12px}.nova-lightbox figure{max-width:96vw}.nova-lightbox-prev{right:5px}.nova-lightbox-next{left:5px}.nova-lightbox button{width:38px;height:38px}}
+@media(prefers-reduced-motion:reduce){.nova-work-card img,.nova-work-filters button{transition:none}}
+
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
@@ -378,7 +414,28 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
   <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1722606511282-e0352680558c?auto=format&fit=crop&w=1000&q=85')"><span>03</span><b>کمد دیواری</b><small>فضای ذخیره‌سازی اختصاصی</small></a>
  </div>
 </section>
-<section class="wrap projects" id="projects"><article class="project" role="img" aria-label="نمونه کابینت چوبی مدرن"></article><article class="project" role="img" aria-label="نمونه آشپزخانه تیره لوکس"></article><article class="project" role="img" aria-label="نمونه آشپزخانه روشن"></article><div class="project-intro"><h2>نمونه‌کارهای ما</h2><p>نگاهی به پروژه‌های اجرا شده توسط نوا کابینت</p><a href="#contact">مشاهده همه　←</a></div></section>
+<section class="wrap projects nova-work-showcase" id="projects">
+ <div class="nova-work-heading"><div><span class="eyebrow">SELECTED INSPIRATION</span><h2>فضاهایی برای زندگی بهتر</h2><p>برای شروع، سبک مورد علاقه‌ات را انتخاب کن و جزئیات هر فضا را ببین.</p></div><a class="nova-work-all" href="#nova-visit">برای پروژه خودم مشاوره می‌خواهم <span>←</span></a></div>
+ <div class="nova-work-filters" role="group" aria-label="فیلتر نمونه‌ها">
+  <button type="button" class="is-active" data-work-filter="all" aria-pressed="true">همه فضاها <span>۹</span></button>
+  <button type="button" data-work-filter="kitchen" aria-pressed="false">کابینت آشپزخانه</button>
+  <button type="button" data-work-filter="tv" aria-pressed="false">TV Wall</button>
+  <button type="button" data-work-filter="wardrobe" aria-pressed="false">کمد و کلوزت</button>
+ </div>
+ <div class="nova-work-grid">
+  <button class="nova-work-card nova-work-feature" type="button" data-category="kitchen" data-title="آشپزخانه مدرن با ترکیب چوب و سنگ" aria-label="نمایش آشپزخانه مدرن با ترکیب چوب و سنگ"><img src="https://images.unsplash.com/photo-1771287490583-ab03482ba338?auto=format&fit=crop&w=1400&q=88" alt="آشپزخانه مدرن با کابینت چوبی و سنگ روشن" loading="lazy"><span class="nova-work-caption"><small>آشپزخانه</small><b>گرمای چوب، ظرافت سنگ</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="kitchen" data-title="آشپزخانه مینیمال روشن" aria-label="نمایش آشپزخانه مینیمال روشن"><img src="https://images.unsplash.com/photo-1669211620495-00ad7993169a?auto=format&fit=crop&w=1000&q=88" alt="آشپزخانه روشن با کابینت مینیمال" loading="lazy"><span class="nova-work-caption"><small>آشپزخانه</small><b>سادگی مدرن</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="kitchen" data-title="آشپزخانه با کابینت گردویی" aria-label="نمایش آشپزخانه با کابینت گردویی"><img src="https://images.unsplash.com/photo-1770063817031-f3b98dff347f?auto=format&fit=crop&w=1000&q=88" alt="کابینت آشپزخانه با رنگ چوب" loading="lazy"><span class="nova-work-caption"><small>آشپزخانه</small><b>رنگ‌های طبیعی</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="kitchen" data-title="آشپزخانه معاصر با جزئیات تیره" aria-label="نمایش آشپزخانه معاصر با جزئیات تیره"><img src="https://images.unsplash.com/photo-1768413292078-a0ff5e27c487?auto=format&fit=crop&w=1000&q=88" alt="کابینت آشپزخانه با جزئیات تیره" loading="lazy"><span class="nova-work-caption"><small>آشپزخانه</small><b>کنتراست چشم‌نواز</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="tv" data-title="TV Wall چوبی و کنسول مینیمال" aria-label="نمایش تی وی وال چوبی و کنسول مینیمال"><img src="https://images.unsplash.com/photo-1724100689403-4df6db8f2564?auto=format&fit=crop&w=1200&q=88" alt="تی وی وال چوبی با کنسول مینیمال" loading="lazy"><span class="nova-work-caption"><small>TV WALL</small><b>دیوار شاخص خانه</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="tv" data-title="TV Wall با پنل دکوراتیو" aria-label="نمایش تی وی وال با پنل دکوراتیو"><img src="https://images.unsplash.com/photo-1696774277032-5ada7eea439c?auto=format&fit=crop&w=1000&q=88" alt="پنل دیواری تلویزیون و دکور چوبی" loading="lazy"><span class="nova-work-caption"><small>TV WALL</small><b>ترکیب بافت و نور</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="tv" data-title="دیوار تلویزیون مدرن" aria-label="نمایش دیوار تلویزیون مدرن"><img src="https://images.unsplash.com/photo-1759735218086-67f9f853ab8b?auto=format&fit=crop&w=1000&q=88" alt="دیوار تلویزیون مدرن با پنل روشن" loading="lazy"><span class="nova-work-caption"><small>TV WALL</small><b>سادگی یکپارچه</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="wardrobe" data-title="فضای کمد و ذخیره‌سازی مدرن" aria-label="نمایش فضای کمد و ذخیره سازی مدرن"><img src="https://images.unsplash.com/photo-1722606511282-e0352680558c?auto=format&fit=crop&w=1000&q=88" alt="کمد دیواری و فضای ذخیره سازی" loading="lazy"><span class="nova-work-caption"><small>کمد و کلوزت</small><b>نظم در تمام جزئیات</b></span><i>↗</i></button>
+  <button class="nova-work-card" type="button" data-category="wardrobe" data-title="کمد دیواری با طراحی ساده" aria-label="نمایش کمد دیواری با طراحی ساده"><img src="https://images.unsplash.com/photo-1722942432715-a08090322190?auto=format&fit=crop&w=1000&q=88" alt="فضای داخلی با طراحی چوبی و کمد" loading="lazy"><span class="nova-work-caption"><small>کمد و کلوزت</small><b>زیبایی کاربردی</b></span><i>↗</i></button>
+ </div>
+ <p class="nova-work-note">تصاویر این بخش برای نمایش سبک‌ها و ایده‌های طراحی هستند و لزوماً نمونه‌کار اجراشده نوا کابینت نیستند.</p>
+</section>
+<div class="nova-lightbox" id="novaLightbox" role="dialog" aria-modal="true" aria-label="نمایش تصویر" hidden><button class="nova-lightbox-close" type="button" aria-label="بستن">×</button><button class="nova-lightbox-prev" type="button" aria-label="تصویر قبلی">‹</button><figure><img id="novaLightboxImage" alt=""><figcaption id="novaLightboxCaption"></figcaption></figure><button class="nova-lightbox-next" type="button" aria-label="تصویر بعدی">›</button></div>
 <section class="wrap nova-panel nova-reveal" id="nova-process">
  <div class="nova-panel-head"><div class="eyebrow">FROM IDEA TO INSTALLATION</div><h2>مراحل اجرای پروژه</h2><p>از اولین گفت‌وگو تا تحویل نهایی، مسیر کار روشن و قابل پیگیری است.</p></div>
  <div class="nova-process-grid">
@@ -610,4 +667,24 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{e.pr
  if(motion){motion.checked=localStorage.getItem('novaMotionOff')==='1';document.body.classList.toggle('nova-motion-off',motion.checked);motion.addEventListener('change',()=>{document.body.classList.toggle('nova-motion-off',motion.checked);localStorage.setItem('novaMotionOff',motion.checked?'1':'0');});}
 })();
 </script>
+
+<script>
+(()=> {
+ const grid=document.querySelector('.nova-work-grid'),filters=[...document.querySelectorAll('[data-work-filter]')],cards=[...document.querySelectorAll('.nova-work-card')],box=document.getElementById('novaLightbox'),photo=document.getElementById('novaLightboxImage'),caption=document.getElementById('novaLightboxCaption');
+ if(!grid||!box||!cards.length)return;
+ let current=0,shown=cards;
+ function filter(type){shown=cards.filter(card=>type==='all'||card.dataset.category===type);cards.forEach(card=>card.hidden=!shown.includes(card));filters.forEach(btn=>{const active=btn.dataset.workFilter===type;btn.classList.toggle('is-active',active);btn.setAttribute('aria-pressed',String(active));});}
+ filters.forEach(btn=>btn.addEventListener('click',()=>filter(btn.dataset.workFilter)));
+ function open(index){current=(index+shown.length)%shown.length;const card=shown[current],img=card.querySelector('img');photo.src=img.src;photo.alt=img.alt;caption.textContent=card.dataset.title||img.alt;box.hidden=false;document.body.style.overflow='hidden';box.querySelector('.nova-lightbox-close').focus();}
+ function close(){box.hidden=true;document.body.style.overflow='';if(shown[current])shown[current].focus();}
+ cards.forEach(card=>card.addEventListener('click',()=>open(shown.indexOf(card))));
+ box.querySelector('.nova-lightbox-close').addEventListener('click',close);
+ box.querySelector('.nova-lightbox-prev').addEventListener('click',()=>open(current-1));
+ box.querySelector('.nova-lightbox-next').addEventListener('click',()=>open(current+1));
+ box.addEventListener('click',e=>{if(e.target===box)close();});
+ document.addEventListener('keydown',e=>{if(box.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowLeft')open(current+1);if(e.key==='ArrowRight')open(current-1);});
+ filter('all');
+})();
+</script>
+
 </body></html>
