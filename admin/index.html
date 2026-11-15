@@ -32,6 +32,11 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
       <button id="resetPassword" type="button">فراموشی / تنظیم رمز عبور</button>
       <button id="sendLink" type="button">ورود با لینک ایمیل</button>
     </div>
+    <form id="newPasswordForm" class="hidden">
+      <label for="newPassword">رمز عبور جدید</label>
+      <input id="newPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="حداقل ۸ کاراکتر">
+      <button type="submit">ذخیره رمز جدید</button>
+    </form>
     <div id="loginStatus" class="status" role="status" aria-live="polite">برای ورود، رمز عبور حساب مدیر را وارد کن. اگر رمز نداری، گزینه تنظیم رمز را بزن.</div>
   </section>
 
@@ -273,7 +278,29 @@ $('sendLink').addEventListener('click',async()=>{
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
 $('refresh').addEventListener('click',loadOrders);
 $('refreshAi').addEventListener('click',loadAiRequests);
-supabase.auth.onAuthStateChange((_event,session)=>{if(session) setTimeout(checkSession,0);});
+supabase.auth.onAuthStateChange((event,session)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    $('login').classList.remove('hidden');
+    $('dashboard').classList.add('hidden');
+    $('loginForm').classList.add('hidden');
+    $('newPasswordForm').classList.remove('hidden');
+    showMessage('loginStatus','لینک معتبر است. رمز عبور جدید را تعیین کن.');
+    return;
+  }
+  if(session) setTimeout(checkSession,0);
+});
+$('newPasswordForm').addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const button=$('newPasswordForm').querySelector('button');button.disabled=true;
+  const {error}=await supabase.auth.updateUser({password:$('newPassword').value});
+  button.disabled=false;
+  if(error){showMessage('loginStatus','ذخیره رمز جدید انجام نشد: '+error.message);return;}
+  $('newPassword').value='';
+  $('newPasswordForm').classList.add('hidden');
+  $('loginForm').classList.remove('hidden');
+  showMessage('loginStatus','رمز جدید ذخیره شد. اکنون با رمز جدید وارد شو.');
+  await supabase.auth.signOut();
+});
 checkSession();
 </script>
 </body>
