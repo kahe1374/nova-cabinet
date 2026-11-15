@@ -178,6 +178,49 @@ header{height:78px;position:absolute;z-index:5;top:0;left:0;right:0;background:l
 body.nova-motion-off *,body.nova-motion-off *:before,body.nova-motion-off *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 @media(max-width:650px){.nova-menu-trigger{top:10px;left:10px;width:42px;height:42px}.nav{padding-left:52px}.nova-drawer{padding-top:20px}}
 @media(prefers-reduced-motion:reduce){.nova-menu-trigger span,.nova-menu-backdrop,.nova-drawer{transition:none}}
+
+/* NOVA page rhythm and section hierarchy */
+:root{--nova-section-space:clamp(28px,4.2vw,58px)}
+main{display:flex;flex-direction:column;align-items:stretch;gap:0}
+main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
+.trust{margin:10px auto 34px;gap:12px}
+.projects{margin:0 auto 34px;padding:clamp(14px,2vw,22px);gap:16px}
+.ai{margin:0 auto 38px;padding:clamp(16px,2.4vw,26px);gap:20px}
+#services{margin:0 auto!important;padding:26px 16px 18px!important;border-top:1px solid #caa66b55;border-bottom:1px solid #caa66b55;background:linear-gradient(90deg,transparent,#21180f88,transparent)}
+#services h2{margin:8px 0 0;line-height:1.9}
+#about{margin:0 auto 40px!important;padding:18px 16px 22px!important;max-width:900px;border-bottom:1px solid #caa66b44;line-height:2.2}
+.nova-extra{margin:0 auto 42px;gap:clamp(22px,3vw,34px)}
+.nova-extra>.nova-panel{margin:0}
+.nova-panel{margin:0 auto 34px;padding:clamp(18px,3vw,34px);border-radius:24px}
+.nova-panel-head{margin-bottom:24px}
+.nova-panel-head h2{line-height:1.65}
+#nova-services-gallery,#nova-configurator,#nova-estimator,#nova-assistant,#nova-visit,#nova-process{margin:0 auto 34px}
+#nova-services-gallery{margin-top:0}
+#nova-configurator .nova-config-layout,#nova-assimator .nova-concierge{gap:24px}
+#nova-visit{margin-bottom:34px}
+#nova-process{margin-bottom:34px}
+#contact{margin:0 auto 24px;padding-top:16px;border-top:1px solid #caa66b55}
+.nova-float{z-index:30}
+@media(max-width:950px){
+ .trust{margin-bottom:28px}
+ .projects{margin-bottom:28px}
+ .ai{margin-bottom:32px}
+ .nova-panel{padding:20px}
+}
+@media(max-width:650px){
+ .trust{margin:8px auto 24px;gap:8px}
+ .trust-item{min-height:58px;padding:8px;font-size:11px}
+ .projects{margin-bottom:24px;gap:10px;padding:12px}
+ .project{height:145px}
+ .ai{margin-bottom:28px;gap:13px;padding:14px}
+ #services{padding:20px 12px 14px!important}
+ #services h2{font-size:18px!important}
+ #about{margin-bottom:28px!important;padding:13px 10px 17px!important}
+ .nova-extra{margin-bottom:30px;gap:20px}
+ .nova-panel,#nova-services-gallery,#nova-configurator,#nova-estimator,#nova-assistant,#nova-visit,#nova-process{margin-bottom:24px;padding:16px;border-radius:18px}
+ .nova-panel-head{margin-bottom:17px}
+ #contact{padding-top:12px}
+}
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
