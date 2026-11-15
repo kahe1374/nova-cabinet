@@ -124,13 +124,17 @@ header{height:78px;position:absolute;z-index:5;top:0;left:0;right:0;background:l
  <div class="nova-panel nova-reveal" id="nova-compare">
   <div class="nova-panel-head"><div class="eyebrow">STYLE COMPARISON</div><h2>سبک‌ها را کنار هم مقایسه کنید</h2><p>با حرکت دادن نوار، دو فضای الهام‌بخش را با هم ببینید.</p></div>
   <div class="nova-compare">
+   <div class="nova-material-tools" style="justify-content:center;flex-wrap:wrap">
+    <label for="novaCompareStyleA">سبک اول</label><select id="novaCompareStyleA" class="nova-brand-filter" aria-label="انتخاب سبک اول"><option value="dark">مدرن تیره</option><option value="wood">چوب گرم</option><option value="white">سفید مینیمال</option><option value="classic">کلاسیک روشن</option><option value="gray">طوسی و چوب</option><option value="black">مشکی و سنگ روشن</option></select>
+    <label for="novaCompareStyleB">سبک دوم</label><select id="novaCompareStyleB" class="nova-brand-filter" aria-label="انتخاب سبک دوم"><option value="wood">چوب گرم</option><option value="dark">مدرن تیره</option><option value="white">سفید مینیمال</option><option value="classic">کلاسیک روشن</option><option value="gray">طوسی و چوب</option><option value="black">مشکی و سنگ روشن</option></select>
+   </div>
    <div class="nova-compare-stage" id="novaCompareStage">
-    <img src="https://images.unsplash.com/photo-1721274505933-287be8b3b75f?auto=format&fit=crop&w=1600&q=85" alt="نمونه آشپزخانه با کابینت تیره و صفحه روشن" loading="lazy">
-    <div class="nova-compare-after" id="novaCompareAfter"><img src="https://images.unsplash.com/photo-1722248240035-140d76921981?auto=format&fit=crop&w=1600&q=85" alt="نمونه آشپزخانه با کابینت چوب روشن" loading="lazy"></div>
-    <span class="nova-compare-label left">چوب روشن</span><span class="nova-compare-label right">تیره و مدرن</span>
+    <img id="novaCompareImageA" src="https://images.unsplash.com/photo-1721274505933-287be8b3b75f?auto=format&fit=crop&w=1600&q=85" alt="نمونه آشپزخانه با کابینت مدرن تیره" loading="lazy">
+    <div class="nova-compare-after" id="novaCompareAfter"><img id="novaCompareImageB" src="https://images.unsplash.com/photo-1722248240035-140d76921981?auto=format&fit=crop&w=1600&q=85" alt="نمونه آشپزخانه با کابینت چوب گرم" loading="lazy"></div>
+    <span class="nova-compare-label left" id="novaCompareLabelB">چوب گرم</span><span class="nova-compare-label right" id="novaCompareLabelA">مدرن تیره</span>
    </div>
    <input id="novaCompareRange" type="range" min="0" max="100" value="50" aria-label="مقایسه دو سبک آشپزخانه">
-   <p class="nova-demo-note">این بخش نمونه‌ای الهام‌بخش از دو سبک متفاوت است و عکس قبل‌ و بعدِ یک پروژه واقعی نیست.</p>
+   <p class="nova-demo-note">دو سبک دلخواه را انتخاب کنید و با حرکت نوار، تفاوت آن‌ها را ببینید. تصاویر نمونه‌های الهام‌بخش هستند.</p>
   </div>
  </div>
  <div class="nova-panel nova-reveal" id="nova-materials">
@@ -206,8 +210,26 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{e.pr
 
 <script>
 (()=> {
- const range=document.getElementById('novaCompareRange'),after=document.getElementById('novaCompareAfter');
- if(range&&after)range.addEventListener('input',()=>{after.style.width=range.value+'%';});
+  const range=document.getElementById('novaCompareRange'),after=document.getElementById('novaCompareAfter');
+  if(range&&after)range.addEventListener('input',()=>{after.style.width=range.value+'%';});
+  const compareStyles={
+   dark:{label:'مدرن تیره',src:'https://images.unsplash.com/photo-1721274505933-287be8b3b75f?auto=format&fit=crop&w=1600&q=85'},
+   wood:{label:'چوب گرم',src:'https://images.unsplash.com/photo-1722248240035-140d76921981?auto=format&fit=crop&w=1600&q=85'},
+   white:{label:'سفید مینیمال',src:'https://images.unsplash.com/photo-1774578341941-cd784a0d41eb?auto=format&fit=crop&w=1600&q=85'},
+   classic:{label:'کلاسیک روشن',src:'https://images.unsplash.com/photo-1721396108215-8f442fcfe2df?auto=format&fit=crop&w=1600&q=85'},
+   gray:{label:'طوسی و چوب',src:'https://images.unsplash.com/photo-1778074976002-6e5d96cc294a?auto=format&fit=crop&w=1600&q=85'},
+   black:{label:'مشکی و سنگ روشن',src:'https://images.unsplash.com/photo-1722349671569-0e3567288496?auto=format&fit=crop&w=1600&q=85'}
+  };
+  const styleA=document.getElementById('novaCompareStyleA'),styleB=document.getElementById('novaCompareStyleB');
+  const imageA=document.getElementById('novaCompareImageA'),imageB=document.getElementById('novaCompareImageB');
+  const labelA=document.getElementById('novaCompareLabelA'),labelB=document.getElementById('novaCompareLabelB');
+  function updateCompare(){
+   const a=compareStyles[styleA?.value]||compareStyles.dark,b=compareStyles[styleB?.value]||compareStyles.wood;
+   if(imageA){imageA.src=a.src;imageA.alt='نمونه آشپزخانه '+a.label;}
+   if(imageB){imageB.src=b.src;imageB.alt='نمونه آشپزخانه '+b.label;}
+   if(labelA)labelA.textContent=a.label;if(labelB)labelB.textContent=b.label;
+  }
+  styleA?.addEventListener('change',updateCompare);styleB?.addEventListener('change',updateCompare);updateCompare();
  const materialButtons=[...document.querySelectorAll('.nova-material')],name=document.getElementById('novaMaterialName'),desc=document.getElementById('novaMaterialDesc'),code=document.getElementById('novaMaterialCode'),board=document.getElementById('novaMaterialBoard'),brandFilter=document.getElementById('novaBrandFilter');
  function chooseMaterial(button){materialButtons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));if(name)name.textContent=button.dataset.name||'';if(desc)desc.textContent=button.dataset.desc||'';if(code)code.textContent=button.dataset.code||'';if(board)board.style.background=button.dataset.look||'';}
  materialButtons.forEach(button=>button.addEventListener('click',()=>chooseMaterial(button)));
