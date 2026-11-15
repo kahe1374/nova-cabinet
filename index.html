@@ -221,6 +221,18 @@ main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
  .nova-panel-head{margin-bottom:17px}
  #contact{padding-top:12px}
 }
+
+/* NOVA page flow: clear visual groups and calmer spacing */
+.nova-anchor{display:block;position:relative;top:-90px;visibility:hidden}
+.nova-studio-heading,.nova-request-heading{grid-column:1/-1;text-align:center;max-width:760px;margin:0 auto 4px;padding:8px 12px 14px}
+.nova-studio-heading h2,.nova-request-heading h2{color:var(--gold2);font-size:clamp(23px,3vw,32px);margin:5px 0;line-height:1.6}
+.nova-studio-heading p,.nova-request-heading p{color:var(--muted);font-size:13px;margin:0;line-height:1.9}
+.nova-extra{align-items:stretch;gap:clamp(18px,2.5vw,28px);margin-top:8px;margin-bottom:42px}
+.nova-extra>.nova-panel{margin:0}
+.nova-request-group{display:grid;gap:clamp(18px,2.5vw,28px);margin:0 auto 42px}
+.nova-request-group>.nova-panel{margin:0}
+#nova-services-gallery{margin:0 auto 34px}
+@media(max-width:650px){.nova-studio-heading,.nova-request-heading{padding:4px 8px 10px}.nova-extra{gap:16px;margin-bottom:30px}.nova-request-group{gap:16px;margin-bottom:30px}}
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
@@ -246,12 +258,27 @@ main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
 
 <main><section class="hero" id="home"><div class="hero-copy"><div class="eyebrow">N O V A &nbsp; C A B I N E T</div><h1><span>زیبایی،</span> ماندگاری، آرامش</h1><p>طراحی و اجرای کابینت‌های لوکس و مدرن<br>با بالاترین کیفیت و جدیدترین متریال</p><div class="hero-actions"><a class="btn" href="#projects">مشاهده نمونه‌کارها　←</a><a class="video-link" href="#about"><i>▶</i> تماشای ویدیو</a></div></div><div class="hero-gallery" aria-label="گالری نمونه‌های تی‌وی‌وال و کابینت"><div class="gallery-ring"><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1770063817031-f3b98dff347f?auto=format&fit=crop&w=1400&q=88" alt="کابینت کلاسیک سفید"><span>کابینت کلاسیک سفید</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1768413292078-a0ff5e27c487?auto=format&fit=crop&w=1400&q=88" alt="کابینت شیشه‌ای دودی"><span>کابینت شیشه‌ای دودی</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1771287490583-ab03482ba338?auto=format&fit=crop&w=1400&q=88" alt="کابینت گردویی مدرن"><span>کابینت گردویی مدرن</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1773098587069-a57143b40fcc?auto=format&fit=crop&w=1400&q=88" alt="کابینت روشن مینیمال"><span>کابینت روشن مینیمال</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1749704647447-ab63fc360769?auto=format&fit=crop&w=1400&q=88" alt="کابینت چوبی یکدست"><span>کابینت چوبی یکدست</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1778074976002-6e5d96cc294a?auto=format&fit=crop&w=1400&q=88" alt="کابینت ترکیبی چوب و طوسی"><span>کابینت ترکیبی چوب و طوسی</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1762810931790-40b25e10b3e7?auto=format&fit=crop&w=1400&q=88" alt="کابینت طوسی تیره"><span>کابینت طوسی تیره</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1769745918779-f255f567664c?auto=format&fit=crop&w=1400&q=88" alt="کابینت چوبی کلاسیک"><span>کابینت چوبی کلاسیک</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1772567732996-bc693c4a016c?auto=format&fit=crop&w=1400&q=88" alt="کابینت مدرن ذغالی"><span>کابینت مدرن ذغالی</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1768578927302-0d85da43f34e?auto=format&fit=crop&w=1400&q=88" alt="ویترین کابینت آشپزخانه"><span>ویترین کابینت آشپزخانه</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1721743170649-dcdcdc889b1a?auto=format&fit=crop&w=1400&q=88" alt="کابینت چوبی روشن"><span>کابینت چوبی روشن</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1782898622998-899bb7183a12?auto=format&fit=crop&w=1400&q=88" alt="کابینت چوبی با سنگ مرمر"><span>کابینت چوبی با سنگ مرمر</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1722606491030-6b92e083fe30?auto=format&fit=crop&w=1400&q=88" alt="آشپزخانه با کابینت چوبی"><span>آشپزخانه با کابینت چوبی</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1774578341941-cd784a0d41eb?auto=format&fit=crop&w=1400&q=88" alt="کابینت سفید مدرن"><span>کابینت سفید مدرن</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1721614663452-a5897d6efb18?auto=format&fit=crop&w=1400&q=88" alt="کابینت چوبی و سفید"><span>کابینت چوبی و سفید</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1722349671569-0e3567288496?auto=format&fit=crop&w=1400&q=88" alt="کابینت با صفحه مرمر"><span>کابینت با صفحه مرمر</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1723468356954-8ed18cc926b1?auto=format&fit=crop&w=1400&q=88" alt="آشپزخانه باریک چوبی"><span>آشپزخانه باریک چوبی</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1768203052831-229e4a5c6283?auto=format&fit=crop&w=1400&q=88" alt="کابینت چوبی کلاسیک"><span>کابینت چوبی کلاسیک</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1779903726433-e479ea8794d0?auto=format&fit=crop&w=1400&q=88" alt="کابینت سفید با سنگ مرمر"><span>کابینت سفید با سنگ مرمر</span></figure><figure class="gallery-card"><img loading="lazy" src="https://images.unsplash.com/photo-1765766601532-90e9b96320c8?auto=format&fit=crop&w=1400&q=88" alt="آشپزخانه لوکس با کابینت"><span>آشپزخانه لوکس با کابینت</span></figure><figure class="gallery-card" data-cat="tv"><img loading="lazy" src="https://images.unsplash.com/photo-1724100689403-4df6db8f2564?auto=format&fit=crop&w=1400&q=88" alt="تی‌وی‌وال چوبی و کنسول مینیمال"><span>تی‌وی‌وال چوبی و کنسول مینیمال</span></figure><figure class="gallery-card" data-cat="tv"><img loading="lazy" src="https://images.unsplash.com/photo-1696774277032-5ada7eea439c?auto=format&fit=crop&w=1400&q=88" alt="تی‌وی‌وال با پنل چوبی"><span>تی‌وی‌وال با پنل چوبی</span></figure><figure class="gallery-card" data-cat="tv"><img loading="lazy" src="https://images.unsplash.com/photo-1759735218086-67f9f853ab8b?auto=format&fit=crop&w=1400&q=88" alt="تی‌وی‌وال مدرن با پنل روشن"><span>تی‌وی‌وال مدرن با پنل روشن</span></figure><figure class="gallery-card" data-cat="tv"><img loading="lazy" src="https://images.unsplash.com/photo-1734937743443-a50fff0c0b40?auto=format&fit=crop&w=1400&q=88" alt="تی‌وی‌وال و میز تلویزیون"><span>تی‌وی‌وال و میز تلویزیون</span></figure><figure class="gallery-card" data-cat="tv"><img loading="lazy" src="https://images.unsplash.com/photo-1794250346636-ea20b56e8528?auto=format&fit=crop&w=1400&q=88" alt="تی‌وی‌وال مدرن و دکوراتیو"><span>تی‌وی‌وال مدرن و دکوراتیو</span></figure><figure class="gallery-card" data-cat="modern"><img loading="lazy" src="https://images.unsplash.com/photo-1771371282665-545256b20dca?auto=format&fit=crop&w=1400&q=88" alt="کابینت مدرن چوبی و پنجره قدی"><span>کابینت مدرن چوبی و پنجره قدی</span></figure><figure class="gallery-card" data-cat="modern"><img loading="lazy" src="https://images.unsplash.com/photo-1722248240035-140d76921981?auto=format&fit=crop&w=1400&q=88" alt="کابینت مدرن چوب روشن و طوسی"><span>کابینت مدرن چوب روشن و طوسی</span></figure><figure class="gallery-card" data-cat="modern"><img loading="lazy" src="https://images.unsplash.com/photo-1722942432715-a08090322190?auto=format&fit=crop&w=1400&q=88" alt="کابینت سفید و صفحه چوبی"><span>کابینت سفید و صفحه چوبی</span></figure><figure class="gallery-card" data-cat="modern"><img loading="lazy" src="https://images.unsplash.com/photo-1721274505933-287be8b3b75f?auto=format&fit=crop&w=1400&q=88" alt="کابینت مشکی و صفحه روشن"><span>کابینت مشکی و صفحه روشن</span></figure><figure class="gallery-card" data-cat="neoclassical"><img loading="lazy" src="https://images.unsplash.com/photo-1721396108215-8f442fcfe2df?auto=format&fit=crop&w=1400&q=88" alt="کابینت سفید قاب‌دار سبک شیکر"><span>کابینت سفید قاب‌دار سبک شیکر</span></figure></div></div><aside class="side-note"><div><b>◇</b>طراحی سه‌بعدی</div><div><b>♢</b>متریال لوکس</div><div><b>♧</b>مشاوره تخصصی</div></aside></section>
 <div class="wrap trust"><div class="trust-item"><b>♧</b>اجرای دقیق و حرفه‌ای</div><div class="trust-item"><b>⚒</b>طراحی اختصاصی</div><div class="trust-logo">N<small>C A B I N E T</small></div><div class="trust-item"><b>♢</b>استفاده از متریال درجه یک</div><div class="trust-item"><b>✧</b>ضمانت کیفیت</div></div>
+<span id="services" class="nova-anchor"></span><span id="about" class="nova-anchor"></span>
+<section class="wrap nova-panel nova-reveal" id="nova-services-gallery">
+ <div class="nova-panel-head"><div class="eyebrow">OUR CRAFT</div><h2>خدمات نوا کابینت</h2><p>طراحی و اجرای هماهنگ برای تمام فضاهای چوبی خانه</p></div>
+ <div class="nova-service-grid">
+  <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1771287490583-ab03482ba338?auto=format&fit=crop&w=1000&q=85')"><span>01</span><b>کابینت آشپزخانه</b><small>مدرن، نئوکلاسیک و کلاسیک</small></a>
+  <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1724100689403-4df6db8f2564?auto=format&fit=crop&w=1000&q=85')"><span>02</span><b>TV Wall</b><small>دیوار شاخص و فضای رسانه</small></a>
+  <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1722606511282-e0352680558c?auto=format&fit=crop&w=1000&q=85')"><span>03</span><b>کمد دیواری</b><small>فضای ذخیره‌سازی اختصاصی</small></a>
+ </div>
+</section>
 <section class="wrap projects" id="projects"><article class="project" role="img" aria-label="نمونه کابینت چوبی مدرن"></article><article class="project" role="img" aria-label="نمونه آشپزخانه تیره لوکس"></article><article class="project" role="img" aria-label="نمونه آشپزخانه روشن"></article><div class="project-intro"><h2>نمونه‌کارهای ما</h2><p>نگاهی به پروژه‌های اجرا شده توسط نوا کابینت</p><a href="#contact">مشاهده همه　←</a></div></section>
-<section class="wrap ai" id="ai-design"><div class="ai-art" role="img" aria-label="طراحی سه بعدی آشپزخانه"></div><div class="ai-copy"><div class="eyebrow">NOVA AI DESIGN</div><h2>آشپزخانه‌ات رو با هوش مصنوعی طراحی کن!</h2><p>عکس آشپزخانه‌ات را بفرست، سبک و رنگ مورد علاقه‌ات را انتخاب کن تا برای دریافت طرح و برآورد هزینه راهنمایی‌ات کنیم.</p><a class="btn" href="#aiDesignForm">شروع طراحی هوشمند　✧</a></div>
-<form class="ai-form" id="aiDesignForm"><input required name="name" placeholder="نام و نام خانوادگی" aria-label="نام و نام خانوادگی"><input required name="phone" type="tel" inputmode="tel" pattern="(09[0-9]{9}|\+989[0-9]{9}|00989[0-9]{9})" placeholder="شماره موبایل" aria-label="شماره موبایل"><input name="city" placeholder="شهر" aria-label="شهر"><select required name="design_mode" aria-label="حالت طراحی"><option value="">حالت طراحی</option><option value="preserve">حفظ ساختار فعلی</option><option value="free">طراحی آزاد</option></select><select required name="style" aria-label="سبک طراحی"><option value="">سبک طراحی</option><option>مدرن و مینیمال</option><option>نئوکلاسیک</option><option>لوکس</option><option>کلاسیک</option><option>پیشنهاد طراح</option></select><input name="door_material" placeholder="جنس درب / متریال"><input name="countertop_material" placeholder="جنس صفحه کابینت"><input name="material_codes" placeholder="کد رنگ یا متریال (اختیاری)"><label class="upload"><b>⇧</b>عکس آشپزخانه خود را آپلود کنید<input required type="file" name="design_file" accept="image/jpeg,image/png,image/webp"></label><textarea name="instructions" placeholder="توضیحات و خواسته‌های شما"></textarea><label class="note"><input required type="checkbox" name="consent"> هزینه طراحی هوشمند پیش از شروع اعلام و با تأیید من انجام شود.</label><button class="btn" type="submit" id="aiDesignSubmit">ثبت درخواست طراحی ✧</button><div class="note" id="aiDesignStatus">ثبت درخواست و بارگذاری فایل رایگان است؛ تولید خروجی هوش مصنوعی پس از اعلام هزینه و تأیید شما انجام می‌شود.</div></form></section>
-<section class="wrap" id="services" style="padding:25px 0 12px;text-align:center"><div class="eyebrow">OUR SERVICES</div><h2 style="color:var(--gold2);font-size:23px">کابینت آشپزخانه　 |　 تی‌وی‌وال　 |　 کمد دیواری</h2></section><section class="wrap" id="about" style="padding:8px 0 20px;text-align:center;color:var(--muted);font-size:13px">نوا کابینت؛ طراحی اختصاصی و اجرای دقیق فضاهای ماندگار برای خانه شما.</section>
-
-<section class="wrap nova-extra" aria-label="امکانات تعاملی نوا کابینت">
+<section class="wrap nova-panel nova-reveal" id="nova-process">
+ <div class="nova-panel-head"><div class="eyebrow">FROM IDEA TO INSTALLATION</div><h2>مراحل اجرای پروژه</h2><p>از اولین گفت‌وگو تا تحویل نهایی، مسیر کار روشن و قابل پیگیری است.</p></div>
+ <div class="nova-process-grid">
+  <div><i>01</i><b>مشاوره و نیازسنجی</b><p>شناخت فضا، خواسته‌ها، سبک و بودجه</p></div>
+  <div><i>02</i><b>اندازه‌گیری و طراحی</b><p>بررسی ابعاد و آماده‌سازی طرح پیشنهادی</p></div>
+  <div><i>03</i><b>انتخاب متریال و تأیید</b><p>انتخاب ورق، صفحه، یراق و جزئیات</p></div>
+  <div><i>04</i><b>ساخت و کنترل کیفیت</b><p>آماده‌سازی قطعات و بررسی پیش از نصب</p></div>
+  <div><i>05</i><b>نصب و تحویل</b><p>اجرای نهایی، رگلاژ و تحویل پروژه</p></div>
+ </div>
+</section>
+\n<section class="wrap nova-extra" aria-label="استودیوی طراحی نوا">
  <div class="nova-panel nova-reveal" id="nova-compare">
   <div class="nova-panel-head"><div class="eyebrow">STYLE COMPARISON</div><h2>سبک‌ها را کنار هم مقایسه کنید</h2><p>با حرکت دادن نوار، دو فضای الهام‌بخش را با هم ببینید.</p></div>
   <div class="nova-compare">
@@ -294,16 +321,6 @@ main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
   </div>
   <div class="nova-catalog-links"><a href="https://sitechoob.ir/brands/pakchoob" target="_blank" rel="noopener">مشاهده دکورهای پاک‌چوب</a><a href="https://www.anadoluucler.com/agt-trendy-panel-renkleri" target="_blank" rel="noopener">کاتالوگ رنگ AGT</a><a href="https://darichoob.com/برند/decopanel/" target="_blank" rel="noopener">اطلاعات کاتالوگ دکوپنل</a></div><p class="nova-stock-note">رنگ‌های روی نمایشگر پیش‌نمایش تقریبی هستند؛ موجودی، سری تولید و کد دقیق دکوپنل باید پیش از سفارش با فروشنده تأیید شود. دکوپنل فعلاً به‌صورت گروه‌های طرح نمایش داده شده، نه کدهای تأییدنشده.</p><div class="nova-material-preview"><div class="nova-material-text"><strong id="novaMaterialName">مشکی براق</strong><p id="novaMaterialDesc">ورق هایگلاس مشکی؛ مناسب ترکیب با سفید، کرم و طرح چوب.</p><small id="novaMaterialCode">AGT 6002 — HG New Black</small></div><div class="nova-material-board" id="novaMaterialBoard" aria-label="پیش‌نمایش بافت انتخاب‌شده"></div></div>
  </div>
-</section>
-
-<section class="wrap nova-panel nova-reveal" id="nova-services-gallery">
- <div class="nova-panel-head"><div class="eyebrow">OUR CRAFT</div><h2>خدمات نوا کابینت</h2><p>طراحی و اجرای هماهنگ برای تمام فضاهای چوبی خانه</p></div>
- <div class="nova-service-grid">
-  <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1771287490583-ab03482ba338?auto=format&fit=crop&w=1000&q=85')"><span>01</span><b>کابینت آشپزخانه</b><small>مدرن، نئوکلاسیک و کلاسیک</small></a>
-  <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1724100689403-4df6db8f2564?auto=format&fit=crop&w=1000&q=85')"><span>02</span><b>TV Wall</b><small>دیوار شاخص و فضای رسانه</small></a>
-  <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1722606511282-e0352680558c?auto=format&fit=crop&w=1000&q=85')"><span>03</span><b>کمد دیواری</b><small>فضای ذخیره‌سازی اختصاصی</small></a>
- </div>
-</section>
 <section class="wrap nova-panel nova-reveal" id="nova-configurator">
  <div class="nova-panel-head"><div class="eyebrow">NOVA COLOR LAB</div><h2>رنگ کابینت را امتحان کنید</h2><p>یک پیش‌نمایش تعاملی برای انتخاب حال‌وهوای رنگ؛ رنگ نهایی باید با نمونه فیزیکی ورق تطبیق داده شود.</p></div>
  <div class="nova-config-layout">
@@ -320,20 +337,10 @@ main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
  </div>
  <p class="nova-demo-note">این ابزار برای انتخاب اولیه است؛ به‌دلیل تفاوت نمایشگر، نور محیط و سری تولید، رنگ واقعی فقط با نمونه ورق تأیید می‌شود.</p>
 </section>
-<section class="wrap nova-panel nova-reveal" id="nova-estimator">
- <div class="nova-panel-head"><div class="eyebrow">PROJECT ESTIMATOR</div><h2>برآورد اولیه پروژه</h2><p>اطلاعات پروژه را وارد کنید تا خلاصه نیازتان برای استعلام قیمت آماده شود.</p></div>
- <form id="novaEstimateForm" class="nova-estimate-grid">
-  <label>نوع پروژه<select name="project"><option>کابینت آشپزخانه</option><option>TV Wall</option><option>کمد دیواری</option><option>ترکیبی</option></select></label>
-  <label>متراژ تقریبی (متر طول)<input name="meters" type="number" min="1" max="100" step="0.5" value="8" required></label>
-  <label>سبک<select name="style"><option>مدرن</option><option>نئوکلاسیک</option><option>کلاسیک</option><option>مینیمال</option></select></label>
-  <label>جنس درب<select name="material"><option>MDF ملامینه</option><option>هایگلاس</option><option>سوپرمات</option><option>پلی‌اورتان / رنگ</option><option>هنوز انتخاب نکرده‌ام</option></select></label>
-  <label class="nova-estimate-wide">توضیحات<textarea name="details" rows="3" placeholder="ابعاد، شهر، زمان اجرا یا توضیحات دیگر"></textarea></label>
-  <div class="nova-estimate-result" id="novaEstimateResult">متراژ واردشده: ۸ متر طول — مبلغ نهایی پس از بررسی ابعاد، نقشه، یراق‌آلات و متریال اعلام می‌شود.</div>
-  <button class="btn" type="submit">دریافت استعلام در واتساپ</button>
- </form>
- <p class="nova-demo-note">این فرم قیمت ساختگی نمایش نمی‌دهد؛ چون قیمت ورق، یراق و اجرا باید بر اساس انتخاب و استعلام روز محاسبه شود.</p>
+
 </section>
 
+<div class="wrap nova-request-group"><div class="nova-request-heading"><div class="eyebrow">START YOUR PROJECT</div><h2>شروع سفارش و دریافت مشاوره</h2><p>هر طور راحت‌تری شروع کن؛ مشاوره، برآورد یا بازدید حضوری.</p></div>
 <section class="wrap nova-panel nova-reveal" id="nova-assistant">
  <div class="nova-panel-head"><div class="eyebrow">NOVA DESIGN CONCIERGE</div><h2>مشاور هوشمند نوا</h2><p>چند انتخاب ساده انجام دهید تا پیشنهاد اولیه متناسب با پروژه‌تان آماده شود.</p></div>
  <div class="nova-concierge">
@@ -349,6 +356,20 @@ main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
   </form>
  </div>
 </section>
+<section class="wrap nova-panel nova-reveal" id="nova-estimator">
+ <div class="nova-panel-head"><div class="eyebrow">PROJECT ESTIMATOR</div><h2>برآورد اولیه پروژه</h2><p>اطلاعات پروژه را وارد کنید تا خلاصه نیازتان برای استعلام قیمت آماده شود.</p></div>
+ <form id="novaEstimateForm" class="nova-estimate-grid">
+  <label>نوع پروژه<select name="project"><option>کابینت آشپزخانه</option><option>TV Wall</option><option>کمد دیواری</option><option>ترکیبی</option></select></label>
+  <label>متراژ تقریبی (متر طول)<input name="meters" type="number" min="1" max="100" step="0.5" value="8" required></label>
+  <label>سبک<select name="style"><option>مدرن</option><option>نئوکلاسیک</option><option>کلاسیک</option><option>مینیمال</option></select></label>
+  <label>جنس درب<select name="material"><option>MDF ملامینه</option><option>هایگلاس</option><option>سوپرمات</option><option>پلی‌اورتان / رنگ</option><option>هنوز انتخاب نکرده‌ام</option></select></label>
+  <label class="nova-estimate-wide">توضیحات<textarea name="details" rows="3" placeholder="ابعاد، شهر، زمان اجرا یا توضیحات دیگر"></textarea></label>
+  <div class="nova-estimate-result" id="novaEstimateResult">متراژ واردشده: ۸ متر طول — مبلغ نهایی پس از بررسی ابعاد، نقشه، یراق‌آلات و متریال اعلام می‌شود.</div>
+  <button class="btn" type="submit">دریافت استعلام در واتساپ</button>
+ </form>
+ <p class="nova-demo-note">این فرم قیمت ساختگی نمایش نمی‌دهد؛ چون قیمت ورق، یراق و اجرا باید بر اساس انتخاب و استعلام روز محاسبه شود.</p>
+</section>
+
 <section class="wrap nova-panel nova-reveal" id="nova-visit">
  <div class="nova-visit-head"><div><div class="eyebrow">BOOK A MEASUREMENT VISIT</div><h2>درخواست بازدید و اندازه‌گیری</h2><p class="nova-visit-note">زمان پیشنهادی خود را ثبت کنید؛ درخواست از طریق واتساپ ارسال می‌شود و پس از هماهنگی تیم نوا قطعی خواهد شد.</p></div><div class="seal" aria-hidden="true">✦</div></div>
  <form class="nova-visit-form" id="novaVisitForm">
@@ -362,17 +383,10 @@ main>section:not(.hero),main>.wrap.trust{scroll-margin-top:88px}
   <button class="btn" type="submit">ارسال درخواست بازدید در واتساپ　↗</button>
  </form>
 </section>
-\n<section class="wrap nova-panel nova-reveal" id="nova-process">
- <div class="nova-panel-head"><div class="eyebrow">FROM IDEA TO INSTALLATION</div><h2>مراحل اجرای پروژه</h2><p>از اولین گفت‌وگو تا تحویل نهایی، مسیر کار روشن و قابل پیگیری است.</p></div>
- <div class="nova-process-grid">
-  <div><i>01</i><b>مشاوره و نیازسنجی</b><p>شناخت فضا، خواسته‌ها، سبک و بودجه</p></div>
-  <div><i>02</i><b>اندازه‌گیری و طراحی</b><p>بررسی ابعاد و آماده‌سازی طرح پیشنهادی</p></div>
-  <div><i>03</i><b>انتخاب متریال و تأیید</b><p>انتخاب ورق، صفحه، یراق و جزئیات</p></div>
-  <div><i>04</i><b>ساخت و کنترل کیفیت</b><p>آماده‌سازی قطعات و بررسی پیش از نصب</p></div>
-  <div><i>05</i><b>نصب و تحویل</b><p>اجرای نهایی، رگلاژ و تحویل پروژه</p></div>
- </div>
-</section>
-\n<div class="nova-float" aria-label="راه‌های ارتباطی سریع"><a href="https://wa.me/989367374312" target="_blank" rel="noopener" aria-label="پیام در واتساپ" title="واتساپ">◉</a><a href="tel:09105348612" aria-label="تماس تلفنی" title="تماس">☎</a></div>
+\n</div>
+<section class="wrap ai" id="ai-design"><div class="ai-art" role="img" aria-label="طراحی سه بعدی آشپزخانه"></div><div class="ai-copy"><div class="eyebrow">NOVA AI DESIGN</div><h2>آشپزخانه‌ات رو با هوش مصنوعی طراحی کن!</h2><p>عکس آشپزخانه‌ات را بفرست، سبک و رنگ مورد علاقه‌ات را انتخاب کن تا برای دریافت طرح و برآورد هزینه راهنمایی‌ات کنیم.</p><a class="btn" href="#aiDesignForm">شروع طراحی هوشمند　✧</a></div>
+<form class="ai-form" id="aiDesignForm"><input required name="name" placeholder="نام و نام خانوادگی" aria-label="نام و نام خانوادگی"><input required name="phone" type="tel" inputmode="tel" pattern="(09[0-9]{9}|\+989[0-9]{9}|00989[0-9]{9})" placeholder="شماره موبایل" aria-label="شماره موبایل"><input name="city" placeholder="شهر" aria-label="شهر"><select required name="design_mode" aria-label="حالت طراحی"><option value="">حالت طراحی</option><option value="preserve">حفظ ساختار فعلی</option><option value="free">طراحی آزاد</option></select><select required name="style" aria-label="سبک طراحی"><option value="">سبک طراحی</option><option>مدرن و مینیمال</option><option>نئوکلاسیک</option><option>لوکس</option><option>کلاسیک</option><option>پیشنهاد طراح</option></select><input name="door_material" placeholder="جنس درب / متریال"><input name="countertop_material" placeholder="جنس صفحه کابینت"><input name="material_codes" placeholder="کد رنگ یا متریال (اختیاری)"><label class="upload"><b>⇧</b>عکس آشپزخانه خود را آپلود کنید<input required type="file" name="design_file" accept="image/jpeg,image/png,image/webp"></label><textarea name="instructions" placeholder="توضیحات و خواسته‌های شما"></textarea><label class="note"><input required type="checkbox" name="consent"> هزینه طراحی هوشمند پیش از شروع اعلام و با تأیید من انجام شود.</label><button class="btn" type="submit" id="aiDesignSubmit">ثبت درخواست طراحی ✧</button><div class="note" id="aiDesignStatus">ثبت درخواست و بارگذاری فایل رایگان است؛ تولید خروجی هوش مصنوعی پس از اعلام هزینه و تأیید شما انجام می‌شود.</div></form></section>
+<div class="nova-float" aria-label="راه‌های ارتباطی سریع"><a href="https://wa.me/989367374312" target="_blank" rel="noopener" aria-label="پیام در واتساپ" title="واتساپ">◉</a><a href="tel:09105348612" aria-label="تماس تلفنی" title="تماس">☎</a></div>
 
 <section class="wrap" id="contact"><div class="foot"><span>© تمامی حقوق محفوظ است. نوا کابینت</span><div class="foot-links"><a href="#">◎</a><a href="https://t.me/">➤</a><a href="#">◎</a></div><div class="foot-contacts"><a href="https://wa.me/989367374312" target="_blank" rel="noopener">ارتباط از طریق واتساپ　☏</a><a href="tel:09105348612">تماس با ما　☎</a></div></div></section></main>
 <script type="module">
