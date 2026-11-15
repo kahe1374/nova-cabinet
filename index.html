@@ -58,8 +58,11 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{e.pr
  const [prevBtn,count,nextBtn]=[controls.children[0],controls.children[1],controls.children[2]];
  function render(){cards.forEach((card,i)=>{card.classList.toggle('is-active',i===current);card.classList.toggle('is-prev',i===(current-1+cards.length)%cards.length);card.classList.toggle('is-next',i===(current+1)%cards.length);});count.textContent=(current+1)+' / '+cards.length;}
  function go(step){current=(current+step+cards.length)%cards.length;render();restart();}
- function restart(){clearInterval(timer);timer=setInterval(()=>{current=(current+1)%cards.length;render();},6500);}
+ function restart(){clearInterval(timer);timer=setInterval(()=>{current=(current+1)%cards.length;render();},10000);}
  prevBtn.addEventListener('click',()=>go(-1));nextBtn.addEventListener('click',()=>go(1));
+ let touchStartX=0,touchStartY=0;
+ gallery.addEventListener('touchstart',e=>{if(!e.touches.length)return;touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY;clearInterval(timer);},{passive:true});
+ gallery.addEventListener('touchend',e=>{if(!e.changedTouches.length)return;const dx=e.changedTouches[0].clientX-touchStartX,dy=e.changedTouches[0].clientY-touchStartY;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy))go(dx<0?1:-1);else restart();},{passive:true});
  gallery.addEventListener('mouseenter',()=>clearInterval(timer));gallery.addEventListener('mouseleave',restart);
  gallery.addEventListener('focusin',()=>clearInterval(timer));gallery.addEventListener('focusout',restart);
  render();restart();
