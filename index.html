@@ -52,13 +52,15 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{e.pr
 </script>
 <script>
 (()=>{const gallery=document.querySelector('.hero-gallery'),ring=gallery?.querySelector('.gallery-ring');if(!ring)return;
- const cards=[...ring.querySelectorAll('.gallery-card')];if(!cards.length)return;
- // Shuffle the existing photo order once per calendar day.
- const today=new Date(),seed=today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate();
- let state=seed>>>0;const random=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
- for(let i=cards.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]];}
- cards.forEach(card=>ring.appendChild(card));
- let current=0,timer;
+ const pool=[...ring.querySelectorAll('.gallery-card')];if(!pool.length)return;
+ // Keep a fixed order within each monthly selection; select a different subset each month.
+ const now=new Date(),monthSeed=now.getFullYear()*12+now.getMonth();
+ let state=(monthSeed+0x9e3779b9)>>>0;const random=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};
+ const shuffled=[...pool];for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
+ const monthlySet=shuffled.slice(0,Math.min(20,shuffled.length));
+ const selected=new Set(monthlySet);pool.forEach(card=>{if(!selected.has(card))card.remove();});
+ monthlySet.forEach(card=>ring.appendChild(card));
+ const cards=monthlySet;let current=0,timer;
  const controls=document.createElement('div');controls.className='coverflow-controls';controls.innerHTML='<button type="button" aria-label="تصویر قبلی">‹</button><span class="coverflow-count" aria-live="polite"></span><button type="button" aria-label="تصویر بعدی">›</button>';gallery.appendChild(controls);
  const [prevBtn,count,nextBtn]=[controls.children[0],controls.children[1],controls.children[2]];
  function render(){cards.forEach((card,i)=>{card.classList.toggle('is-active',i===current);card.classList.toggle('is-prev',i===(current-1+cards.length)%cards.length);card.classList.toggle('is-next',i===(current+1)%cards.length);});count.textContent=(current+1)+' / '+cards.length;}
