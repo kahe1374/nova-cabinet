@@ -48,7 +48,7 @@ const SUPABASE_URL = 'https://sjapgxjllnlttrhjxkez.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
 const OWNER_EMAIL = 'vahiiidk74@gmail.com';
 const REDIRECT_URL = 'https://kahe1374.github.io/nova-cabinet/admin/';
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
 const $ = (id) => document.getElementById(id);
 const statusLabels = {
   new:'جدید', under_review:'در حال بررسی', awaiting_quote_approval:'در انتظار تأیید پیش‌فاکتور',
@@ -248,7 +248,7 @@ $('loginForm').addEventListener('submit',async (event)=>{
   });
   button.disabled=false;
   if(error){showMessage('loginStatus','ارسال لینک انجام نشد: '+error.message);return;}
-  showMessage('loginStatus','لینک ورود به ایمیل ارسال شد. فقط آخرین ایمیل را باز کن و لینک را یک‌بار بزن؛ سپس باید پنل باز شود.');
+  showMessage('loginStatus','لینک ورود ارسال شد. فقط جدیدترین ایمیل را باز کن و لینک را یک‌بار بزن. اگر چند ایمیل داری، لینک‌های قبلی را استفاده نکن.');
 });
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
 $('refresh').addEventListener('click',loadOrders);
