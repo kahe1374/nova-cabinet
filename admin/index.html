@@ -56,7 +56,9 @@ const statusLabels = {
   quality_control:'کنترل کیفیت', ready_for_delivery:'آماده تحویل', delivered:'تحویل شده',
   completed:'تکمیل شده', cancelled:'لغو شده'
 };
-const allowedStatuses = Object.keys(statusLabels);\nconst aiStatusLabels={awaiting_payment:'در انتظار پرداخت',queued:'در صف طراحی',processing:'در حال طراحی',preview_ready:'پیش‌نمایش آماده',revision_requested:'درخواست اصلاح',completed:'تکمیل شده',cancelled:'لغو شده'};\nconst paymentLabels={pending:'در انتظار پرداخت',paid:'پرداخت شده',refunded:'عودت وجه'};
+const allowedStatuses = Object.keys(statusLabels);
+const aiStatusLabels={awaiting_payment:'در انتظار پرداخت',queued:'در صف طراحی',processing:'در حال طراحی',preview_ready:'پیش‌نمایش آماده',revision_requested:'درخواست اصلاح',completed:'تکمیل شده',cancelled:'لغو شده'};
+const paymentLabels={pending:'در انتظار پرداخت',paid:'پرداخت شده',refunded:'عودت وجه'};
 let currentRole = null;
 
 function showMessage(id, message) { $(id).textContent = message; }
@@ -75,11 +77,12 @@ async function loadOrders() {
   for (const order of data ?? []) {
     const tr = document.createElement('tr');
     const customer = Array.isArray(order.customers) ? order.customers[0] : order.customers;
-    const customerCell = [customer?.full_name,customer?.mobile].filter(Boolean).join(' · ') || '—';\n    for (const value of [order.order_number,customerCell,order.title,statusLabels[order.status] ?? order.status,new Date(order.created_at).toLocaleString('fa-IR')]) {
+    const customerCell = [customer?.full_name,customer?.mobile].filter(Boolean).join(' · ') || '—';
+    for (const value of [order.order_number,customerCell,order.title,statusLabels[order.status] ?? order.status,new Date(order.created_at).toLocaleString('fa-IR')]) {
       const td = document.createElement('td'); td.textContent = value ?? '—'; tr.append(td);
     }
     const action = document.createElement('td');
-    if (currentRole === 'owner' || currentRole === 'factory_manager') {
+    if (currentRole === 'owner') {
       const select = document.createElement('select');
       for (const [value,label] of Object.entries(statusLabels)) {
         const option = document.createElement('option'); option.value=value; option.textContent=label; option.selected=value===order.status; select.append(option);
@@ -101,9 +104,12 @@ async function loadOrders() {
     }
     tr.append(action); $('ordersBody').append(tr);
   }
-  showMessage('dashStatus',data?.length ? 'آخرین '+data.length+' سفارش نمایش داده شده است.' : 'هنوز سفارشی ثبت نشده است.');\n  await loadAiRequests();
+  showMessage('dashStatus',data?.length ? 'آخرین '+data.length+' سفارش نمایش داده شده است.' : 'هنوز سفارشی ثبت نشده است.');
+  await loadAiRequests();
 }
-\nasync function loadAiRequests(){showMessage('aiDashStatus','در حال دریافت درخواست‌های طراحی...');const {data,error}=await supabase.from('ai_design_requests').select('id,request_number,full_name,mobile,design_mode,style,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at').order('created_at',{ascending:false}).limit(100);if(error){showMessage('aiDashStatus','دریافت درخواست‌ها ناموفق بود: '+error.message);return;}const body=$('aiRequestsBody');body.replaceChildren();for(const item of data??[]){const tr=document.createElement('tr');const vals=[item.request_number,item.full_name+' · '+item.mobile,item.style+' · '+(item.design_mode==='preserve'?'حفظ ساختار':'طراحی آزاد')];for(const val of vals){const td=document.createElement('td');td.textContent=val??'—';tr.append(td);}const fileCell=document.createElement('td');if(item.file_key){const link=document.createElement('button');link.type='button';link.textContent=item.upload_completed_at?'مشاهده فایل':'فایل ثبت نشده';link.disabled=!item.upload_completed_at;link.addEventListener('click',async()=>{const {data:linkData,error:linkError}=await supabase.storage.from('nova-ai-designs').createSignedUrl(item.file_key,300);if(linkError){showMessage('aiDashStatus','دریافت لینک فایل ناموفق بود: '+linkError.message);return;}window.open(linkData.signedUrl,'_blank','noopener');});fileCell.append(link);}else fileCell.textContent='—';tr.append(fileCell);const pay=document.createElement('td');const paySelect=document.createElement('select');for(const [v,l] of Object.entries(paymentLabels)){const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===item.payment_status;paySelect.append(o);}pay.append(paySelect);tr.append(pay);const stat=document.createElement('td');const statusSelect=document.createElement('select');for(const [v,l] of Object.entries(aiStatusLabels)){const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===item.status;statusSelect.append(o);}stat.append(statusSelect);tr.append(stat);const note=document.createElement('td');const noteInput=document.createElement('input');noteInput.value=item.admin_note??'';noteInput.placeholder='یادداشت داخلی';note.append(noteInput);tr.append(note);const action=document.createElement('td');const save=document.createElement('button');save.type='button';save.textContent='ذخیره';save.addEventListener('click',async()=>{save.disabled=true;const {error:saveError}=await supabase.from('ai_design_requests').update({payment_status:paySelect.value,status:statusSelect.value,admin_note:noteInput.value,updated_at:new Date().toISOString()}).eq('id',item.id);save.disabled=false;if(saveError){showMessage('aiDashStatus','ذخیره تغییرات ناموفق بود: '+saveError.message);return;}showMessage('aiDashStatus','تغییرات درخواست '+item.request_number+' ذخیره شد.');await loadAiRequests();});action.append(save);tr.append(action);body.append(tr);}showMessage('aiDashStatus',data?.length?'تعداد '+data.length+' درخواست طراحی نمایش داده شده است.':'هنوز درخواست طراحی هوشمندی ثبت نشده است.');}\nasync function checkSession() {
+
+async function loadAiRequests(){showMessage('aiDashStatus','در حال دریافت درخواست‌های طراحی...');const {data,error}=await supabase.from('ai_design_requests').select('id,request_number,full_name,mobile,design_mode,style,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at').order('created_at',{ascending:false}).limit(100);if(error){showMessage('aiDashStatus','دریافت درخواست‌ها ناموفق بود: '+error.message);return;}const body=$('aiRequestsBody');body.replaceChildren();for(const item of data??[]){const tr=document.createElement('tr');const vals=[item.request_number,item.full_name+' · '+item.mobile,item.style+' · '+(item.design_mode==='preserve'?'حفظ ساختار':'طراحی آزاد')];for(const val of vals){const td=document.createElement('td');td.textContent=val??'—';tr.append(td);}const fileCell=document.createElement('td');if(item.file_key){const link=document.createElement('button');link.type='button';link.textContent=item.upload_completed_at?'مشاهده فایل':'فایل ثبت نشده';link.disabled=!item.upload_completed_at;link.addEventListener('click',async()=>{const {data:linkData,error:linkError}=await supabase.storage.from('nova-ai-designs').createSignedUrl(item.file_key,300);if(linkError){showMessage('aiDashStatus','دریافت لینک فایل ناموفق بود: '+linkError.message);return;}window.open(linkData.signedUrl,'_blank','noopener');});fileCell.append(link);}else fileCell.textContent='—';tr.append(fileCell);const pay=document.createElement('td');const paySelect=document.createElement('select');for(const [v,l] of Object.entries(paymentLabels)){const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===item.payment_status;paySelect.append(o);}pay.append(paySelect);tr.append(pay);const stat=document.createElement('td');const statusSelect=document.createElement('select');for(const [v,l] of Object.entries(aiStatusLabels)){const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===item.status;statusSelect.append(o);}stat.append(statusSelect);tr.append(stat);const note=document.createElement('td');const noteInput=document.createElement('input');noteInput.value=item.admin_note??'';noteInput.placeholder='یادداشت داخلی';note.append(noteInput);tr.append(note);const action=document.createElement('td');const save=document.createElement('button');save.type='button';save.textContent='ذخیره';save.addEventListener('click',async()=>{save.disabled=true;const {error:saveError}=await supabase.from('ai_design_requests').update({payment_status:paySelect.value,status:statusSelect.value,admin_note:noteInput.value,updated_at:new Date().toISOString()}).eq('id',item.id);save.disabled=false;if(saveError){showMessage('aiDashStatus','ذخیره تغییرات ناموفق بود: '+saveError.message);return;}showMessage('aiDashStatus','تغییرات درخواست '+item.request_number+' ذخیره شد.');await loadAiRequests();});action.append(save);tr.append(action);body.append(tr);}showMessage('aiDashStatus',data?.length?'تعداد '+data.length+' درخواست طراحی نمایش داده شده است.':'هنوز درخواست طراحی هوشمندی ثبت نشده است.');}
+async function checkSession() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) { showLogin(); return; }
   const { data: role, error } = await supabase.rpc('get_my_app_role');
@@ -133,7 +139,8 @@ $('loginForm').addEventListener('submit',async (event)=>{
   showMessage('loginStatus','لینک ورود به ایمیل ارسال شد. فقط آخرین ایمیل را باز کن و لینک را یک‌بار بزن؛ سپس باید پنل باز شود.');
 });
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
-$('refresh').addEventListener('click',loadOrders);\n$('refreshAi').addEventListener('click',loadAiRequests);
+$('refresh').addEventListener('click',loadOrders);
+$('refreshAi').addEventListener('click',loadAiRequests);
 supabase.auth.onAuthStateChange((_event,session)=>{if(session) setTimeout(checkSession,0);});
 checkSession();
 </script>
