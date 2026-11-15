@@ -20,13 +20,19 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
   <section id="login" class="card">
     <div class="tag">NOVA CABINET / SECURE ACCESS</div>
     <h1>پنل <span>مدیریت</span></h1>
-    <p>ورود مدیر اصلی با لینک امن و یک‌بارمصرف ایمیل انجام می‌شود.</p>
+    <p>ورود مدیر اصلی با رمز عبور. اثر انگشت گوشی را می‌توان بعداً با Passkey فعال کرد.</p>
     <form id="loginForm">
       <label for="email">ایمیل مدیر اصلی</label>
-      <input id="email" type="email" value="Vahiiidk74@gmail.com" readonly>
-      <button id="sendLink" type="submit">ارسال لینک ورود</button>
+      <input id="email" type="email" value="vahiiidk74@gmail.com" readonly>
+      <label for="password">رمز عبور</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور حساب مدیر" required>
+      <button id="passwordLogin" type="submit">ورود با رمز عبور</button>
     </form>
-    <div id="loginStatus" class="status" role="status" aria-live="polite">برای ورود، لینک امن به ایمیل مدیر ارسال می‌شود.</div>
+    <div class="row" style="justify-content:flex-start;margin-top:10px">
+      <button id="resetPassword" type="button">فراموشی / تنظیم رمز عبور</button>
+      <button id="sendLink" type="button">ورود با لینک ایمیل</button>
+    </div>
+    <div id="loginStatus" class="status" role="status" aria-live="polite">برای ورود، رمز عبور حساب مدیر را وارد کن. اگر رمز نداری، گزینه تنظیم رمز را بزن.</div>
   </section>
 
   <section id="dashboard" class="hidden">
@@ -241,14 +247,28 @@ const callbackError = callbackParams.get('error_description') || new URLSearchPa
 if (callbackError) showMessage('loginStatus', 'ورود از طریق ایمیل ناموفق بود: ' + callbackError);
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
-  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال لینک امن...');
-  const { error }=await supabase.auth.signInWithOtp({
+  const button=$('passwordLogin'); button.disabled=true; showMessage('loginStatus','در حال بررسی رمز عبور...');
+  const { error }=await supabase.auth.signInWithPassword({
     email:OWNER_EMAIL,
-    options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}
+    password:$('password').value
   });
   button.disabled=false;
-  if(error){showMessage('loginStatus','ارسال لینک انجام نشد: '+error.message);return;}
-  showMessage('loginStatus','لینک ورود ارسال شد. فقط جدیدترین ایمیل را باز کن و لینک را یک‌بار بزن. اگر چند ایمیل داری، لینک‌های قبلی را استفاده نکن.');
+  if(error){showMessage('loginStatus','ورود انجام نشد. رمز عبور را بررسی کن یا گزینه «فراموشی / تنظیم رمز عبور» را بزن.');return;}
+  $('password').value='';
+  await checkSession();
+});
+$('resetPassword').addEventListener('click',async()=>{
+  const button=$('resetPassword'); button.disabled=true; showMessage('loginStatus','در حال ارسال ایمیل تنظیم رمز عبور...');
+  const { error }=await supabase.auth.resetPasswordForEmail(OWNER_EMAIL,{redirectTo:REDIRECT_URL});
+  button.disabled=false;
+  if(error){showMessage('loginStatus','ارسال ایمیل تنظیم رمز انجام نشد: '+error.message);return;}
+  showMessage('loginStatus','ایمیل تنظیم رمز ارسال شد. صندوق ورودی و پوشه Spam را بررسی کن؛ پس از تعیین رمز، با همان رمز وارد شو.');
+});
+$('sendLink').addEventListener('click',async()=>{
+  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال لینک ورود...');
+  const { error }=await supabase.auth.signInWithOtp({email:OWNER_EMAIL,options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}});
+  button.disabled=false;
+  showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'لینک ورود ارسال شد. فقط جدیدترین ایمیل را باز کن.');
 });
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
 $('refresh').addEventListener('click',loadOrders);
