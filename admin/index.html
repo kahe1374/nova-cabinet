@@ -29,15 +29,10 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
       <button id="passwordLogin" type="submit">ورود با رمز عبور</button>
     </form>
     <div class="row" style="justify-content:flex-start;margin-top:10px">
-      <button id="resetPassword" type="button">فراموشی / تنظیم رمز عبور</button>
-      <button id="sendLink" type="button">ورود با لینک ایمیل</button>
+
     </div>
-    <form id="newPasswordForm" class="hidden">
-      <label for="newPassword">رمز عبور جدید</label>
-      <input id="newPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="حداقل ۸ کاراکتر">
-      <button type="submit">ذخیره رمز جدید</button>
-    </form>
-    <div id="loginStatus" class="status" role="status" aria-live="polite">برای ورود، رمز عبور حساب مدیر را وارد کن. اگر رمز نداری، گزینه تنظیم رمز را بزن.</div>
+
+    <div id="loginStatus" class="status" role="status" aria-live="polite">ورود فقط با ایمیل و رمز عبور حساب مدیر انجام می‌شود.</div>
   </section>
 
   <section id="dashboard" class="hidden">
@@ -303,10 +298,6 @@ async function checkSession() {
   $('identity').textContent=session.user.email+' · '+(role==='owner'?'مدیر کامل':'مدیر کارخانه');
   await loadOrders();
 }
-// نمایش خطاهای بازگشتی از لینک ایمیل، به‌جای صفحه سفید یا خطای نامفهوم
-const callbackParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-const callbackError = callbackParams.get('error_description') || new URLSearchParams(window.location.search).get('error_description');
-if (callbackError) showMessage('loginStatus', 'ورود از طریق ایمیل ناموفق بود: ' + callbackError);
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
   const button=$('passwordLogin'); button.disabled=true; showMessage('loginStatus','در حال بررسی رمز عبور...');
@@ -319,44 +310,11 @@ $('loginForm').addEventListener('submit',async (event)=>{
   $('password').value='';
   await checkSession();
 });
-$('resetPassword').addEventListener('click',async()=>{
-  const button=$('resetPassword'); button.disabled=true; showMessage('loginStatus','در حال ارسال ایمیل تنظیم رمز عبور...');
-  const { error }=await supabase.auth.resetPasswordForEmail(loginEmail(),{redirectTo:REDIRECT_URL});
-  button.disabled=false;
-  if(error){showMessage('loginStatus','ارسال ایمیل تنظیم رمز انجام نشد: '+error.message);return;}
-  showMessage('loginStatus','ایمیل تنظیم رمز ارسال شد. صندوق ورودی و پوشه Spam را بررسی کن؛ پس از تعیین رمز، با همان رمز وارد شو.');
-});
-$('sendLink').addEventListener('click',async()=>{
-  const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال لینک ورود...');
-  const { error }=await supabase.auth.signInWithOtp({email:loginEmail(),options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}});
-  button.disabled=false;
-  showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'لینک ورود ارسال شد. فقط جدیدترین ایمیل را باز کن.');
-});
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
 $('refresh').addEventListener('click',loadOrders);
 $('refreshAi').addEventListener('click',loadAiRequests);
 supabase.auth.onAuthStateChange((event,session)=>{
-  if(event==='PASSWORD_RECOVERY'){
-    $('login').classList.remove('hidden');
-    $('dashboard').classList.add('hidden');
-    $('loginForm').classList.add('hidden');
-    $('newPasswordForm').classList.remove('hidden');
-    showMessage('loginStatus','لینک معتبر است. رمز عبور جدید را تعیین کن.');
-    return;
-  }
   if(session) setTimeout(checkSession,0);
-});
-$('newPasswordForm').addEventListener('submit',async(event)=>{
-  event.preventDefault();
-  const button=$('newPasswordForm').querySelector('button');button.disabled=true;
-  const {error}=await supabase.auth.updateUser({password:$('newPassword').value});
-  button.disabled=false;
-  if(error){showMessage('loginStatus','ذخیره رمز جدید انجام نشد: '+error.message);return;}
-  $('newPassword').value='';
-  $('newPasswordForm').classList.add('hidden');
-  $('loginForm').classList.remove('hidden');
-  showMessage('loginStatus','رمز جدید ذخیره شد. اکنون با رمز جدید وارد شو.');
-  await supabase.auth.signOut();
 });
 checkSession();
 </script>
