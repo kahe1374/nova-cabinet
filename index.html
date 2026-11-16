@@ -505,6 +505,17 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
  .hero h1{font-size:clamp(30px,8vw,42px)!important}
 }
 
+
+/* DESKTOP-ONLY FINAL FIX: absolute non-overlapping hero columns */
+@media(min-width:951px){
+ .hero{display:block!important;position:relative!important;min-height:780px!important;height:min(900px,calc(100vh - 72px))!important;padding:0!important;overflow:hidden!important}
+ .hero-gallery{position:absolute!important;left:1.5%!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:51%!important;height: min(650px,78vh)!important;z-index:2!important;overflow:hidden!important}
+ .hero-gallery .gallery-ring{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:min(47vw,650px)!important;height:min(570px,68vh)!important}
+ .hero-gallery .gallery-card{width:min(34vw,470px)!important;height:clamp(250px,29vw,365px)!important}
+ .hero-copy{position:absolute!important;left:auto!important;right:3.5%!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;display:block!important;grid-column:auto!important;justify-self:auto!important;width:40%!important;max-width:590px!important;min-width:350px!important;margin:0!important;padding:38px 34px!important;z-index:7!important;text-align:right!important;background:linear-gradient(270deg,#100d0af5 0%,#100d0ae8 82%,#100d0ad9 100%)!important;border:1px solid #d2ad7855!important;border-radius:20px!important;box-shadow:0 22px 55px #0008!important}
+ .hero-copy h1,.hero-copy p,.hero-copy .eyebrow,.hero-copy .hero-actions{position:relative!important;z-index:1!important}
+}
+
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#ai-design">طراحی سه‌بعدی</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
