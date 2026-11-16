@@ -637,6 +637,68 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
  .hero .nova-cinema-shot-two{display:none}
 }
 
+
+/* NOVA hero video-first layout: cinematic footage gets its own visible stage */
+.hero{display:block!important;min-height:1160px!important;height:auto!important;padding:0 0 48px!important;overflow:hidden}
+.hero .nova-hero-cinema{inset:0 0 auto!important;height:510px!important;z-index:0!important;overflow:hidden}
+.hero .nova-cinema-shot{inset:0!important}
+.hero .nova-cinema-shot video{object-fit:cover!important;object-position:center 48%!important}
+.hero .nova-cinema-shade{
+ background:linear-gradient(0deg,#100d0a 0%,#100d0a12 24%,#09070518 100%),
+ linear-gradient(90deg,#09070508,#09070522 72%,#09070538)!important;
+}
+.hero .hero-copy{
+ position:absolute!important;top:350px!important;right:4%!important;left:auto!important;
+ width:min(520px,43%)!important;max-width:520px!important;margin:0!important;
+ padding:24px 28px!important;z-index:6!important;
+ background:linear-gradient(135deg,#100d0ad9,#100d0a9c)!important;
+ border:1px solid #d9ad6c66!important;border-radius:18px!important;
+ backdrop-filter:blur(8px);box-shadow:0 18px 50px #0008!important;
+}
+.hero .hero-gallery{
+ top:790px!important;left:0!important;width:100%!important;height:470px!important;
+ transform:none!important;z-index:3!important;overflow:visible!important;
+}
+.hero .hero-gallery .gallery-ring{
+ width:100%!important;height:100%!important;left:50%!important;top:50%!important;
+}
+.hero .hero-gallery .gallery-card.is-active{
+ width:min(54vw,650px)!important;height:clamp(320px,38vw,460px)!important;
+}
+.hero .hero-gallery .gallery-card.is-prev{transform:translate(-50%,-50%) translateX(-82%) rotateY(17deg) scale(.72)!important}
+.hero .hero-gallery .gallery-card.is-next{transform:translate(-50%,-50%) translateX(82%) rotateY(-17deg) scale(.72)!important}
+.hero .coverflow-controls{bottom:-4px!important}
+.hero .side-note{top:385px!important;left:3%!important}
+@media(max-width:950px){
+ .hero{min-height:1260px!important}
+ .hero .nova-hero-cinema{height:470px!important}
+ .hero .hero-copy{top:350px!important;right:5%!important;left:5%!important;width:auto!important;max-width:none!important;text-align:center!important}
+ .hero .hero-actions{justify-content:center!important}
+ .hero .hero-gallery{top:850px!important;height:390px!important}
+ .hero .hero-gallery .gallery-card.is-active{width:min(68vw,600px)!important;height:clamp(290px,40vw,400px)!important}
+ .hero .side-note{display:none!important}
+}
+@media(max-width:650px){
+ .hero{min-height:1120px!important;padding-bottom:35px!important}
+ .hero .nova-hero-cinema{height:390px!important}
+ .hero .nova-cinema-shot video{object-position:center center!important}
+ .hero .nova-cinema-shade{
+  background:linear-gradient(0deg,#100d0a 0%,#100d0a0c 35%,#09070520 100%)!important;
+ }
+ .hero .hero-copy{
+  top:315px!important;right:4%!important;left:4%!important;width:auto!important;
+  padding:17px 14px!important;border-radius:15px!important;
+ }
+ .hero .hero-copy h1{font-size:clamp(28px,7.5vw,38px)!important}
+ .hero .hero-copy p{font-size:12px!important}
+ .hero .hero-gallery{top:790px!important;height:285px!important;overflow:hidden!important}
+ .hero .hero-gallery .gallery-ring{height:100%!important}
+ .hero .hero-gallery .gallery-card.is-active{width:86vw!important;height:min(61vw,255px)!important}
+ .hero .hero-gallery .gallery-card.is-prev{transform:translate(-50%,-50%) translateX(-86%) rotateY(13deg) scale(.72)!important}
+ .hero .hero-gallery .gallery-card.is-next{transform:translate(-50%,-50%) translateX(86%) rotateY(-13deg) scale(.72)!important}
+ .hero .coverflow-controls{bottom:-2px!important}
+}
+
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#ai-design">طراحی سه‌بعدی</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
