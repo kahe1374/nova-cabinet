@@ -585,6 +585,58 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
  .hero .hero-gallery .gallery-card,.hero .hero-gallery .gallery-card img,.hero .coverflow-controls button{transition:none!important}
 }
 
+
+/* NOVA hero video visibility correction — let the real footage read clearly */
+.hero .nova-cinema-shot{animation-name:novaCinemaFadeVisible}
+@keyframes novaCinemaFadeVisible{
+ 0%,4%{opacity:0}
+ 10%,42%{opacity:.94}
+ 50%,100%{opacity:0}
+}
+.hero .nova-cinema-shot-one{opacity:.94}
+.hero .nova-cinema-shot video{
+ filter:brightness(.66) saturate(.88) sepia(.025) contrast(1.08)!important;
+ transform:scale(1.025);
+}
+.hero .nova-cinema-shot-two video{filter:brightness(.66) saturate(.88) sepia(.025) contrast(1.08)!important}
+.hero .nova-cinema-shade{
+ background:linear-gradient(90deg,#09070512 0%,#09070535 44%,#090705a8 100%),
+ linear-gradient(0deg,#100d0a 0%,#100d0a18 25%,transparent 70%),
+ radial-gradient(ellipse at 25% 48%,#d7aa6a12,transparent 60%)!important;
+}
+.hero .hero-gallery{filter:drop-shadow(0 22px 38px #0009)}
+.hero .hero-gallery .gallery-card.is-active{
+ width:min(48vw,590px);
+ height:clamp(300px,36vw,440px);
+}
+.hero .hero-gallery .gallery-card.is-active img{
+ filter:brightness(.96) saturate(.94) contrast(1.08)!important;
+}
+.hero .hero-gallery .gallery-card.is-prev img,.hero .hero-gallery .gallery-card.is-next img{
+ filter:brightness(.72) saturate(.82) contrast(1.06)!important;
+}
+@media(max-width:950px){
+ .hero .nova-cinema-shade{
+  background:linear-gradient(180deg,#09070510 0%,#09070532 46%,#100d0aaf 100%),
+  radial-gradient(ellipse at 50% 26%,#d7aa6a18,transparent 64%)!important;
+ }
+ .hero .nova-cinema-shot video{filter:brightness(.62) saturate(.86) contrast(1.08)!important}
+ .hero .hero-gallery .gallery-card.is-active{width:min(66vw,590px);height:clamp(270px,38vw,390px)}
+}
+@media(max-width:650px){
+ .hero .nova-cinema-shot video{filter:brightness(.58) saturate(.84) contrast(1.08)!important}
+ .hero .nova-cinema-shade{
+  background:linear-gradient(180deg,#09070508 0%,#09070522 44%,#100d0a9c 100%),
+  radial-gradient(ellipse at 50% 24%,#d7aa6a18,transparent 64%)!important;
+ }
+ .hero .hero-gallery .gallery-card.is-active{width:84vw;height:min(61vw,270px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero .nova-cinema-shot{animation:none!important}
+ .hero .nova-cinema-shot-one{opacity:.78!important}
+ .hero .nova-cinema-shot-two{display:none}
+}
+
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#ai-design">طراحی سه‌بعدی</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
