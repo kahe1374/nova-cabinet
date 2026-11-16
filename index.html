@@ -475,6 +475,36 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
 .nova-3d-hint{margin-right:auto;color:#c9b89f;font-size:10px}
 @media(max-width:850px){.ai{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto;grid-template-areas:"copy" "model" "form"!important;gap:14px!important}.ai-art.nova-3d-studio{min-height:450px;height:450px}.nova-3d-stage{min-height:325px}.ai-copy{text-align:right}}
 @media(max-width:600px){.ai{padding:13px!important}.ai-art.nova-3d-studio{min-height:380px;height:380px}.nova-3d-stage{min-height:270px}.nova-3d-controls{gap:8px;padding:10px}.nova-3d-hint{width:100%;margin:3px 0 0}.ai-form{grid-template-columns:minmax(0,1fr)!important}}
+
+/* FINAL HERO LAYOUT FIX: isolate text and gallery on every viewport */
+.hero{position:relative!important;isolation:isolate!important;overflow:hidden!important;min-height:790px!important;display:grid!important;grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr)!important;align-items:center!important;column-gap:18px!important;padding:70px 3% 45px!important}
+.hero-gallery{position:absolute!important;left:0!important;right:auto!important;top:50%!important;transform:translateY(-50%)!important;width:49%!important;height:540px!important;z-index:2!important;overflow:hidden!important;perspective:1500px!important;filter:drop-shadow(0 20px 34px #000b)!important}
+.hero-gallery .gallery-ring{width:100%!important;height:100%!important}
+.hero-gallery .gallery-card{width:min(37vw,470px)!important;height:clamp(250px,28vw,350px)!important}
+.hero-gallery .gallery-card:not(.is-active):not(.is-prev):not(.is-next){opacity:0!important;visibility:hidden!important}
+.hero-gallery .gallery-card.is-active{opacity:1!important;visibility:visible!important;transform:translate(-50%,-50%) translateZ(45px) scale(1)!important}
+.hero-gallery .gallery-card.is-prev{opacity:.42!important;visibility:visible!important;transform:translate(-50%,-50%) translateX(-68%) rotateY(13deg) scale(.68)!important}
+.hero-gallery .gallery-card.is-next{opacity:.42!important;visibility:visible!important;transform:translate(-50%,-50%) translateX(68%) rotateY(-13deg) scale(.68)!important}
+.hero-copy{grid-column:2!important;position:relative!important;z-index:6!important;width:100%!important;max-width:610px!important;justify-self:stretch!important;margin:0!important;padding:42px clamp(18px,3vw,48px)!important;text-align:right!important;background:linear-gradient(270deg,#100d0af2 0%,#100d0ad9 76%,#100d0a00 100%)!important;border-radius:18px!important}
+.nova-hero-cinema{z-index:0!important}.hero:before{z-index:1!important}.hero:after{z-index:4!important}
+@media(max-width:950px){
+ .hero{display:block!important;min-height:920px!important;padding:1px 0 35px!important}
+ .hero-gallery{left:0!important;top:225px!important;width:100%!important;height:350px!important;transform:translateY(-50%)!important}
+ .hero-gallery .gallery-card{width:min(58vw,440px)!important;height:clamp(230px,34vw,310px)!important}
+ .hero-copy{display:block!important;width:min(92%,720px)!important;max-width:720px!important;margin:430px auto 0!important;padding:25px 22px 35px!important;text-align:center!important;background:linear-gradient(180deg,#100d0aeb,#100d0ac9)!important}
+ .hero-copy .eyebrow{margin-inline:auto!important}.hero p{margin-inline:auto!important}.hero-actions{justify-content:center!important}
+}
+@media(max-width:650px){
+ .hero{min-height:900px!important;min-height:100svh!important;padding:68px 0 24px!important;display:block!important}
+ .hero-gallery{top:220px!important;left:0!important;width:100%!important;height:280px!important;transform:translateY(-50%)!important;overflow:hidden!important}
+ .hero-gallery .gallery-card{width:76vw!important;height:54vw!important;max-height:235px!important}
+ .hero-gallery .gallery-card.is-active{transform:translate(-50%,-50%) translateZ(25px) scale(1)!important}
+ .hero-gallery .gallery-card.is-prev{transform:translate(-50%,-50%) translateX(-74%) rotateY(12deg) scale(.66)!important}
+ .hero-gallery .gallery-card.is-next{transform:translate(-50%,-50%) translateX(74%) rotateY(-12deg) scale(.66)!important}
+ .hero-copy{width:92%!important;margin:405px auto 0!important;padding:20px 15px 28px!important}
+ .hero h1{font-size:clamp(30px,8vw,42px)!important}
+}
+
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#ai-design">طراحی سه‌بعدی</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
