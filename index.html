@@ -455,6 +455,26 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
  .ai-form{grid-template-columns:1fr;padding:11px}
 }
 @media(prefers-reduced-motion:reduce){.nova-service-card,.nova-work-card,.nova-process-grid>div{transition:none}}
+
+/* NOVA 3D studio: hard-separated copy, model and form */
+.ai{display:grid!important;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr)!important;grid-template-rows:auto 1fr;grid-template-areas:"copy model" "form model"!important;align-items:stretch;gap:20px!important;direction:rtl;overflow:hidden}
+.ai-copy{grid-area:copy!important;position:relative;z-index:2;min-width:0;padding:8px 6px 4px}
+.ai-form{grid-area:form!important;position:relative;z-index:2;min-width:0;align-self:start}
+.ai-art.nova-3d-studio{grid-area:model!important;position:relative;isolation:isolate;display:flex;flex-direction:column;min-width:0;min-height:520px;height:100%;margin:0;overflow:hidden;transform:none!important;border:1px solid #d9ad6c99;border-radius:17px;background:radial-gradient(ellipse at 50% 35%,#55402b 0%,#211810 54%,#0b0907 100%);box-shadow:0 24px 55px #0009}
+.ai-art.nova-3d-studio:before,.ai-art.nova-3d-studio:after{display:none!important;content:none!important}
+.nova-3d-topline{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:13px 15px 0;color:#e8c78e;font:600 10px/1.4 Arial,sans-serif;letter-spacing:1.2px}
+.nova-3d-live{display:flex;align-items:center;gap:6px;letter-spacing:0;font-size:11px;color:#d9c6a8}
+.nova-3d-live i{width:7px;height:7px;border-radius:50%;background:#9bc58b;box-shadow:0 0 10px #9bc58b}
+.nova-3d-stage{position:relative;flex:1;min-height:380px;width:100%;overflow:hidden}
+#nova3DCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
+.nova-3d-loading{position:absolute;inset:0;display:grid;place-items:center;color:#d8c39e;font-size:12px;pointer-events:none}
+.nova-3d-controls{position:relative;z-index:3;display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 14px 15px;background:linear-gradient(0deg,#090705e8,#09070588);color:#e9d7b9;font-size:11px}
+.nova-3d-swatch{width:25px;height:25px;padding:0;border-radius:50%;border:2px solid #e8d4b2aa;cursor:pointer;box-shadow:0 2px 9px #0007}
+.nova-3d-swatch[data-finish="#493526"]{background:#493526}.nova-3d-swatch[data-finish="#d8cbb5"]{background:#d8cbb5}.nova-3d-swatch[data-finish="#25282b"]{background:#25282b}.nova-3d-swatch[data-finish="#777d79"]{background:#777d79}
+.nova-3d-swatch.is-selected{outline:2px solid #f3d59e;outline-offset:3px}
+.nova-3d-hint{margin-right:auto;color:#c9b89f;font-size:10px}
+@media(max-width:850px){.ai{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto;grid-template-areas:"copy" "model" "form"!important;gap:14px!important}.ai-art.nova-3d-studio{min-height:450px;height:450px}.nova-3d-stage{min-height:325px}.ai-copy{text-align:right}}
+@media(max-width:600px){.ai{padding:13px!important}.ai-art.nova-3d-studio{min-height:380px;height:380px}.nova-3d-stage{min-height:270px}.nova-3d-controls{gap:8px;padding:10px}.nova-3d-hint{width:100%;margin:3px 0 0}.ai-form{grid-template-columns:minmax(0,1fr)!important}}
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#ai-design">طراحی سه‌بعدی</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
@@ -492,7 +512,7 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
   <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1724100689403-4df6db8f2564?auto=format&fit=crop&w=1000&q=85')"><span>02</span><b>TV Wall</b><small>دیوار شاخص و فضای رسانه</small></a>
   <a class="nova-service-card" href="#contact" style="--service-image:url('https://images.unsplash.com/photo-1722606511282-e0352680558c?auto=format&fit=crop&w=1000&q=85')"><span>03</span><b>کمد دیواری</b><small>فضای ذخیره‌سازی اختصاصی</small></a>
  </div>
-</section><section class="wrap ai nova-reveal" id="ai-design"><div class="ai-art" role="img" aria-label="پیش‌نمایش مفهومی طراحی سه‌بعدی آشپزخانه"><span class="ai-art-tag">NOVA · 3D DESIGN STUDIO</span><span class="ai-art-note">تصور کن، انتخاب کن، سفارش بده</span></div><div class="ai-copy"><div class="eyebrow">NOVA AI DESIGN</div><h2>قبل از ساخت، فضای دلخواهت را ببین</h2><p>عکس فضای خودت را بفرست و سبک، رنگ و متریال مورد علاقه‌ات را انتخاب کن. نوا بر اساس اطلاعات پروژه، درخواست پیش‌نمایش طراحی هوشمند را بررسی می‌کند تا پیش از تصمیم نهایی، تصویر روشن‌تری از نتیجه داشته باشی.</p><p class="ai-promise">مناسب برای آشپزخانه، TV Wall و کمد دیواری؛ هزینه تولید خروجی پیش از شروع اعلام می‌شود و فقط با تأیید تو انجام خواهد شد.</p><a class="btn" href="#aiDesignForm">شروع طراحی هوشمند　✧</a></div>
+</section><section class="wrap ai nova-reveal" id="ai-design"><div class="ai-art nova-3d-studio" aria-label="مدل تعاملی سه‌بعدی کابینت آشپزخانه"><div class="nova-3d-topline"><span>NOVA · INTERACTIVE 3D</span><span class="nova-3d-live"><i></i> مدل زنده</span></div><div class="nova-3d-stage" id="nova3DStage"><canvas id="nova3DCanvas" aria-label="مدل سه‌بعدی کابینت؛ با لمس و کشیدن بچرخانید"></canvas><div class="nova-3d-loading" id="nova3DStatus">در حال آماده‌سازی مدل سه‌بعدی…</div></div><div class="nova-3d-controls"><span>رنگ کابینت</span><button type="button" class="nova-3d-swatch is-selected" data-finish="#493526" aria-label="گردویی" title="گردویی"></button><button type="button" class="nova-3d-swatch" data-finish="#d8cbb5" aria-label="کرم روشن" title="کرم روشن"></button><button type="button" class="nova-3d-swatch" data-finish="#25282b" aria-label="ذغالی" title="ذغالی"></button><button type="button" class="nova-3d-swatch" data-finish="#777d79" aria-label="طوسی" title="طوسی"></button><span class="nova-3d-hint">برای چرخاندن، مدل را لمس و بکش</span></div></div><div class="ai-copy"><div class="eyebrow">NOVA AI DESIGN</div><h2>قبل از ساخت، فضای دلخواهت را ببین</h2><p>عکس فضای خودت را بفرست و سبک، رنگ و متریال مورد علاقه‌ات را انتخاب کن. نوا بر اساس اطلاعات پروژه، درخواست پیش‌نمایش طراحی هوشمند را بررسی می‌کند تا پیش از تصمیم نهایی، تصویر روشن‌تری از نتیجه داشته باشی.</p><p class="ai-promise">مناسب برای آشپزخانه، TV Wall و کمد دیواری؛ هزینه تولید خروجی پیش از شروع اعلام می‌شود و فقط با تأیید تو انجام خواهد شد.</p><a class="btn" href="#aiDesignForm">شروع طراحی هوشمند　✧</a></div>
 <form class="ai-form" id="aiDesignForm"><input required name="name" placeholder="نام و نام خانوادگی" aria-label="نام و نام خانوادگی"><input required name="phone" type="tel" inputmode="tel" pattern="(09[0-9]{9}|\+989[0-9]{9}|00989[0-9]{9})" placeholder="شماره موبایل" aria-label="شماره موبایل"><input name="city" placeholder="شهر" aria-label="شهر"><select required name="design_mode" aria-label="حالت طراحی"><option value="">حالت طراحی</option><option value="preserve">حفظ ساختار فعلی</option><option value="free">طراحی آزاد</option></select><select required name="style" aria-label="سبک طراحی"><option value="">سبک طراحی</option><option>مدرن و مینیمال</option><option>نئوکلاسیک</option><option>لوکس</option><option>کلاسیک</option><option>پیشنهاد طراح</option></select><input name="door_material" placeholder="جنس درب / متریال"><input name="countertop_material" placeholder="جنس صفحه کابینت"><input name="material_codes" placeholder="کد رنگ یا متریال (اختیاری)"><label class="upload"><b>⇧</b>عکس آشپزخانه خود را آپلود کنید<input required type="file" name="design_file" accept="image/jpeg,image/png,image/webp"></label><textarea name="instructions" placeholder="توضیحات و خواسته‌های شما"></textarea><label class="note"><input required type="checkbox" name="consent"> هزینه طراحی هوشمند پیش از شروع اعلام و با تأیید من انجام شود.</label><button class="btn" type="submit" id="aiDesignSubmit">ثبت درخواست طراحی ✧</button><div class="note" id="aiDesignStatus">ثبت درخواست و بارگذاری فایل رایگان است؛ تولید خروجی هوش مصنوعی پس از اعلام هزینه و تأیید شما انجام می‌شود.</div></form></section>
 <section class="wrap projects nova-work-showcase" id="projects">
  <div class="nova-work-heading"><div><span class="eyebrow">SELECTED INSPIRATION</span><h2>فضاهایی برای زندگی بهتر</h2><p>ایده بگیر، جزئیات سبک‌ها را بررسی کن و ترکیبی را پیدا کن که با خانه و سلیقه‌ات هماهنگ باشد. تصاویر این بخش الهام‌بخش‌اند و لزوماً پروژه‌های اجراشده نوا نیستند.</p></div><a class="nova-work-all" href="#nova-visit">برای پروژه خودم مشاوره می‌خواهم <span>←</span></a></div>
@@ -766,4 +786,47 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{e.pr
 })();
 </script>
 
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js';
+(()=>{
+ const canvas=document.getElementById('nova3DCanvas'),stage=document.getElementById('nova3DStage'),status=document.getElementById('nova3DStatus');
+ if(!canvas||!stage)return;
+ try{
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x211810);scene.fog=new THREE.Fog(0x211810,10,22);
+  const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(7.2,5.2,9.4);
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+  scene.add(new THREE.HemisphereLight(0xffe7c6,0x30251c,2.1));
+  const key=new THREE.DirectionalLight(0xffd9a2,3.1);key.position.set(5,9,6);key.castShadow=true;key.shadow.mapSize.set(1024,1024);scene.add(key);
+  const fill=new THREE.DirectionalLight(0xc3d7ff,1.15);fill.position.set(-6,4,-4);scene.add(fill);
+  const kitchen=new THREE.Group();scene.add(kitchen);
+  const cabinetMat=new THREE.MeshStandardMaterial({color:0x493526,roughness:.48,metalness:.04});
+  const darkMat=new THREE.MeshStandardMaterial({color:0x201b17,roughness:.55});
+  const stoneMat=new THREE.MeshStandardMaterial({color:0xb9b1a5,roughness:.24,metalness:.06});
+  const brassMat=new THREE.MeshStandardMaterial({color:0xc6a16b,metalness:.82,roughness:.24});
+  const wallMat=new THREE.MeshStandardMaterial({color:0x65584b,roughness:.9});
+  const floorMat=new THREE.MeshStandardMaterial({color:0x30271f,roughness:.82});
+  function box(parent,w,h,d,x,y,z,mat,cast=true){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m;}
+  box(kitchen,13,.18,10,0,-.12,0,floorMat,false);box(kitchen,13,7,.12,0,3.35,-2.35,wallMat,false);
+  const baseY=1.05,baseH=1.85,baseZ=.2;
+  box(kitchen,5.65,baseH,1.05,0,baseY,baseZ,darkMat);
+  for(let i=0;i<4;i++){const x=-2.1+i*1.4;box(kitchen,1.32,1.68,.055,x,baseY,baseZ+.56,cabinetMat);box(kitchen,.045,1.57,.025,x-.59,baseY,baseZ+.60,brassMat,false);box(kitchen,.045,1.57,.025,x+.59,baseY,baseZ+.60,brassMat,false);box(kitchen,.38,.045,.075,x+.38,baseY+.12,baseZ+.66,brassMat,false);}
+  box(kitchen,5.9,.16,1.18,0,2.02,baseZ+.02,stoneMat);box(kitchen,5.9,.035,1.18,0,2.115,baseZ+.02,new THREE.MeshStandardMaterial({color:0xe2d8c8,roughness:.25}));
+  for(let i=0;i<4;i++){const x=-2.1+i*1.4;box(kitchen,1.32,1.35,.55,x,4.02,-1.45,cabinetMat);box(kitchen,1.22,1.24,.045,x,4.02,-1.155,darkMat);box(kitchen,.045,1.1,.025,x+.48,4.02,-1.115,brassMat,false);}
+  box(kitchen,5.65,1.02,.08,0,2.68,-1.45,stoneMat,false);box(kitchen,1.3,.24,.72,.1,4.88,-1.28,darkMat);box(kitchen,1.08,.07,.54,.1,4.72,-1.28,brassMat,false);
+  box(kitchen,.95,.035,.55,-1.42,2.12,.24,darkMat,false);
+  const tap=new THREE.Mesh(new THREE.TorusGeometry(.18,.035,10,24,Math.PI),brassMat);tap.rotation.z=Math.PI;tap.position.set(-1.42,2.52,-.02);kitchen.add(tap);
+  box(kitchen,2.55,1.55,1.35,.2,.78,2.15,cabinetMat);box(kitchen,2.8,.15,1.55,.2,1.62,2.15,stoneMat);
+  for(let i=0;i<3;i++)box(kitchen,.045,1.28,.025,-.58+i*.78,.78,2.84,brassMat,false);
+  box(kitchen,5.55,.12,.9,0,.08,.2,darkMat,false);kitchen.rotation.y=-.16;
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x18130f,roughness:.95}));ground.rotation.x=-Math.PI/2;ground.position.y=-.23;ground.receiveShadow=true;scene.add(ground);
+  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,2.1,.5);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=7;controls.maxDistance=17;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.25;controls.autoRotate=true;controls.autoRotateSpeed=.55;
+  const resize=()=>{const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};new ResizeObserver(resize).observe(stage);resize();
+  document.querySelectorAll('.nova-3d-swatch').forEach(btn=>btn.addEventListener('click',()=>{cabinetMat.color.set(btn.dataset.finish);document.querySelectorAll('.nova-3d-swatch').forEach(b=>b.classList.toggle('is-selected',b===btn));}));
+  controls.addEventListener('start',()=>{controls.autoRotate=false;});
+  status?.remove();let frame=0;const render=()=>{frame=requestAnimationFrame(render);controls.update();renderer.render(scene,camera);};render();window.addEventListener('pagehide',()=>cancelAnimationFrame(frame),{once:true});
+ }catch(err){if(status)status.textContent='نمایش سه‌بعدی در این مرورگر در دسترس نیست؛ صفحه را تازه‌سازی کنید.';console.error('NOVA 3D viewer:',err);}
+})();
+</script>
 </body></html>
