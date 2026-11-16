@@ -699,6 +699,75 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
  .hero .coverflow-controls{bottom:-2px!important}
 }
 
+
+/* NOVA hero hierarchy repair: video -> copy -> visible image carousel */
+.hero{position:relative!important;display:block!important;min-height:1190px!important;height:auto!important;padding:0 0 42px!important;overflow:hidden!important;isolation:isolate}
+.hero .nova-hero-cinema{position:absolute!important;inset:0 0 auto!important;height:430px!important;z-index:0!important;overflow:hidden!important;background:#100d0a}
+.hero .nova-cinema-shot{position:absolute!important;inset:0!important;opacity:0!important;animation:novaFiveKitchenClips 40s linear infinite!important}
+.hero .nova-cinema-shot-one{animation-delay:0s!important}
+.hero .nova-cinema-shot-two{animation-delay:10s!important}
+.hero .nova-cinema-shot-three{animation-delay:20s!important}
+.hero .nova-cinema-shot-four{animation-delay:30s!important}
+.hero .nova-cinema-shot video{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center 52%!important;filter:brightness(.62) saturate(.72) sepia(.18) contrast(1.13)!important;transform:scale(1.025)!important;animation:none!important}
+@keyframes novaFiveKitchenClips{
+ 0%,3%{opacity:0}
+ 7%,20%{opacity:1}
+ 24%,100%{opacity:0}
+}
+.hero .nova-cinema-shade{
+ position:absolute!important;inset:0!important;
+ background:linear-gradient(0deg,#100d0a 0%,#100d0a12 24%,#100d0a22 100%),
+ linear-gradient(90deg,#100d0a16 0%,#100d0a04 48%,#100d0a42 100%)!important;
+}
+.hero:before{z-index:1!important;pointer-events:none}
+.hero:after{z-index:2!important;pointer-events:none}
+.hero .hero-copy{
+ position:absolute!important;top:445px!important;right:5%!important;left:5%!important;
+ width:auto!important;max-width:none!important;margin:0!important;padding:15px 22px!important;
+ z-index:7!important;text-align:center!important;
+ background:linear-gradient(135deg,#100d0aeF,#21180fe8)!important;
+ border:1px solid #d9ad6c77!important;border-radius:17px!important;
+ box-shadow:0 14px 35px #0008!important;backdrop-filter:blur(8px)
+}
+.hero .hero-copy .hero-actions{justify-content:center!important}
+.hero .hero-gallery{
+ position:absolute!important;top:680px!important;left:0!important;right:0!important;
+ width:100%!important;height:460px!important;transform:none!important;
+ display:grid!important;place-items:center!important;perspective:1800px!important;
+ z-index:6!important;overflow:visible!important;filter:drop-shadow(0 22px 38px #000b)
+}
+.hero .hero-gallery .gallery-ring{position:relative!important;left:50%!important;top:50%!important;width:100%!important;height:100%!important;z-index:6!important}
+.hero .hero-gallery .gallery-card{z-index:1!important}
+.hero .hero-gallery .gallery-card.is-active{z-index:8!important;opacity:1!important}
+.hero .hero-gallery .gallery-card.is-prev,.hero .hero-gallery .gallery-card.is-next{z-index:5!important;opacity:.78!important}
+.hero .coverflow-controls{z-index:10!important;bottom:-8px!important}
+.hero .side-note{top:460px!important;left:3%!important;z-index:7!important}
+@media(max-width:950px){
+ .hero{min-height:1210px!important}
+ .hero .nova-hero-cinema{height:400px!important}
+ .hero .hero-copy{top:415px!important;right:4%!important;left:4%!important}
+ .hero .hero-gallery{top:700px!important;height:430px!important}
+ .hero .hero-gallery .gallery-card.is-active{width:min(70vw,600px)!important;height:clamp(290px,40vw,400px)!important}
+ .hero .side-note{display:none!important}
+}
+@media(max-width:650px){
+ .hero{min-height:1080px!important;padding-bottom:30px!important}
+ .hero .nova-hero-cinema{height:330px!important}
+ .hero .nova-cinema-shot video{object-position:center center!important}
+ .hero .hero-copy{top:345px!important;padding:13px 10px!important;border-radius:14px!important}
+ .hero .hero-copy h1{font-size:clamp(25px,7vw,34px)!important;margin:6px 0!important}
+ .hero .hero-copy p{font-size:11px!important;margin-bottom:12px!important}
+ .hero .hero-actions{gap:12px!important;flex-wrap:wrap!important}
+ .hero .hero-gallery{top:625px!important;height:330px!important;overflow:hidden!important}
+ .hero .hero-gallery .gallery-card.is-active{width:86vw!important;height:min(61vw,255px)!important}
+ .hero .coverflow-controls{bottom:0!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero .nova-cinema-shot{animation:none!important}
+ .hero .nova-cinema-shot-one{opacity:1!important}
+ .hero .nova-cinema-shot-two,.hero .nova-cinema-shot-three,.hero .nova-cinema-shot-four{display:none!important}
+}
+
 </style></head><body>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA CABINET"><span class="mark" aria-hidden="true"><span>N</span></span><span class="brand-word" aria-label="NOVA"><span>N</span><span>O</span><span>V</span><span>A</span><small>C A B I N E T</small></span></a><nav class="links"><a href="#home">خانه</a><a href="#ai-design">طراحی سه‌بعدی</a><a href="#projects">نمونه‌کارها</a><a href="#services">خدمات</a><a href="#about">درباره ما</a><a href="#contact">تماس با ما</a><a href="#nova-assistant">مشاور هوشمند</a></nav><a class="btn" href="#contact">مشاوره رایگان　☏</a></div></header>
 <div class="nova-menu-backdrop" id="novaMenuBackdrop" aria-hidden="true"></div>
@@ -722,9 +791,11 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
 </aside>
 <button class="nova-menu-trigger" id="novaMenuTrigger" type="button" aria-label="باز کردن منوی اصلی" aria-controls="novaDrawer" aria-expanded="false"><span></span><span></span><span></span></button>
 
-<main><section class="hero" id="home"><div class="nova-hero-cinema" aria-hidden="true">
-  <div class="nova-cinema-shot nova-cinema-shot-one"><video autoplay muted playsinline loop preload="metadata" poster="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=82"><source src="https://videos.pexels.com/video-files/36906908/36906908-hd_1920_1080_30fps.mp4" type="video/mp4"></video></div>
-  <div class="nova-cinema-shot nova-cinema-shot-two"><video autoplay muted playsinline loop preload="none" poster="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2000&q=82"><source src="https://videos.pexels.com/video-files/36906909/36906909-hd_1920_1080_30fps.mp4" type="video/mp4"></video></div>
+<main><section class="hero" id="home"><div class="nova-hero-cinema" aria-label="ویدیوهای سینمایی کابینت آشپزخانه">
+  <div class="nova-cinema-shot nova-cinema-shot-one"><video autoplay muted playsinline loop preload="metadata" poster="https://images.pexels.com/photos/31267709/pexels-photo-31267709.jpeg?auto=compress&cs=tinysrgb&w=1800"><source src="https://videos.pexels.com/video-files/36906908/36906908-hd_1920_1080_30fps.mp4" type="video/mp4"></video></div>
+  <div class="nova-cinema-shot nova-cinema-shot-two"><video autoplay muted playsinline loop preload="none" poster="https://images.pexels.com/photos/35843928/pexels-photo-35843928.jpeg?auto=compress&cs=tinysrgb&w=1800"><source src="https://videos.pexels.com/video-files/36906909/36906909-hd_1920_1080_30fps.mp4" type="video/mp4"></video></div>
+  <div class="nova-cinema-shot nova-cinema-shot-three"><video autoplay muted playsinline loop preload="none" poster="https://images.pexels.com/photos/31267709/pexels-photo-31267709.jpeg?auto=compress&cs=tinysrgb&w=1800"><source src="https://videos.pexels.com/video-files/36778201/36778201-hd_1920_1080_30fps.mp4" type="video/mp4"></video></div>
+  <div class="nova-cinema-shot nova-cinema-shot-four"><video autoplay muted playsinline loop preload="none" poster="https://images.pexels.com/photos/7166644/pexels-photo-7166644.jpeg?auto=compress&cs=tinysrgb&w=1800"><source src="https://videos.pexels.com/video-files/3773483/3773483-hd_1920_1080_30fps.mp4" type="video/mp4"></video></div>
   <div class="nova-cinema-shade"></div>
 </div><div class="hero-copy"><div class="eyebrow">N O V A &nbsp; C A B I N E T</div><h1><span>زیبایی،</span> ماندگاری، آرامش</h1><p>طراحی و اجرای کابینت‌های لوکس و مدرن<br>با بالاترین کیفیت و جدیدترین متریال</p><div class="hero-actions"><a class="btn" href="#projects">مشاهده نمونه‌کارها　←</a><a class="video-link" href="#ai-design"><i>✧</i> شروع طراحی سه‌بعدی</a></div></div><div class="hero-gallery" aria-label="گالری نمونه‌های تی‌وی‌وال و کابینت"><div class="gallery-ring"><figure class="gallery-card"><img loading="eager" fetchpriority="high" decoding="async" src="https://images.pexels.com/photos/35843928/pexels-photo-35843928.jpeg?cs=srgb&dl=pexels-alexander-f-ungerer-157458816-35843928.jpg&fm=jpg" alt="کابینت چوبی کلاسیک با جزیره"><span>کابینت چوبی کلاسیک با جزیره</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/31238723/pexels-photo-31238723.jpeg?cs=srgb&dl=pexels-alexander-f-ungerer-157458816-31238723.jpg&fm=jpg" alt="کابینت چوبی با صفحه روشن"><span>کابینت چوبی با صفحه روشن</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/30673264/pexels-photo-30673264.jpeg?cs=srgb&dl=pexels-alexander-f-ungerer-157458816-30673264.jpg&fm=jpg" alt="کابینت مدرن چوبی ال‌شکل"><span>کابینت مدرن چوبی ال‌شکل</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/100575/pexels-photo-100575.jpeg?cs=srgb&dl=pexels-ryan-donnelly-22544-100575.jpg&fm=jpg" alt="کابینت گردویی و صفحه سفید"><span>کابینت گردویی و صفحه سفید</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/34764079/pexels-photo-34764079.jpeg?cs=srgb&dl=pexels-peter-vang-2157328093-34764079.jpg&fm=jpg" alt="کابینت چوبی و لوازم توکار"><span>کابینت چوبی و لوازم توکار</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/36777557/pexels-photo-36777557.jpeg?cs=srgb&dl=pexels-curtis-adams-1694007-36777557.jpg&fm=jpg" alt="کابینت روشن با جزئیات چوب"><span>کابینت روشن با جزئیات چوب</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/36777862/pexels-photo-36777862.jpeg?cs=srgb&dl=pexels-curtis-adams-1694007-36777862.jpg&fm=jpg" alt="ترکیب کابینت سفید و گردویی"><span>ترکیب کابینت سفید و گردویی</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/7767073/pexels-photo-7767073.jpeg?cs=srgb&dl=pexels-harryphotographer-7767073.jpg&fm=jpg" alt="کابینت چوبی با بین‌کابینتی تیره"><span>کابینت چوبی با بین‌کابینتی تیره</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/7166644/pexels-photo-7166644.jpeg?cs=srgb&dl=pexels-artbovich-7166644.jpg&fm=jpg" alt="کابینت نئوکلاسیک طوسی"><span>کابینت نئوکلاسیک طوسی</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/6980708/pexels-photo-6980708.jpeg?cs=srgb&dl=pexels-artbovich-6980708.jpg&fm=jpg" alt="کابینت سفید ساده و یکدست"><span>کابینت سفید ساده و یکدست</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/6508351/pexels-photo-6508351.jpeg?cs=srgb&dl=pexels-artbovich-6508351.jpg&fm=jpg" alt="کابینت سفید با صفحه چوبی"><span>کابینت سفید با صفحه چوبی</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/8082222/pexels-photo-8082222.jpeg?cs=srgb&dl=pexels-artbovich-8082222.jpg&fm=jpg" alt="کابینت قدی و فر توکار"><span>کابینت قدی و فر توکار</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/6835108/pexels-photo-6835108.jpeg?cs=srgb&dl=pexels-curtis-adams-1694007-6835108.jpg&fm=jpg" alt="کابینت قاب‌دار سفید"><span>کابینت قاب‌دار سفید</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/8032006/pexels-photo-8032006.jpeg?cs=srgb&dl=pexels-curtis-adams-1694007-8032006.jpg&fm=jpg" alt="کابینت سفید با ویترین شیشه‌ای"><span>کابینت سفید با ویترین شیشه‌ای</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/31267709/pexels-photo-31267709.jpeg?cs=srgb&dl=pexels-alexander-f-ungerer-157458816-31267709.jpg&fm=jpg" alt="کابینت ذغالی مدرن"><span>کابینت ذغالی مدرن</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/6996078/pexels-photo-6996078.jpeg?cs=srgb&dl=pexels-pavel-danilyuk-6996078.jpg&fm=jpg" alt="کابینت سفید مینیمال"><span>کابینت سفید مینیمال</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/7601078/pexels-photo-7601078.jpeg?cs=srgb&dl=pexels-curtis-adams-1694007-7601078.jpg&fm=jpg" alt="کابینت سفید و صفحه چوبی"><span>کابینت سفید و صفحه چوبی</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/8583735/pexels-photo-8583735.jpeg?cs=srgb&dl=pexels-curtis-adams-1694007-8583735.jpg&fm=jpg" alt="آشپزخانه روشن با جزیره مرکزی"><span>آشپزخانه روشن با جزیره مرکزی</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/35843927/pexels-photo-35843927.jpeg?cs=srgb&dl=pexels-alexander-f-ungerer-157458816-35843927.jpg&fm=jpg" alt="کابینت چوبی و صفحه مرمر"><span>کابینت چوبی و صفحه مرمر</span></figure><figure class="gallery-card"><img loading="lazy" decoding="async" src="https://images.pexels.com/photos/37153434/pexels-photo-37153434.jpeg?cs=srgb&dl=pexels-curtis-adams-1694007-37153434.jpg&fm=jpg" alt="کابینت چوبی و جزیره سنگی"><span>کابینت چوبی و جزیره سنگی</span></figure></div></div><aside class="side-note"><div><b>◇</b>طراحی سه‌بعدی</div><div><b>♢</b>متریال لوکس</div><div><b>♧</b>مشاوره تخصصی</div></aside></section>
 <div class="wrap trust"><div class="trust-item"><b>♧</b>اجرای دقیق و حرفه‌ای</div><div class="trust-item"><b>⚒</b>طراحی اختصاصی</div><div class="trust-logo">N<small>C A B I N E T</small></div><div class="trust-item"><b>♢</b>استفاده از متریال درجه یک</div><div class="trust-item"><b>✧</b>ضمانت کیفیت</div></div>
