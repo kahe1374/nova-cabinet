@@ -295,7 +295,7 @@ async function checkSession() {
   }
   currentRole=role;
   $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden');
-  $('identity').textContent=session.user.email+' · '+(role==='owner'?'مدیر کامل':'مدیر کارخانه');
+  $('identity').textContent=(session.user.phone || session.user.email || 'مدیر')+' · '+(role==='owner'?'مدیر کامل':'مدیر کارخانه');
   await loadOrders();
 }
 $('loginForm').addEventListener('submit',async (event)=>{
@@ -306,7 +306,7 @@ $('loginForm').addEventListener('submit',async (event)=>{
     password:$('password').value
   });
   button.disabled=false;
-  if(error){showMessage('loginStatus','ورود انجام نشد. رمز عبور را بررسی کن یا گزینه «فراموشی / تنظیم رمز عبور» را بزن.');return;}
+  if(error){showMessage('loginStatus','ورود انجام نشد. ایمیل حساب و رمز عبور را بررسی کن.');return;}
   $('password').value='';
   await checkSession();
 });
