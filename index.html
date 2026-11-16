@@ -78,6 +78,14 @@ header{height:78px;position:absolute;z-index:5;top:0;left:0;right:0;background:l
 .nova-compare-label.left{left:12px}.nova-compare-label.right{right:12px}
 .nova-compare input{display:block;width:100%;margin:16px 0 0;accent-color:#d9ad6c;cursor:ew-resize}
 .nova-demo-note{text-align:center;color:#b9aa96;font-size:10px;margin:8px 0 0}
+.nova-catalog-real{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.nova-real-catalog{display:flex;flex-direction:column;gap:9px;min-height:145px;padding:18px;border:1px solid #caa66b55;border-radius:15px;background:linear-gradient(145deg,#1d1712,#100d0a);color:var(--cream);text-decoration:none;transition:border-color .2s,transform .2s}
+.nova-real-catalog:hover{border-color:var(--gold2);transform:translateY(-3px)}
+.nova-real-brand{font-size:10px;letter-spacing:1px;color:var(--gold2)}
+.nova-real-catalog b{font-size:15px}
+.nova-real-catalog p{margin:0;color:var(--muted);font-size:11px;line-height:1.9}
+.nova-real-catalog>span:last-child{margin-top:auto;color:var(--gold2);font-size:11px}
+@media(max-width:650px){.nova-catalog-real{grid-template-columns:1fr}}
 .nova-materials{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .nova-material{appearance:none;cursor:pointer;text-align:right;color:var(--cream);background:#100d0a;border:1px solid #caa66b55;border-radius:15px;padding:10px;transition:transform .25s,border-color .25s,box-shadow .25s}
 .nova-material:hover{transform:translateY(-4px)}
@@ -646,30 +654,22 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
   </div>
  </div>
  <div class="nova-panel nova-reveal" id="nova-materials">
-  <div class="nova-panel-head"><div class="eyebrow">MATERIAL STUDIO</div><h2>متریال و رنگ دلخواهتان را انتخاب کنید</h2><p>بافت و رنگ فقط ظاهر کار نیست؛ روی حس فضا و نگهداری روزمره هم اثر می‌گذارد. نمونه‌ها را بررسی کن تا انتخاب متریال دقیق‌تر شود.</p></div>
-  <div class="nova-material-tools">
-   <label for="novaBrandFilter">برند ورق</label>
-   <select id="novaBrandFilter" class="nova-brand-filter">
-    <option value="agt">AGT / ای‌جی‌تی</option><option value="pakchoob">پاک‌چوب</option><option value="decopanel">دکوپنل</option><option value="egger">EGGER</option>
-   </select>
+  <div class="nova-panel-head"><div class="eyebrow">MATERIAL STUDIO</div><h2>رنگ درب‌ها را از کاتالوگ واقعی سازنده ببینید</h2><p>به‌جای نمایش رنگ‌های تقریبی و ساختگی، لینک کاتالوگ رسمی برندها را گذاشته‌ایم تا کد و تصویر دکور را از منبع سازنده بررسی کنی.</p></div>
+  <div class="nova-catalog-real">
+   <a class="nova-real-catalog" href="https://www.agtwood.com/products/panel/panel/supramat-panel" target="_blank" rel="noopener">
+    <span class="nova-real-brand">AGT · SUPRAMAT</span><b>رنگ‌های واقعی پنل مات AGT</b><p>نمونه‌های رسمی رنگ و کدهای 3114، 3097، 3096، 3095 و 3019 را در کاتالوگ سازنده ببین.</p><span>مشاهده کاتالوگ رسمی ↗</span>
+   </a>
+   <a class="nova-real-catalog" href="https://www.egger.com/en/furniture-interior-design/decors" target="_blank" rel="noopener">
+    <span class="nova-real-brand">EGGER · DECORATIVE COLLECTION</span><b>دکورهای ساده و طرح چوب EGGER</b><p>تصویر دکور، بافت سطح، کد محصول و امکان سفارش نمونه از مرجع رسمی سازنده.</p><span>مشاهده کاتالوگ رسمی ↗</span>
+   </a>
+   <a class="nova-real-catalog" href="https://sitechoob.ir/brands/pakchoob" target="_blank" rel="noopener">
+    <span class="nova-real-brand">PAKCHOOB · پاک‌چوب</span><b>رنگ‌ها و طرح‌های پاک‌چوب</b><p>برای دیدن دکورها و بررسی کد و موجودی به کاتالوگ فروشنده مراجعه کن.</p><span>مشاهده کاتالوگ ↗</span>
+   </a>
+   <a class="nova-real-catalog" href="https://darichoob.com/برند/decopanel/" target="_blank" rel="noopener">
+    <span class="nova-real-brand">DECOPANEL · دکوپنل</span><b>طرح‌ها و رنگ‌های دکوپنل</b><p>طرح‌های موجود را در مرجع کاتالوگ بررسی کن؛ کد و موجودی باید پیش از سفارش تأیید شود.</p><span>مشاهده کاتالوگ ↗</span>
+   </a>
   </div>
-  <div class="nova-materials" id="novaMaterialGrid">
-   <button class="nova-material" type="button" data-brand="agt" data-name="ساکورا صورتی" data-code="AGT 3114 — Sakura Pink" data-desc="دکور مات از مجموعه Supramat؛ کد و نام در صفحه رسمی AGT درج شده است." data-look="linear-gradient(135deg,#c69b9a,#e5c4c1 50%,#aa7778)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#c69b9a,#e5c4c1 50%,#aa7778)"></span><b>ساکورا صورتی</b><small>3114 · Supramat</small></button>
-   <button class="nova-material" type="button" data-brand="agt" data-name="زیتونی" data-code="AGT 3097 — Olive Green" data-desc="دکور سبز زیتونی از مجموعه Supramat؛ نمایشگر جایگزین نمونه فیزیکی نیست." data-look="linear-gradient(135deg,#59604a,#879077 50%,#3f4938)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#59604a,#879077 50%,#3f4938)"></span><b>زیتونی</b><small>3097 · Supramat</small></button>
-   <button class="nova-material" type="button" data-brand="agt" data-name="هاوانا قهوه‌ای" data-code="AGT 3096 — Havana Brown" data-desc="دکور قهوه‌ای از مجموعه Supramat؛ کد رسمی AGT." data-look="linear-gradient(135deg,#4d3023,#8b6046 50%,#362117)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#4d3023,#8b6046 50%,#362117)"></span><b>هاوانا قهوه‌ای</b><small>3096 · Supramat</small></button>
-   <button class="nova-material" type="button" data-brand="agt" data-name="ویکتوریا گری" data-code="AGT 3095 — Victoria Grey" data-desc="دکور خاکستری از مجموعه Supramat؛ کد رسمی AGT." data-look="linear-gradient(135deg,#777b7a,#b1b3ae 50%,#626663)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#777b7a,#b1b3ae 50%,#626663)"></span><b>ویکتوریا گری</b><small>3095 · Supramat</small></button>
-   <button class="nova-material" type="button" data-brand="agt" data-name="صحرا کرم" data-code="AGT 3019 — Sahara Cream" data-desc="کرم روشن از مجموعه AGT؛ کد رسمی در صفحه محصولات درج شده است." data-look="linear-gradient(135deg,#c8b89e,#eadcc4 50%,#b6a487)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#c8b89e,#eadcc4 50%,#b6a487)"></span><b>صحرا کرم</b><small>3019 · AGT</small></button>
-   <button class="nova-material" type="button" data-brand="pakchoob" data-name="مونومنت گری" data-code="پاک‌چوب 1133 — Monument Grey" data-desc="نام و کد در فهرست محصولات پاک‌چوب در سایت چوب ثبت شده؛ موجودی روز باید استعلام شود." data-look="linear-gradient(135deg,#55595b,#777b7d 50%,#414547)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#55595b,#777b7d 50%,#414547)"></span><b>مونومنت گری</b><small>1133 · پاک‌چوب</small></button>
-   <button class="nova-material" type="button" data-brand="pakchoob" data-name="وارم گری" data-code="پاک‌چوب 1132 — Warm Grey" data-desc="نام و کد در فهرست محصولات پاک‌چوب ثبت شده؛ موجودی روز باید استعلام شود." data-look="linear-gradient(135deg,#77736e,#aaa49b 50%,#5d5954)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#77736e,#aaa49b 50%,#5d5954)"></span><b>وارم گری</b><small>1132 · پاک‌چوب</small></button>
-   <button class="nova-material" type="button" data-brand="pakchoob" data-name="آنتراسیت" data-code="پاک‌چوب 1129 — Anthracite" data-desc="نام و کد در فهرست محصولات پاک‌چوب ثبت شده؛ موجودی روز باید استعلام شود." data-look="linear-gradient(135deg,#303438,#5b6063 50%,#202326)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#303438,#5b6063 50%,#202326)"></span><b>آنتراسیت</b><small>1129 · پاک‌چوب</small></button>
-   <button class="nova-material" type="button" data-brand="pakchoob" data-name="کاپوچینو" data-code="پاک‌چوب 1123 — Cappuccino" data-desc="نام و کد در فهرست محصولات پاک‌چوب ثبت شده؛ موجودی روز باید استعلام شود." data-look="linear-gradient(135deg,#9a8067,#c8b098 50%,#80684f)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#9a8067,#c8b098 50%,#80684f)"></span><b>کاپوچینو</b><small>1123 · پاک‌چوب</small></button>
-   <button class="nova-material" type="button" data-brand="egger" data-name="کشمیری" data-code="EGGER U702 ST9 — Cashmere Grey" data-desc="دکور یک‌رنگ کشمیری؛ ترکیب پیشنهادی رسمی با دکورهای چوبی در راهنمای EGGER." data-look="linear-gradient(135deg,#a9a39a,#d0c9bd 50%,#8f8980)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#a9a39a,#d0c9bd 50%,#8f8980)"></span><b>کشمیری</b><small>U702 ST9 · EGGER</small></button>
-   <button class="nova-material" type="button" data-brand="egger" data-name="داستی گری" data-code="EGGER U732 ST9 — Dust Grey" data-desc="خاکستری خنثی؛ کد و نام در مجموعه دکورهای EGGER درج شده است." data-look="linear-gradient(135deg,#777b7c,#a4a7a6 50%,#5d6162)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#777b7c,#a4a7a6 50%,#5d6162)"></span><b>داستی گری</b><small>U732 ST9 · EGGER</small></button>
-   <button class="nova-material" type="button" data-brand="egger" data-name="بلک" data-code="EGGER U999 — Black" data-desc="دکور مشکی EGGER؛ نوع سطح باید هنگام سفارش با فروشنده تطبیق داده شود." data-look="linear-gradient(135deg,#090909,#343434 50%,#111)" aria-pressed="false"><span class="nova-material-swatch" style="background:linear-gradient(135deg,#090909,#343434 50%,#111)"></span><b>مشکی</b><small>U999 · EGGER</small></button>
-   <button class="nova-material" type="button" data-brand="egger" data-name="بلوط هالیفاکس سفید" data-code="EGGER H1176 ST37 — White Halifax Oak" data-desc="دکور چوبی با بافت برجسته؛ کد در راهنمای رسمی ترکیب دکورهای EGGER." data-look="repeating-linear-gradient(92deg,#c6b69e 0 5px,#e3d7c3 6px 10px,#ad9b82 11px 14px)" aria-pressed="false"><span class="nova-material-swatch" style="background:repeating-linear-gradient(92deg,#c6b69e 0 5px,#e3d7c3 6px 10px,#ad9b82 11px 14px)"></span><b>بلوط هالیفاکس سفید</b><small>H1176 ST37 · EGGER</small></button>
-   <div class="nova-catalog-placeholder" data-brand="decopanel"><b>دکوپنل</b><p>برای این برند، کاتالوگ مرجع و دسته‌های طرح ساده، چوب، فانتزی و سافت قابل مشاهده است. تا زمان تأیید کد و نمونه واقعی، رنگ ساختگی نمایش نمی‌دهیم.</p><a href="https://darichoob.com/برند/decopanel/" target="_blank" rel="noopener">مشاهده کاتالوگ دکوپنل ↗</a></div>
-  </div>
-  <div class="nova-catalog-links"><a href="https://sitechoob.ir/brands/pakchoob" target="_blank" rel="noopener">مشاهده دکورهای پاک‌چوب</a><a href="https://www.anadoluucler.com/agt-trendy-panel-renkleri" target="_blank" rel="noopener">کاتالوگ رنگ AGT</a><a href="https://darichoob.com/برند/decopanel/" target="_blank" rel="noopener">اطلاعات کاتالوگ دکوپنل</a></div><p class="nova-stock-note">رنگ‌های روی نمایشگر پیش‌نمایش تقریبی هستند؛ موجودی، سری تولید و کد دقیق دکوپنل باید پیش از سفارش با فروشنده تأیید شود. دکوپنل فعلاً به‌صورت گروه‌های طرح نمایش داده شده، نه کدهای تأییدنشده.</p><div class="nova-material-preview"><div class="nova-material-text"><strong id="novaMaterialName">مشکی براق</strong><p id="novaMaterialDesc">ورق هایگلاس مشکی؛ مناسب ترکیب با سفید، کرم و طرح چوب.</p><small id="novaMaterialCode">AGT 6002 — HG New Black</small></div><div class="nova-material-board" id="novaMaterialBoard" aria-label="پیش‌نمایش بافت انتخاب‌شده"></div></div>
+  <p class="nova-stock-note">دیگر رنگ‌های ساختگی و گرادیانی را به‌عنوان نمونه واقعی در این بخش نشان نمی‌دهیم. رنگ نمایشگر و عکس کاتالوگ ممکن است با ورق فیزیکی تفاوت داشته باشد؛ برای انتخاب نهایی، نمونه اصلی همان کد و سری تولید را از فروشنده بگیر.</p>
  </div>
 <section class="wrap nova-panel nova-reveal" id="nova-configurator">
  <div class="nova-panel-head"><div class="eyebrow">NOVA COLOR LAB</div><h2>ترکیب دلخواهت را قبل از سفارش انتخاب کن</h2><p>رنگ بدنه، مدل درب، دستگیره، صفحه و نورپردازی را تغییر بده و انتخاب‌هایت را یکجا برای مشاوره نوا بفرست. این پیش‌نمایش برای تصمیم اولیه است و جایگزین رندر اجرایی یا نمونه فیزیکی نیست.</p></div>
