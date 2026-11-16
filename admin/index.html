@@ -20,10 +20,10 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
   <section id="login" class="card">
     <div class="tag">NOVA CABINET / SECURE ACCESS</div>
     <h1>پنل <span>مدیریت</span></h1>
-    <p>ورود مدیر اصلی با رمز عبور. اثر انگشت گوشی را می‌توان بعداً با Passkey فعال کرد.</p>
+    <p>ورود مدیران مجاز نوا با حساب شخصی و دسترسی کامل.</p>
     <form id="loginForm">
-      <label for="email">ایمیل مدیر اصلی</label>
-      <input id="email" type="email" value="vahiiidk74@gmail.com" readonly>
+      <label for="email">ایمیل حساب مدیر</label>
+      <input id="email" type="email" value="vahiiidk74@gmail.com" autocomplete="username" required>
       <label for="password">رمز عبور</label>
       <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور حساب مدیر" required>
       <button id="passwordLogin" type="submit">ورود با رمز عبور</button>
@@ -57,7 +57,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 
 const SUPABASE_URL = 'https://sjapgxjllnlttrhjxkez.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
-const OWNER_EMAIL = 'vahiiidk74@gmail.com';
+const DEFAULT_OWNER_EMAIL = 'vahiiidk74@gmail.com';
+const loginEmail = () => $('email').value.trim().toLowerCase() || DEFAULT_OWNER_EMAIL;
 const REDIRECT_URL = 'https://kahe1374.github.io/nova-cabinet/admin/';
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
 const $ = (id) => document.getElementById(id);
@@ -299,7 +300,7 @@ async function checkSession() {
   }
   currentRole=role;
   $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden');
-  $('identity').textContent=session.user.email+' · '+(role==='owner'?'مدیر اصلی':'مدیر کارخانه');
+  $('identity').textContent=session.user.email+' · '+(role==='owner'?'مدیر کامل':'مدیر کارخانه');
   await loadOrders();
 }
 // نمایش خطاهای بازگشتی از لینک ایمیل، به‌جای صفحه سفید یا خطای نامفهوم
@@ -310,7 +311,7 @@ $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
   const button=$('passwordLogin'); button.disabled=true; showMessage('loginStatus','در حال بررسی رمز عبور...');
   const { error }=await supabase.auth.signInWithPassword({
-    email:OWNER_EMAIL,
+    email:loginEmail(),
     password:$('password').value
   });
   button.disabled=false;
@@ -320,14 +321,14 @@ $('loginForm').addEventListener('submit',async (event)=>{
 });
 $('resetPassword').addEventListener('click',async()=>{
   const button=$('resetPassword'); button.disabled=true; showMessage('loginStatus','در حال ارسال ایمیل تنظیم رمز عبور...');
-  const { error }=await supabase.auth.resetPasswordForEmail(OWNER_EMAIL,{redirectTo:REDIRECT_URL});
+  const { error }=await supabase.auth.resetPasswordForEmail(loginEmail(),{redirectTo:REDIRECT_URL});
   button.disabled=false;
   if(error){showMessage('loginStatus','ارسال ایمیل تنظیم رمز انجام نشد: '+error.message);return;}
   showMessage('loginStatus','ایمیل تنظیم رمز ارسال شد. صندوق ورودی و پوشه Spam را بررسی کن؛ پس از تعیین رمز، با همان رمز وارد شو.');
 });
 $('sendLink').addEventListener('click',async()=>{
   const button=$('sendLink'); button.disabled=true; showMessage('loginStatus','در حال ارسال لینک ورود...');
-  const { error }=await supabase.auth.signInWithOtp({email:OWNER_EMAIL,options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}});
+  const { error }=await supabase.auth.signInWithOtp({email:loginEmail(),options:{shouldCreateUser:false,emailRedirectTo:REDIRECT_URL}});
   button.disabled=false;
   showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'لینک ورود ارسال شد. فقط جدیدترین ایمیل را باز کن.');
 });
