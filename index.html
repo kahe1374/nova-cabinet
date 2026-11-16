@@ -655,6 +655,9 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
  <div class="nova-concierge">
   <div class="nova-concierge-intro"><div class="seal">N</div><h3>از ایده تا انتخاب درست</h3><p>نوع فضا، سبک، ابعاد و حدود بودجه را مشخص کنید. این راهنما اطلاعات شما را مرتب می‌کند و برای مشاوره تخصصی به واتساپ نوا می‌فرستد؛ پیشنهاد آن جایگزین بازدید و اندازه‌گیری نیست.</p><a class="btn" href="#nova-visit">درخواست بازدید و اندازه‌گیری　↗</a></div>
   <form class="nova-assistant-form" id="novaAssistantForm">
+   <label>نام و نام خانوادگی<input name="name" autocomplete="name" required placeholder="نام شما"></label>
+   <label>شماره تماس<input name="phone" type="tel" inputmode="tel" pattern="(09[0-9]{9}|\\+989[0-9]{9}|00989[0-9]{9})" required placeholder="09xxxxxxxxx"></label>
+   
    <label>چه فضایی را می‌خواهید طراحی کنید؟<select name="service"><option>کابینت آشپزخانه</option><option>TV Wall</option><option>کمد دیواری</option><option>چند فضای مختلف</option></select></label>
    <label>سبک مورد علاقه<select name="style"><option>مدرن و مینیمال</option><option>نئوکلاسیک</option><option>کلاسیک</option><option>لوکس و تیره</option><option>چوب گرم</option><option>هنوز مطمئن نیستم</option></select></label>
    <label>ابعاد تقریبی فضا<select name="size"><option>کوچک</option><option>متوسط</option><option>بزرگ</option><option>هنوز اندازه‌گیری نشده</option></select></label>
@@ -668,6 +671,9 @@ body{background:radial-gradient(ellipse at 50% 12%,#21170f 0,#100d0a 42%,#090807
 <section class="wrap nova-panel nova-reveal" id="nova-estimator">
  <div class="nova-panel-head"><div class="eyebrow">PROJECT ESTIMATOR</div><h2>برآورد اولیه پروژه</h2><p>نوع فضا، متراژ و متریال مدنظرت را مشخص کن تا درخواست استعلام کامل‌تری بفرستی؛ قیمت نهایی پس از بررسی جزئیات اعلام می‌شود.</p></div>
  <form id="novaEstimateForm" class="nova-estimate-grid">
+  <label>نام و نام خانوادگی<input name="name" autocomplete="name" required placeholder="نام شما"></label>
+   <label>شماره تماس<input name="phone" type="tel" inputmode="tel" pattern="(09[0-9]{9}|\\+989[0-9]{9}|00989[0-9]{9})" required placeholder="09xxxxxxxxx"></label>
+   
   <label>نوع پروژه<select name="project"><option>کابینت آشپزخانه</option><option>TV Wall</option><option>کمد دیواری</option><option>ترکیبی</option></select></label>
   <label>متراژ تقریبی (متر طول)<input name="meters" type="number" min="1" max="100" step="0.5" value="8" required></label>
   <label>سبک<select name="style"><option>مدرن</option><option>نئوکلاسیک</option><option>کلاسیک</option><option>مینیمال</option></select></label>
@@ -775,21 +781,41 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{e.pr
  function update(){if(overlay&&color)overlay.style.background=color.value;if(wa){const msg='سلام، برای پروژه نوا کابینت این گزینه‌ها را انتخاب کردم: رنگ '+color.options[color.selectedIndex].text+'، مدل درب '+door.value+'، دستگیره '+handle.value+'، صفحه '+counter.value+'، نورپردازی '+(lighting?.value||'انتخاب نشده')+'، امکانات داخلی '+(storage?.value||'انتخاب نشده')+'. لطفاً راهنمایی و برآورد قیمت بفرمایید.';wa.href='https://wa.me/989367374312?text='+encodeURIComponent(msg);}}
  [color,door,handle,counter,lighting,storage].forEach(el=>el?.addEventListener('change',update));update();
  const form=document.getElementById('novaEstimateForm'),result=document.getElementById('novaEstimateResult');
- if(form){const meters=form.elements.meters;const refresh=()=>{const m=Math.max(0,Number(meters.value)||0);result.textContent='متراژ واردشده: '+m.toLocaleString('fa-IR')+' متر طول — '+form.elements.project.value+'، سبک '+form.elements.style.value+'، متریال '+form.elements.material.value+'. مبلغ نهایی پس از بررسی ابعاد، نقشه، یراق‌آلات و استعلام روز اعلام می‌شود.';};form.addEventListener('input',refresh);form.addEventListener('change',refresh);form.addEventListener('submit',e=>{e.preventDefault();refresh();const msg='درخواست برآورد NOVA CABINET\n'+result.textContent+'\nتوضیحات: '+form.elements.details.value;window.open('https://wa.me/989367374312?text='+encodeURIComponent(msg),'_blank','noopener');});}
+ if(form){const meters=form.elements.meters;const refresh=()=>{const m=Math.max(0,Number(meters.value)||0);result.textContent='متراژ واردشده: '+m.toLocaleString('fa-IR')+' متر طول — '+form.elements.project.value+'، سبک '+form.elements.style.value+'، متریال '+form.elements.material.value+'. مبلغ نهایی پس از بررسی ابعاد، نقشه، یراق‌آلات و استعلام روز اعلام می‌شود.';};form.addEventListener('input',refresh);form.addEventListener('change',refresh);}
 })();
 </script>\n
 <script>
 (()=> {
+ const endpoint='https://sjapgxjllnlttrhjxkez.supabase.co/functions/v1/create-lead';
+ const apiKey='sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
+ async function saveLead(payload,button,status,form){
+  button.disabled=true;const original=button.textContent;button.textContent='در حال ثبت امن درخواست...';status.textContent='در حال ذخیره درخواست در سامانه نوا...';
+  try{
+   const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','apikey':apiKey},body:JSON.stringify(payload)});
+   const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||'save_failed');
+   status.replaceChildren();const msg=document.createElement('span');msg.textContent='درخواست با موفقیت ثبت شد. کد پیگیری: '+data.order_number+' — تیم نوا برای هماهنگی با شما تماس می‌گیرد. ';status.append(msg);
+   const link=document.createElement('a');link.href='https://wa.me/989367374312?text='+encodeURIComponent('سلام، درخواست من در سایت NOVA CABINET ثبت شد. کد پیگیری: '+data.order_number);link.target='_blank';link.rel='noopener';link.textContent='پیگیری در واتساپ';link.className='btn';status.append(link);form.reset();
+   return true;
+  }catch(err){console.error('NOVA lead save failed',err);status.textContent='ثبت درخواست انجام نشد. لطفاً اتصال اینترنت را بررسی و دوباره تلاش کنید یا مستقیم با واتساپ تماس بگیرید.';return false;}
+  finally{button.disabled=false;button.textContent=original;}
+ }
  const assistant=document.getElementById('novaAssistantForm'),summary=document.getElementById('novaAssistantResult');
  if(assistant&&summary){
   const refresh=()=>{const d=new FormData(assistant);summary.textContent='پیشنهاد اولیه نوا: '+d.get('service')+' با سبک '+d.get('style')+'، ابعاد '+d.get('size')+'، بودجه '+d.get('budget')+' و زمان اجرا '+d.get('time')+'. برای انتخاب نهایی، بررسی فضا و متریال لازم است.';};
   assistant.addEventListener('change',refresh);refresh();
-  assistant.addEventListener('submit',e=>{e.preventDefault();refresh();const d=new FormData(assistant);const message='سلام، از مشاور هوشمند سایت NOVA CABINET درخواست مشاوره دارم.\\n'+summary.textContent+'\\nلطفاً برای ادامه راهنمایی کنید.';window.open('https://wa.me/989367374312?text='+encodeURIComponent(message),'_blank','noopener');});
+  assistant.addEventListener('submit',async e=>{e.preventDefault();if(!assistant.reportValidity())return;refresh();const d=new FormData(assistant),button=assistant.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'مشاوره هوشمند - '+d.get('service'),order_type:'cabinet',details:summary.textContent+'\nزمان اجرا: '+d.get('time')},button,summary,assistant);});
+ }
+ const estimate=document.getElementById('novaEstimateForm'),estimateResult=document.getElementById('novaEstimateResult');
+ if(estimate&&estimateResult){
+  const refresh=()=>{const d=new FormData(estimate),m=Math.max(0,Number(d.get('meters'))||0);estimateResult.textContent='متراژ واردشده: '+m.toLocaleString('fa-IR')+' متر طول — '+d.get('project')+'، سبک '+d.get('style')+'، متریال '+d.get('material')+'. مبلغ نهایی پس از بررسی ابعاد، نقشه، یراق‌آلات و استعلام روز اعلام می‌شود.';};
+  estimate.addEventListener('input',refresh);estimate.addEventListener('change',refresh);refresh();
+  estimate.addEventListener('submit',async e=>{e.preventDefault();if(!estimate.reportValidity())return;refresh();const d=new FormData(estimate),button=estimate.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'استعلام قیمت - '+d.get('project'),order_type:'cabinet',details:estimateResult.textContent+'\nتوضیحات مشتری: '+d.get('details')},button,estimateResult,estimate);});
  }
  const visit=document.getElementById('novaVisitForm');
  if(visit){
-  const date=visit.elements.date;const today=new Date();const localToday=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);date.min=localToday;
-  visit.addEventListener('submit',e=>{e.preventDefault();if(!visit.reportValidity())return;const d=new FormData(visit);const message='درخواست بازدید و اندازه‌گیری — NOVA CABINET\\nنام: '+d.get('name')+'\\nتماس: '+d.get('phone')+'\\nشهر/منطقه: '+d.get('city')+'\\nپروژه: '+d.get('project')+'\\nتاریخ پیشنهادی: '+d.get('date')+'\\nبازه زمانی: '+d.get('time')+'\\nنشانی/توضیحات: '+d.get('address')+'\\nاین زمان تا تأیید تیم نوا قطعی نیست.';window.open('https://wa.me/989367374312?text='+encodeURIComponent(message),'_blank','noopener');});
+  const date=visit.elements.date,today=new Date(),localToday=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);date.min=localToday;
+  let status=document.getElementById('novaVisitStatus');if(!status){status=document.createElement('div');status.id='novaVisitStatus';status.className='status';visit.insertAdjacentElement('afterend',status);}
+  visit.addEventListener('submit',async e=>{e.preventDefault();if(!visit.reportValidity())return;const d=new FormData(visit),button=visit.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:d.get('city'),type:'درخواست بازدید و اندازه‌گیری - '+d.get('project'),order_type:'workshop_service',details:'تاریخ پیشنهادی: '+d.get('date')+'\nبازه زمانی: '+d.get('time')+'\nنشانی/توضیحات: '+d.get('address')+'\nاین زمان تا تأیید تیم نوا قطعی نیست.'},button,status,visit);});
  }
 })();
 </script>
