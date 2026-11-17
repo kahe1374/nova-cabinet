@@ -22,6 +22,7 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
     <div class="tag">NOVA CABINET / SECURE ACCESS</div>
     <h1>پنل <span>مدیریت</span></h1>
     <p>ورود مدیران مجاز نوا با حساب شخصی و دسترسی کامل.</p>
+    <button id="newPasswordOption" type="button" style="width:100%;margin:8px 0 14px">رمز جدید / تنظیم رمز عبور</button>
     <form id="loginForm">
       <label for="email">ایمیل حساب مدیر</label>
       <input id="email" type="email" value="vahiiidk74@gmail.com" autocomplete="username" required>
@@ -29,9 +30,17 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
       <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور حساب مدیر" required>
       <button id="passwordLogin" type="submit">ورود با رمز عبور</button>
     </form>
-    <div class="row" style="justify-content:flex-start;margin-top:10px">
-
-    </div>
+    <section id="recoveryPanel" class="hidden" style="border:1px solid var(--line);border-radius:8px;padding:16px;margin-top:14px">
+      <h2>تنظیم رمز جدید</h2>
+      <p>پس از بازکردن لینک امنی که به ایمیل مدیر ارسال می‌شود، رمز جدید را دو بار وارد کن.</p>
+      <form id="newPasswordForm">
+        <label for="newPassword">رمز جدید</label>
+        <input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="حداقل ۸ کاراکتر" required>
+        <label for="confirmNewPassword">تکرار رمز جدید</label>
+        <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="8" placeholder="رمز جدید را دوباره وارد کن" required>
+        <button id="saveNewPassword" type="submit">ذخیره رمز جدید</button>
+      </form>
+    </section>
 
     <div id="loginStatus" class="status" role="status" aria-live="polite">ورود فقط با ایمیل و رمز عبور حساب مدیر انجام می‌شود.</div>
   </section>
@@ -325,6 +334,30 @@ async function checkSession() {
   $('identity').textContent=(session.user.phone || session.user.email || 'مدیر')+' · '+(role==='owner'?'مدیر کامل':'مدیر کارخانه');
   await loadOrders();
 }
+$('newPasswordOption').addEventListener('click',async()=>{
+  const email=loginEmail();
+  if(!email){showMessage('loginStatus','ابتدا ایمیل حساب مدیر را وارد کن.');return;}
+  const button=$('newPasswordOption');button.disabled=true;
+  showMessage('loginStatus','در حال ارسال لینک امن تنظیم رمز به ایمیل مدیر...');
+  const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:REDIRECT_URL});
+  button.disabled=false;
+  showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'اگر این ایمیل حساب معتبر مدیر باشد، لینک تنظیم رمز جدید برای آن ارسال می‌شود. ایمیل و پوشه هرزنامه را بررسی کن.');
+});
+$('newPasswordForm').addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const next=$('newPassword').value,confirm=$('confirmNewPassword').value;
+  if(next.length<8){showMessage('loginStatus','رمز جدید باید دست‌کم ۸ کاراکتر باشد.');return;}
+  if(next!==confirm){showMessage('loginStatus','تکرار رمز با رمز جدید یکسان نیست.');return;}
+  const button=$('saveNewPassword');button.disabled=true;
+  showMessage('loginStatus','در حال ذخیره رمز جدید...');
+  const {error}=await supabase.auth.updateUser({password:next});
+  button.disabled=false;
+  if(error){showMessage('loginStatus','ذخیره رمز انجام نشد: '+error.message);return;}
+  $('newPassword').value='';$('confirmNewPassword').value='';
+  $('recoveryPanel').classList.add('hidden');
+  showMessage('loginStatus','رمز جدید با موفقیت ذخیره شد. اکنون می‌توانی با ایمیل و رمز جدید وارد شوی.');
+  await supabase.auth.signOut();
+});
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
   const button=$('passwordLogin'); button.disabled=true; showMessage('loginStatus','در حال بررسی رمز عبور...');
@@ -344,9 +377,23 @@ $('orderSearch').addEventListener('input',renderOrders);
 $('orderStatusFilter').addEventListener('change',renderOrders);
 for(const [value,label] of Object.entries(statusLabels)){const option=document.createElement('option');option.value=value;option.textContent=label;$('orderStatusFilter').append(option);}
 supabase.auth.onAuthStateChange((event,session)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    $('login').classList.remove('hidden');$('dashboard').classList.add('hidden');
+    $('recoveryPanel').classList.remove('hidden');
+    showMessage('loginStatus','لینک تأیید شد؛ اکنون رمز جدید را دو بار وارد کن.');
+    return;
+  }
   if(session) setTimeout(checkSession,0);
 });
-checkSession();
+(async()=>{
+  const {data:{session}}=await supabase.auth.getSession();
+  if(session && (location.hash.includes('type=recovery') || location.search.includes('type=recovery'))){
+    $('recoveryPanel').classList.remove('hidden');
+    showMessage('loginStatus','لینک تنظیم رمز باز شد؛ رمز جدید را وارد کن.');
+    return;
+  }
+  checkSession();
+})();
 </script>
 </body>
 </html>
