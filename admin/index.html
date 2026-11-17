@@ -37,6 +37,7 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
         </div>
       </div>
     </form>
+    <button id="requestPasswordReset" type="button" class="hidden" style="margin-top:10px;background:transparent;color:var(--gold)">بازیابی رمز عبور از طریق ایمیل</button>
     <div id="loginStatus" class="status" role="status" aria-live="polite">ورود امن با حساب مدیر انجام می‌شود.</div>
   </section>
 
@@ -95,6 +96,18 @@ $('continueLogin').addEventListener('click', () => {
   $('passwordStep').classList.remove('hidden');
   $('password').focus();
   showMessage('loginStatus', 'شماره مدیر تأیید شد؛ رمز عبور را وارد کن.');
+});
+$('requestPasswordReset').addEventListener('click', async () => {
+  const button = $('requestPasswordReset');
+  button.disabled = true;
+  showMessage('loginStatus', 'در حال ارسال لینک بازیابی به ایمیل حساب مدیر...');
+  const { error } = await supabase.auth.resetPasswordForEmail(ADMIN_EMAIL, {
+    redirectTo: REDIRECT_URL
+  });
+  button.disabled = false;
+  showMessage('loginStatus', error
+    ? 'ارسال لینک بازیابی انجام نشد. تنظیمات ایمیل Supabase یا محدودیت ارسال را باید بررسی کنیم: ' + error.message
+    : 'اگر حساب مدیر وجود داشته باشد، لینک بازیابی به ایمیل ثبت‌شده ارسال می‌شود. صندوق ورودی و پوشه هرزنامه را بررسی کن.');
 });
 $('backToPhone').addEventListener('click', () => {
   $('password').value = '';
@@ -404,7 +417,11 @@ $('loginForm').addEventListener('submit',async (event)=>{
     password:$('password').value
   });
   button.disabled=false;
-  if(error){showMessage('loginStatus','شماره موبایل یا رمز عبور صحیح نیست.');return;}
+  if(error){
+    $('requestPasswordReset').classList.remove('hidden');
+    showMessage('loginStatus','ورود ناموفق بود. اگر رمز را نمی‌دانی، از گزینه بازیابی رمز استفاده کن.');
+    return;
+  }
   $('adminPhone').value=''; $('password').value='';
   await checkSession();
 });
