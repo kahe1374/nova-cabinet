@@ -28,12 +28,18 @@ Deno.serve(async (req) => {
     }
 
     const name = String(body.name ?? "").trim().slice(0, 160);
-    const mobile = String(body.phone ?? "").replace(/[\s-]/g, "");
+    const mobile = String(body.phone ?? "").replace(/[\\s-]/g, "");
     const type = String(body.type ?? "").trim().slice(0, 80);
+    const orderType = String(body.order_type ?? "cabinet").trim();
     const city = String(body.city ?? "").trim().slice(0, 100);
     const details = String(body.details ?? "").trim().slice(0, 3000);
 
-    if (name.length < 2 || !/^(09\d{9}|\+989\d{9}|00989\d{9})$/.test(mobile) || !type) {
+    if (
+      name.length < 2 ||
+      !/^(09\\d{9}|\\+989\\d{9}|00989\\d{9})$/.test(mobile) ||
+      !type ||
+      !["cabinet", "workshop_service"].includes(orderType)
+    ) {
       return reply(400, { error: "invalid_form" }, origin);
     }
 
@@ -71,9 +77,9 @@ Deno.serve(async (req) => {
     const { error: orderError } = await db.from("orders").insert({
       order_number: orderNumber,
       customer_id: customer.id,
-      order_type: "cabinet",
+      order_type: orderType,
       title: type,
-      description: [city ? "شهر: " + city : "", details].filter(Boolean).join("\n"),
+      description: [city ? "شهر: " + city : "", details].filter(Boolean).join("\\n"),
       status: "new",
     });
 
