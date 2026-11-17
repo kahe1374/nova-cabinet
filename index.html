@@ -1038,7 +1038,16 @@ acceptButton.addEventListener('click',async()=>{
   const accepted=await fetch('https://sjapgxjllnlttrhjxkez.supabase.co/functions/v1/accept-ai-design-price',{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE'},body:JSON.stringify({request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman,price_acceptance_token:result.price_acceptance_token})});
   const acceptedResult=await accepted.json();
   if(!accepted.ok||!acceptedResult.ok)throw new Error(acceptedResult.error||'price_acceptance_failed');
-  confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده. پس از فعال‌شدن درگاه، مرحله پرداخت در دسترس خواهد بود.';
+  confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده. برای پرداخت، مبلغ را کارت‌به‌کارت کنید و رسید را برای بررسی ارسال کنید.';
+  const paymentBox=document.createElement('div');paymentBox.className='nova-manual-payment';paymentBox.style.cssText='margin-top:16px;padding:16px;border:1px solid #c9a46b;border-radius:14px;background:#211a14;color:#f8f1e7;line-height:2';
+  const paymentTitle=document.createElement('strong');paymentTitle.textContent='پرداخت کارت‌به‌کارت';paymentBox.append(paymentTitle);
+  const paymentAmount=document.createElement('p');paymentAmount.textContent='مبلغ قابل پرداخت: '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان';paymentBox.append(paymentAmount);
+  const cardOwner=document.createElement('p');cardOwner.textContent='به نام: وحید کاهه';paymentBox.append(cardOwner);
+  const cardNumber=document.createElement('p');cardNumber.dir='ltr';cardNumber.style.cssText='font-size:20px;font-weight:700;letter-spacing:1px;text-align:center;direction:ltr';cardNumber.textContent='6037 9982 1837 6928';paymentBox.append(cardNumber);
+  const copyCard=document.createElement('button');copyCard.type='button';copyCard.className='btn';copyCard.textContent='کپی شماره کارت';copyCard.addEventListener('click',async()=>{try{await navigator.clipboard.writeText('6037998218376928');copyCard.textContent='شماره کارت کپی شد';}catch(_){copyCard.textContent='کپی خودکار ممکن نیست؛ شماره را دستی وارد کنید.';}});paymentBox.append(copyCard);
+  const paymentNote=document.createElement('p');paymentNote.textContent='پس از واریز، تصویر رسید و کد پیگیری درخواست را برای بررسی ارسال کنید. وضعیت سفارش تا زمان تأیید دستی پرداخت، پرداخت‌نشده باقی می‌ماند و طراحی شروع نمی‌شود.';paymentBox.append(paymentNote);
+  const receiptLink=document.createElement('a');receiptLink.className='btn';receiptLink.href='https://wa.me/989367374312?text='+encodeURIComponent('سلام، رسید پرداخت درخواست طراحی '+result.request_number+' را ارسال می‌کنم.');receiptLink.target='_blank';receiptLink.rel='noopener';receiptLink.textContent='ارسال رسید در واتساپ';paymentBox.append(receiptLink);
+  status.append(paymentBox);
   acceptButton.remove();
  }catch(err){console.error('NOVA price acceptance failed',err);acceptButton.disabled=false;acceptButton.textContent='تلاش دوباره برای تأیید هزینه';}
 });
