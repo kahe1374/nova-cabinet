@@ -28,8 +28,23 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
       <label for="password">رمز عبور مدیر</label>
       <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور پنل مدیریت" required>
       <button id="passwordLogin" type="submit">ورود</button>
+      <button id="sendRecovery" type="button">ارسال لینک تعیین / بازیابی رمز به ایمیل</button>
     </form>
     <div id="loginStatus" class="status" role="status" aria-live="polite">ورود با ایمیل و رمز عبور حساب مدیر انجام می‌شود؛ نیازی به پیامک نیست.</div>
+  </section>
+
+  <section id="recovery" class="card hidden">
+    <div class="tag">NOVA CABINET / PASSWORD SETUP</div>
+    <h1>تعیین <span>رمز عبور</span></h1>
+    <p>برای حساب مدیر یک رمز عبور جدید انتخاب کن.</p>
+    <form id="recoveryForm">
+      <label for="newPassword">رمز عبور جدید</label>
+      <input id="newPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="حداقل ۸ نویسه">
+      <label for="confirmPassword">تکرار رمز عبور</label>
+      <input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="رمز را دوباره وارد کن">
+      <button id="savePassword" type="submit">ثبت رمز عبور</button>
+    </form>
+    <div id="recoveryStatus" class="status" role="status" aria-live="polite">رمز جدید را دو بار وارد کن.</div>
   </section>
 
   <section id="dashboard" class="hidden">
@@ -69,6 +84,12 @@ function showLogin(message) {
   $('login').classList.remove('hidden');
   $('dashboard').classList.add('hidden');
   if (message) showMessage('loginStatus', message);
+}
+function showRecovery(message) {
+  $('login').classList.add('hidden');
+  $('dashboard').classList.add('hidden');
+  $('recovery').classList.remove('hidden');
+  if (message) showMessage('recoveryStatus',message);
 }
 let cachedOrders = [];
 function renderOrders() {
@@ -331,6 +352,29 @@ $('loginForm').addEventListener('submit',async (event)=>{
   $('password').value='';
   await checkSession();
 });
+$('sendRecovery').addEventListener('click',async()=>{
+  const email=$('email').value.trim().toLowerCase();
+  if(!email){showMessage('loginStatus','ابتدا ایمیل حساب مدیر را وارد کن.');return;}
+  const button=$('sendRecovery');button.disabled=true;
+  showMessage('loginStatus','در حال ارسال لینک تعیین رمز به ایمیل...');
+  const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:REDIRECT_URL});
+  button.disabled=false;
+  showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'اگر این ایمیل در حساب مدیر ثبت شده باشد، لینک تعیین رمز برای آن ارسال شده است. ایمیل و پوشه Spam را بررسی کن.');
+});
+$('recoveryForm').addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const password=$('newPassword').value;
+  if(password!==$('confirmPassword').value){showMessage('recoveryStatus','تکرار رمز با رمز جدید یکسان نیست.');return;}
+  const button=$('savePassword');button.disabled=true;
+  showMessage('recoveryStatus','در حال ثبت رمز جدید...');
+  const {error}=await supabase.auth.updateUser({password});
+  button.disabled=false;
+  if(error){showMessage('recoveryStatus','ثبت رمز انجام نشد: '+error.message);return;}
+  $('newPassword').value='';$('confirmPassword').value='';
+  $('recovery').classList.add('hidden');
+  showLogin('رمز عبور با موفقیت تعیین شد. اکنون با ایمیل و رمز جدید وارد شو.');
+  await supabase.auth.signOut();
+});
 $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
 $('refresh').addEventListener('click',loadOrders);
 $('refreshAi').addEventListener('click',loadAiRequests);
@@ -338,6 +382,7 @@ $('orderSearch').addEventListener('input',renderOrders);
 $('orderStatusFilter').addEventListener('change',renderOrders);
 for(const [value,label] of Object.entries(statusLabels)){const option=document.createElement('option');option.value=value;option.textContent=label;$('orderStatusFilter').append(option);}
 supabase.auth.onAuthStateChange((event,session)=>{
+  if(event==='PASSWORD_RECOVERY'){setTimeout(()=>showRecovery('لینک معتبر است؛ رمز جدید را تعیین کن.'),0);return;}
   if(session) setTimeout(checkSession,0);
 });
 checkSession();
