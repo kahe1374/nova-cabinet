@@ -55,7 +55,7 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
     <div class="card">
       <div class="row"><h2>سفارش‌ها</h2><button id="refresh">به‌روزرسانی</button></div>
       <div class="toolbar"><input id="orderSearch" type="search" placeholder="جست‌وجوی شماره سفارش، نام، موبایل یا عنوان"><select id="orderStatusFilter" aria-label="فیلتر وضعیت"><option value="">همه وضعیت‌ها</option></select></div>
-      <div id="dashStatus" class="status">در حال بارگذاری...</div><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><button id="refreshAi" type="button">به‌روزرسانی درخواست‌ها</button></div><div id="aiDashStatus" class="status">در حال بارگذاری...</div><div class="table-wrap"><table><thead><tr><th>کد پیگیری</th><th>مشتری / تماس</th><th>سبک و حالت</th><th>فایل ورودی</th><th>خروجی طراحی</th><th>پرداخت</th><th>وضعیت</th><th>یادداشت مدیر</th><th>ذخیره</th></tr></thead><tbody id="aiRequestsBody"></tbody></table></div>
+      <div id="dashStatus" class="status">در حال بارگذاری...</div><section id="aiPricingPanel" class="status" style="margin:18px 0"><h3 style="margin-top:0;color:var(--gold)">تنظیم قیمت طراحی هوشمند</h3><p>فقط مدیر کامل می‌تواند قیمت پایه سبک‌ها را تغییر دهد. مبالغ به تومان هستند.</p><div id="aiPricingFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><button id="saveAiPricing" type="button">ذخیره قیمت‌ها</button><div id="aiPricingStatus" class="muted" role="status"></div></section><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><button id="refreshAi" type="button">به‌روزرسانی درخواست‌ها</button></div><div id="aiDashStatus" class="status">در حال بارگذاری...</div><div class="table-wrap"><table><thead><tr><th>کد پیگیری</th><th>مشتری / تماس</th><th>سبک و حالت</th><th>فایل ورودی</th><th>خروجی طراحی</th><th>پرداخت</th><th>وضعیت</th><th>یادداشت مدیر</th><th>ذخیره</th></tr></thead><tbody id="aiRequestsBody"></tbody></table></div>
       <div class="table-wrap"><table><thead><tr><th>شماره سفارش</th><th>مشتری / تماس</th><th>شرح درخواست</th><th>نوع</th><th>وضعیت</th><th>تاریخ ثبت</th><th>اقدام</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
     </div>
   </section>
@@ -157,10 +157,38 @@ async function loadOrders() {
   await loadAiRequests();
 }
 
+async function loadAiPricing() {
+  const panel=$('aiPricingPanel');
+  if(currentRole!=='owner'){panel.classList.add('hidden');return;}
+  panel.classList.remove('hidden');
+  const {data,error}=await supabase.from('ai_design_pricing').select('style_key,style_label,base_price_toman').order('style_key');
+  if(error){showMessage('aiPricingStatus','دریافت قیمت‌ها ناموفق بود: '+error.message);return;}
+  const fields=$('aiPricingFields');fields.replaceChildren();
+  for(const item of data||[]){
+    const label=document.createElement('label');label.textContent=item.style_label;
+    const input=document.createElement('input');input.type='number';input.min='700000';input.max='3000000';input.step='10000';input.required=true;input.value=item.base_price_toman;input.dataset.styleKey=item.style_key;input.style.width='100%';
+    label.append(input);fields.append(label);
+  }
+  showMessage('aiPricingStatus','قیمت‌ها بارگذاری شدند. ضریب متوسط ۲۰٪ و پیچیده ۴۰٪ است؛ سقف قیمت نهایی ۳ میلیون تومان.');
+}
+async function saveAiPricing(){
+  const button=$('saveAiPricing');const inputs=[...$('aiPricingFields').querySelectorAll('input')];
+  if(!inputs.length)return;
+  const invalid=inputs.find(input=>!Number.isInteger(Number(input.value))||Number(input.value)<700000||Number(input.value)>3000000);
+  if(invalid){showMessage('aiPricingStatus','هر قیمت پایه باید بین ۷۰۰٬۰۰۰ تا ۳٬۰۰۰٬۰۰۰ تومان باشد.');return;}
+  button.disabled=true;
+  const {data:{user}}=await supabase.auth.getUser();
+  for(const input of inputs){
+    const {error}=await supabase.from('ai_design_pricing').update({base_price_toman:Number(input.value),updated_at:new Date().toISOString(),updated_by:user?.id}).eq('style_key',input.dataset.styleKey);
+    if(error){showMessage('aiPricingStatus','ذخیره قیمت ناموفق بود: '+error.message);button.disabled=false;return;}
+  }
+  button.disabled=false;showMessage('aiPricingStatus','قیمت‌های پایه با موفقیت ذخیره شدند.');await loadAiPricing();
+}
+$('saveAiPricing').addEventListener('click',saveAiPricing);
 async function loadAiRequests() {
   showMessage('aiDashStatus','در حال دریافت درخواست‌های طراحی...');
   const { data, error } = await supabase.from('ai_design_requests')
-    .select('id,request_number,full_name,mobile,design_mode,style,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at,fal_request_id,output_file_key,output_description')
+    .select('id,request_number,full_name,mobile,design_mode,style,complexity_level,quoted_price_toman,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at,fal_request_id,output_file_key,output_description')
     .order('created_at',{ascending:false}).limit(100);
   if (error) {
     showMessage('aiDashStatus','دریافت درخواست‌ها ناموفق بود: '+error.message);
@@ -172,7 +200,7 @@ async function loadAiRequests() {
     const tr = document.createElement('tr');
     const customer = [item.full_name,item.mobile].filter(Boolean).join(' · ');
     const mode = item.design_mode === 'preserve' ? 'حفظ ساختار' : 'طراحی آزاد';
-    for (const value of [item.request_number,customer,item.style+' · '+mode]) {
+    for (const value of [item.request_number,customer,item.style+' · '+mode+' · '+(item.complexity_level==='complex'?'پیچیده':item.complexity_level==='medium'?'متوسط':'ساده')+' · '+(item.quoted_price_toman?Number(item.quoted_price_toman).toLocaleString('fa-IR')+' تومان':'قیمت نامشخص')]) {
       const td = document.createElement('td');
       td.textContent = value || '—';
       tr.append(td);
@@ -339,6 +367,7 @@ async function checkSession() {
   $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden');
   $('identity').textContent=(session.user.phone || session.user.email || 'مدیر')+' · '+(role==='owner'?'مدیر کامل':'مدیر کارخانه');
   await loadOrders();
+  await loadAiPricing();
 }
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
