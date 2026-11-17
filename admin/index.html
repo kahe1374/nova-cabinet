@@ -21,13 +21,21 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
   <section id="login" class="card">
     <div class="tag">NOVA CABINET / SECURE ACCESS</div>
     <h1>پنل <span>مدیریت</span></h1>
-    <p>شماره موبایل مدیر و رمز عبور را وارد کن.</p>
+    <p>برای ورود به پنل مدیریت، مراحل زیر را انجام بده.</p>
     <form id="loginForm">
-      <label for="adminPhone">شماره موبایل مدیر</label>
-      <input id="adminPhone" type="tel" inputmode="tel" autocomplete="username" placeholder="شماره موبایل" required>
-      <label for="password">رمز عبور مدیر</label>
-      <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور پنل مدیریت" required>
-      <button id="passwordLogin" type="submit">ورود</button>
+      <div id="phoneStep">
+        <label for="adminPhone">شماره موبایل مدیر</label>
+        <input id="adminPhone" type="tel" inputmode="tel" autocomplete="username" readonly required>
+        <button id="continueLogin" type="button">ادامه</button>
+      </div>
+      <div id="passwordStep" class="hidden">
+        <label for="password">رمز عبور مدیر</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور پنل مدیریت" required>
+        <div class="row">
+          <button id="backToPhone" type="button">بازگشت</button>
+          <button id="passwordLogin" type="submit">ورود به پنل</button>
+        </div>
+      </div>
     </form>
     <div id="loginStatus" class="status" role="status" aria-live="polite">ورود امن با حساب مدیر انجام می‌شود.</div>
   </section>
@@ -81,6 +89,19 @@ const paymentLabels={pending:'در انتظار پرداخت',paid:'پرداخت
 let currentRole = null;
 
 function showMessage(id, message) { $(id).textContent = message; }
+$('adminPhone').value = ADMIN_PHONE;
+$('continueLogin').addEventListener('click', () => {
+  $('phoneStep').classList.add('hidden');
+  $('passwordStep').classList.remove('hidden');
+  $('password').focus();
+  showMessage('loginStatus', 'شماره مدیر تأیید شد؛ رمز عبور را وارد کن.');
+});
+$('backToPhone').addEventListener('click', () => {
+  $('password').value = '';
+  $('passwordStep').classList.add('hidden');
+  $('phoneStep').classList.remove('hidden');
+  showMessage('loginStatus', 'شماره موبایل مدیر نمایش داده شده است.');
+});
 function showLogin(message) {
   $('login').classList.remove('hidden');
   $('dashboard').classList.add('hidden');
