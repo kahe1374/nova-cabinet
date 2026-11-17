@@ -25,7 +25,7 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
     <form id="loginForm">
       <div id="phoneStep">
         <label for="adminPhone">شماره موبایل مدیر</label>
-        <input id="adminPhone" type="tel" inputmode="tel" autocomplete="username" readonly required>
+        <input id="adminPhone" type="tel" inputmode="tel" autocomplete="username" placeholder="شماره موبایل مدیر را وارد کن" required>
         <button id="continueLogin" type="button">ادامه</button>
       </div>
       <div id="passwordStep" class="hidden">
@@ -90,12 +90,12 @@ const paymentLabels={pending:'در انتظار پرداخت',paid:'پرداخت
 let currentRole = null;
 
 function showMessage(id, message) { $(id).textContent = message; }
-$('adminPhone').value = ADMIN_PHONE;
 $('continueLogin').addEventListener('click', () => {
   $('phoneStep').classList.add('hidden');
   $('passwordStep').classList.remove('hidden');
   $('password').focus();
-  showMessage('loginStatus', 'شماره مدیر تأیید شد؛ رمز عبور را وارد کن.');
+  $('requestPasswordReset').classList.add('hidden');
+  showMessage('loginStatus', 'شماره تأیید شد؛ رمز عبور را وارد کن.');
 });
 $('requestPasswordReset').addEventListener('click', async () => {
   const button = $('requestPasswordReset');
@@ -113,7 +113,8 @@ $('backToPhone').addEventListener('click', () => {
   $('password').value = '';
   $('passwordStep').classList.add('hidden');
   $('phoneStep').classList.remove('hidden');
-  showMessage('loginStatus', 'شماره موبایل مدیر نمایش داده شده است.');
+  $('requestPasswordReset').classList.add('hidden');
+  showMessage('loginStatus', 'شماره موبایل مدیر را وارد کن.');
 });
 function showLogin(message) {
   $('login').classList.remove('hidden');
