@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     }
 
     const name = String(body.name ?? "").trim().slice(0, 160);
-    const mobile = String(body.phone ?? "").replace(/[\\s-]/g, "");
+    const mobile = String(body.phone ?? "").replace(/[\s-]/g, "");
     const type = String(body.type ?? "").trim().slice(0, 80);
     const orderType = String(body.order_type ?? "cabinet").trim();
     const city = String(body.city ?? "").trim().slice(0, 100);
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
     if (
       name.length < 2 ||
-      !/^(09\\d{9}|\\+989\\d{9}|00989\\d{9})$/.test(mobile) ||
+      !/^(09\d{9}|\+989\d{9}|00989\d{9})$/.test(mobile) ||
       !type ||
       !["cabinet", "workshop_service"].includes(orderType)
     ) {
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
       customer_id: customer.id,
       order_type: orderType,
       title: type,
-      description: [city ? "شهر: " + city : "", details].filter(Boolean).join("\\n"),
+      description: [city ? "شهر: " + city : "", details].filter(Boolean).join("\n"),
       status: "new",
     });
 
