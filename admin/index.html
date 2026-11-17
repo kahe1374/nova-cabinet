@@ -21,16 +21,13 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
   <section id="login" class="card">
     <div class="tag">NOVA CABINET / SECURE ACCESS</div>
     <h1>پنل <span>مدیریت</span></h1>
-    <p>ورود مدیران مجاز نوا با حساب شخصی و دسترسی کامل.</p>
+    <p>برای ورود به پنل مدیریت، رمز عبور را وارد کن.</p>
     <form id="loginForm">
-      <label for="email">ایمیل مدیر</label>
-      <input id="email" type="email" inputmode="email" autocomplete="username" placeholder="ایمیل حساب مدیر" required>
       <label for="password">رمز عبور مدیر</label>
       <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور پنل مدیریت" required>
       <button id="passwordLogin" type="submit">ورود</button>
-      <button id="sendRecovery" type="button">ارسال لینک تعیین / بازیابی رمز به ایمیل</button>
     </form>
-    <div id="loginStatus" class="status" role="status" aria-live="polite">ورود با ایمیل و رمز عبور حساب مدیر انجام می‌شود؛ نیازی به پیامک نیست.</div>
+    <div id="loginStatus" class="status" role="status" aria-live="polite">ورود امن با حساب مدیر انجام می‌شود.</div>
   </section>
 
   <section id="recovery" class="card hidden">
@@ -66,6 +63,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 const SUPABASE_URL = 'https://sjapgxjllnlttrhjxkez.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
 const REDIRECT_URL = 'https://kahe1374.github.io/nova-cabinet/admin/';
+const ADMIN_EMAIL = 'vahiiidk74@gmail.com'; // Fixed Supabase Auth identity; password remains private.
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
 const $ = (id) => document.getElementById(id);
 const statusLabels = {
@@ -373,7 +371,7 @@ $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
   const button=$('passwordLogin'); button.disabled=true; showMessage('loginStatus','در حال بررسی رمز عبور...');
   const { error }=await supabase.auth.signInWithPassword({
-    email:$('email').value.trim().toLowerCase(),
+    email:ADMIN_EMAIL,
     password:$('password').value
   });
   button.disabled=false;
@@ -381,15 +379,7 @@ $('loginForm').addEventListener('submit',async (event)=>{
   $('password').value='';
   await checkSession();
 });
-$('sendRecovery').addEventListener('click',async()=>{
-  const email=$('email').value.trim().toLowerCase();
-  if(!email){showMessage('loginStatus','ابتدا ایمیل حساب مدیر را وارد کن.');return;}
-  const button=$('sendRecovery');button.disabled=true;
-  showMessage('loginStatus','در حال ارسال لینک تعیین رمز به ایمیل...');
-  const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:REDIRECT_URL});
-  button.disabled=false;
-  showMessage('loginStatus',error?'ارسال لینک انجام نشد: '+error.message:'اگر این ایمیل در حساب مدیر ثبت شده باشد، لینک تعیین رمز برای آن ارسال شده است. ایمیل و پوشه Spam را بررسی کن.');
-});
+
 $('recoveryForm').addEventListener('submit',async(event)=>{
   event.preventDefault();
   const password=$('newPassword').value;
