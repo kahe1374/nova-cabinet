@@ -1035,7 +1035,7 @@ acceptButton.type='button';acceptButton.className='btn';acceptButton.textContent
 acceptButton.addEventListener('click',async()=>{
  acceptButton.disabled=true;acceptButton.textContent='در حال ثبت تأیید...';
  try{
-  const accepted=await fetch('https://sjapgxjllnlttrhjxkez.supabase.co/functions/v1/accept-ai-design-price',{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE'},body:JSON.stringify({request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman})});
+  const accepted=await fetch('https://sjapgxjllnlttrhjxkez.supabase.co/functions/v1/accept-ai-design-price',{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE'},body:JSON.stringify({request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman,price_acceptance_token:result.price_acceptance_token})});
   const acceptedResult=await accepted.json();
   if(!accepted.ok||!acceptedResult.ok)throw new Error(acceptedResult.error||'price_acceptance_failed');
   confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده. پس از فعال‌شدن درگاه، مرحله پرداخت در دسترس خواهد بود.';
