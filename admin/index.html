@@ -23,11 +23,13 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding
     <h1>پنل <span>مدیریت</span></h1>
     <p>ورود مدیران مجاز نوا با حساب شخصی و دسترسی کامل.</p>
     <form id="loginForm">
+      <label for="phone">شماره موبایل مدیر</label>
+      <input id="phone" type="tel" inputmode="tel" autocomplete="username" value="09223685532" placeholder="09xxxxxxxxx" pattern="09[0-9]{9}" required>
       <label for="password">رمز عبور مدیر</label>
       <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور پنل مدیریت" required>
       <button id="passwordLogin" type="submit">ورود</button>
     </form>
-    <div id="loginStatus" class="status" role="status" aria-live="polite">ورود فقط با ایمیل و رمز عبور حساب مدیر انجام می‌شود.</div>
+    <div id="loginStatus" class="status" role="status" aria-live="polite">ورود با شماره موبایل تأییدشده و رمز عبور انجام می‌شود؛ برای ورودهای بعدی پیامک لازم نیست.</div>
   </section>
 
   <section id="dashboard" class="hidden">
@@ -48,7 +50,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 
 const SUPABASE_URL = 'https://sjapgxjllnlttrhjxkez.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
-const DEFAULT_OWNER_EMAIL = 'vahiiidk74@gmail.com';
 const REDIRECT_URL = 'https://kahe1374.github.io/nova-cabinet/admin/';
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
 const $ = (id) => document.getElementById(id);
@@ -321,12 +322,14 @@ async function checkSession() {
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
   const button=$('passwordLogin'); button.disabled=true; showMessage('loginStatus','در حال بررسی رمز عبور...');
+  const phoneInput=$('phone').value.replace(/[\\s-]/g,'');
+  const phoneE164=phoneInput.startsWith('09')?'+98'+phoneInput.slice(1):phoneInput;
   const { error }=await supabase.auth.signInWithPassword({
-    email:DEFAULT_OWNER_EMAIL,
+    phone:phoneE164,
     password:$('password').value
   });
   button.disabled=false;
-  if(error){showMessage('loginStatus','ورود انجام نشد. ایمیل حساب و رمز عبور را بررسی کن.');return;}
+  if(error){showMessage('loginStatus','ورود انجام نشد. شماره باید قبلاً در حساب مدیر ثبت و با پیامک تأیید شده باشد؛ سپس رمز عبور را بررسی کن.');return;}
   $('password').value='';
   await checkSession();
 });
