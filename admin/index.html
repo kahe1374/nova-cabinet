@@ -372,7 +372,7 @@ async function checkSession() {
 }
 $('loginForm').addEventListener('submit',async (event)=>{
   event.preventDefault();
-  const normalizePhone = (value) => value.replace(/\\D/g,'').replace(/^98/,'0');
+  const normalizePhone = (value) => value.replace(/\D/g,'').replace(/^98/,'0');
   if(normalizePhone($('adminPhone').value) !== normalizePhone(ADMIN_PHONE)){
     showMessage('loginStatus','شماره موبایل یا رمز عبور صحیح نیست.');
     return;
