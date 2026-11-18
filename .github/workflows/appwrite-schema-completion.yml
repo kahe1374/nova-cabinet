@@ -1,4 +1,5 @@
 name: Appwrite schema completion diagnostic (read-only)
+# Triggered for the consented public-order schema verification; this workflow performs GET requests only.
 
 on:
   workflow_dispatch:
