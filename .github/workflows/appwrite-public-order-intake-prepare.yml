@@ -41,7 +41,18 @@ jobs:
                 entrypoint:'index.js',commands:'',scopes:['rows.write']
               })});
               fn=await r.json().catch(()=>({}));
-              if(!r.ok) throw new Error('Function creation failed HTTP '+r.status+' '+JSON.stringify({code:fn.code,type:fn.type,message:fn.message}));
+              if(!r.ok) {
+                if (r.status === 403 && fn.type === 'additional_resource_not_allowed') {
+                  const inventoryResponse = await fetch(endpoint+'/functions?limit=100',{headers});
+                  const inventory = await inventoryResponse.json().catch(()=>({}));
+                  if (inventoryResponse.ok) {
+                    for (const item of (inventory.functions || [])) {
+                      console.log('EXISTING_FUNCTION='+JSON.stringify({id:item.$id,name:item.name,enabled:item.enabled,execute:item.execute||[],scopes:item.scopes||[]}));
+                    }
+                  }
+                }
+                throw new Error('Function creation failed HTTP '+r.status+' '+JSON.stringify({code:fn.code,type:fn.type,message:fn.message}));
+              }
             } else if(!r.ok) throw new Error('Function inspection failed HTTP '+r.status);
             if(fn.enabled!==false||(fn.execute||[]).length!==0||(fn.scopes||[]).length!==1||fn.scopes[0]!=='rows.write')
               throw new Error('Function must remain disabled, non-executable and rows.write-only. Refusing changes.');
