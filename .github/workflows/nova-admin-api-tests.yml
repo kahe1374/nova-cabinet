@@ -8,6 +8,7 @@ on:
       - 'tests/nova-admin-api.test.js'
       - 'tests/appwrite-admin-client.test.mjs'
       - 'admin/appwrite-admin-api.js'
+      - 'appwrite/functions/nova-public-order-intake/**'
       - '.github/workflows/nova-admin-api-tests.yml'
 
 permissions:
@@ -25,6 +26,8 @@ jobs:
         with:
           node-version: 22
       - name: Syntax check
-        run: node --check appwrite/functions/nova-admin-api/index.js
+        run: |
+          node --check appwrite/functions/nova-admin-api/index.js
+          node --check appwrite/functions/nova-public-order-intake/index.js
       - name: Run mocked security tests
-        run: node --test tests/nova-admin-api.test.js appwrite/functions/nova-admin-api/test/admin-api.test.mjs tests/appwrite-admin-client.test.mjs
+        run: node --test tests/nova-admin-api.test.js appwrite/functions/nova-admin-api/test/admin-api.test.mjs tests/appwrite-admin-client.test.mjs appwrite/functions/nova-public-order-intake/test/intake.test.mjs
