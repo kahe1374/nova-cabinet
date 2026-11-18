@@ -1,4 +1,4 @@
-name: Prepare Nova admin API (locked deployment)
+name: Prepare NOVA admin API (read-only locked deployment)
 
 on:
   workflow_dispatch:
@@ -52,7 +52,7 @@ jobs:
                   logging: true,
                   entrypoint: 'index.js',
                   commands: '',
-                  scopes: ['rows.read', 'rows.write']
+                  scopes: ['rows.read']
                 })
               });
               current = await response.json().catch(() => ({}));
@@ -64,7 +64,7 @@ jobs:
             const safeExecute = execute.length === 1 && execute[0] === 'user:6afdf252002cc39270ab';
             const scopes = current.scopes || [];
             const isReadOnly = scopes.length === 1 && scopes.includes('rows.read');
-            const isTargetScope = scopes.length === 2 && ['rows.read', 'rows.write'].every(scope => scopes.includes(scope));
+            const isTargetScope = scopes.length === 1 && scopes.includes('rows.read');
             if (current.enabled !== false || !safeExecute || (!isReadOnly && !isTargetScope)) {
               throw new Error('Existing function is not in an approved disabled state. Refusing to modify it.');
             }
@@ -88,7 +88,7 @@ jobs:
               });
               const updated = await upgraded.json().catch(() => ({}));
               if (!upgraded.ok || updated.enabled !== false || (updated.execute || []).length !== 0 ||
-                  (updated.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (updated.scopes || []).includes(scope))) {
+                  (updated.scopes || []).length !== 1 || (updated.scopes || [])[0] !== 'rows.read') {
                 throw new Error('Function scope update failed HTTP ' + upgraded.status + ' ' +
                   JSON.stringify({ code: updated.code, type: updated.type, message: updated.message }));
               }
@@ -96,7 +96,7 @@ jobs:
             console.log('FUNCTION_ID=' + id);
             console.log('FUNCTION_DISABLED=true');
             console.log('OWNER_ONLY_EXECUTE_PERMISSION=true');
-            console.log('FUNCTION_SCOPES_OWNER_API_READ_WRITE=true');
+            console.log('FUNCTION_SCOPES_READ_ONLY=true');
           }
           main().catch(e => { console.error('PREPARATION_FAILED:', e.message); process.exit(1); });
           NODE
@@ -126,7 +126,7 @@ jobs:
             const fn = await check.json().catch(() => ({}));
             if (!check.ok || fn.enabled !== false || (fn.execute || []).length !== 1 ||
                 fn.execute[0] !== 'user:6afdf252002cc39270ab' ||
-                (fn.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (fn.scopes || []).includes(scope))) {
+                (fn.scopes || []).length !== 1 || (fn.scopes || [])[0] !== 'rows.read') {
               throw new Error('Function safety state changed; deployment aborted.');
             }
             const form = new FormData();
