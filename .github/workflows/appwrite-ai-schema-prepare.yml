@@ -111,7 +111,7 @@ jobs:
 
           async function ensureColumn(tableId, [key, type, options]) {
             const path = '/tablesdb/' + database + '/tables/' + encodeURIComponent(tableId) + '/columns/' + type;
-            let result = await call(path, 'POST', { key, ...options });
+            let result = await call(path, 'POST', { key, required: options.required ?? false, ...options });
             if (result.response.status === 409) {
               const existing = await call('/tablesdb/' + database + '/tables/' + encodeURIComponent(tableId) + '/columns/' + encodeURIComponent(key));
               if (!existing.response.ok || existing.data.key !== key || existing.data.type !== type) {
