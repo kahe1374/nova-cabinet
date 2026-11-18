@@ -1,0 +1,63 @@
+name: Check NOVA owner function deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-deployment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check Appwrite deployment status
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-owner-bootstrap
+          DEPLOYMENT_ID: 6afde3ea786be85fafc6
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const functionId = process.env.FUNCTION_ID;
+          const deploymentId = process.env.DEPLOYMENT_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key };
+          const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+          async function get(path) {
+            const response = await fetch(endpoint + path, { headers });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!response.ok) throw new Error('Appwrite inspection failed: HTTP ' + response.status + ' ' + JSON.stringify({code:data.code,type:data.type,message:data.message}));
+            return data;
+          }
+
+          async function main() {
+            let deployment;
+            for (let attempt = 1; attempt <= 18; attempt++) {
+              deployment = await get('/functions/' + encodeURIComponent(functionId) + '/deployments/' + encodeURIComponent(deploymentId));
+              console.log('CHECK=' + attempt);
+              console.log('DEPLOYMENT_STATUS=' + deployment.status);
+              if (['ready','active','failed'].includes(deployment.status)) break;
+              await sleep(10000);
+            }
+            const fn = await get('/functions/' + encodeURIComponent(functionId));
+            console.log('FUNCTION_ENABLED=' + fn.enabled);
+            console.log('EXECUTE_PERMISSIONS=' + (fn.execute || []).length);
+            console.log('FUNCTION_SCOPES=' + (fn.scopes || []).length);
+            console.log('ACTIVE_DEPLOYMENT_MATCH=' + (fn.deploymentId === deploymentId));
+            if (deployment.status === 'failed') throw new Error('Appwrite deployment build failed; inspect deployment build logs in Appwrite Console.');
+            if (!['ready','active'].includes(deployment.status)) throw new Error('Deployment is still processing after 3 minutes; it remains inactive.');
+            console.log('DEPLOYMENT_BUILD_COMPLETE=true');
+            console.log('NO_FUNCTION_ACTIVATION_OR_PUBLIC_ACCESS=true');
+          }
+
+          main().catch(error => { console.error('STATUS_CHECK_FAILED:', error.message); process.exit(1); });
+          NODE
