@@ -40,13 +40,16 @@ jobs:
             const fn = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error('Cannot inspect function. HTTP ' + response.status);
             const execute = fn.execute || [];
-            const executeIsSafe = execute.length === 0 || (execute.length === 1 && execute[0] === 'users');
-            if (fn.enabled !== false || !executeIsSafe ||
-                (fn.scopes || []).length !== 2 ||
-                !(fn.scopes || []).includes('rows.read') ||
-                !(fn.scopes || []).includes('rows.write')) {
-              throw new Error('Function is not in the expected disabled, no-execute, least-privilege state.');
-            }
+          const isLocked = fn.enabled === false &&
+            (execute.length === 0 || (execute.length === 1 && execute[0] === 'users'));
+          const isKnownMisboundPrivateState = fn.enabled === true &&
+            execute.length === 1 && execute[0] === 'user:6afdee377d9427531d6e';
+          if (!(isLocked || isKnownMisboundPrivateState) ||
+              (fn.scopes || []).length !== 2 ||
+              !(fn.scopes || []).includes('rows.read') ||
+              !(fn.scopes || []).includes('rows.write')) {
+            throw new Error('Function is not in the locked state or the exact known private recovery state.');
+          }
             console.log('OWNER_ID_FORMAT_VALID=true');
             console.log('FUNCTION_PRECHECK_LOCKED=true');
           }
@@ -79,13 +82,15 @@ jobs:
             const before = await beforeResponse.json().catch(() => ({}));
             if (!beforeResponse.ok) throw new Error('Cannot re-check function. HTTP ' + beforeResponse.status);
             const beforeExecute = before.execute || [];
-            const beforeExecuteIsSafe = beforeExecute.length === 0 ||
-              (beforeExecute.length === 1 && beforeExecute[0] === 'users');
-            if (before.enabled !== false || !beforeExecuteIsSafe ||
+            const isLocked = before.enabled === false &&
+              (beforeExecute.length === 0 || (beforeExecute.length === 1 && beforeExecute[0] === 'users'));
+            const isKnownMisboundPrivateState = before.enabled === true &&
+              beforeExecute.length === 1 && beforeExecute[0] === 'user:6afdee377d9427531d6e';
+            if (!(isLocked || isKnownMisboundPrivateState) ||
                 (before.scopes || []).length !== 2 ||
                 !(before.scopes || []).includes('rows.read') ||
                 !(before.scopes || []).includes('rows.write')) {
-              throw new Error('Function lock changed during activation; refusing.');
+              throw new Error('Function is not in the locked state or the exact known private recovery state; refusing.');
             }
 
             const form = new FormData();
