@@ -155,7 +155,11 @@ export default async ({ req, res, log, error }) => {
         note: note || null, changed_by: account.$id, changed_at: new Date().toISOString()
       }, key);
       if (!history.response.ok) return reply(res, { ok: false, code: 'STATUS_UPDATED_HISTORY_FAILED', partial: true, row: updated.data }, 502);
-      await writeAudit(key, account.$id, 'order.status.updated', 'order', orderId, { old_status: oldStatus || null, new_status: newStatus });
+      try {
+        await writeAudit(key, account.$id, 'order.status.updated', 'order', orderId, { old_status: oldStatus || null, new_status: newStatus });
+      } catch {
+        return reply(res, { ok: false, code: 'STATUS_AND_HISTORY_SAVED_AUDIT_FAILED', partial: true, row: updated.data, history_id: history.data.$id }, 502);
+      }
       return reply(res, { ok: true, code: 'ORDER_STATUS_UPDATED', row: updated.data, history_id: history.data.$id });
     }
 
@@ -176,7 +180,11 @@ export default async ({ req, res, log, error }) => {
       if (previous === assigneeId) return reply(res, { ok: true, code: 'ASSIGNMENT_UNCHANGED', row: current.data });
       const updated = await updateRow('orders', orderId, { assigned_user_id: assigneeId, updated_at: new Date().toISOString() }, key);
       if (!updated.response.ok) return reply(res, { ok: false, code: 'ORDER_ASSIGNMENT_FAILED' }, 502);
-      await writeAudit(key, account.$id, 'order.assigned', 'order', orderId, { previous_assigned_user_id: previous, assigned_user_id: assigneeId });
+      try {
+        await writeAudit(key, account.$id, 'order.assigned', 'order', orderId, { previous_assigned_user_id: previous, assigned_user_id: assigneeId });
+      } catch {
+        return reply(res, { ok: false, code: 'ASSIGNMENT_SAVED_AUDIT_FAILED', partial: true, row: updated.data }, 502);
+      }
       return reply(res, { ok: true, code: 'ORDER_ASSIGNED', row: updated.data });
     }
 
@@ -195,8 +203,12 @@ export default async ({ req, res, log, error }) => {
         ? await updateRow('ai_design_pricing', match.$id, data, key)
         : await createRow('ai_design_pricing', data, key);
       if (!saved.response.ok) return reply(res, { ok: false, code: 'PRICING_SAVE_FAILED' }, 502);
-      await writeAudit(key, account.$id, match ? 'ai.pricing.updated' : 'ai.pricing.created',
-        'ai_design_pricing', saved.data.$id, { style_key: styleKey, base_price_toman: price });
+      try {
+        await writeAudit(key, account.$id, match ? 'ai.pricing.updated' : 'ai.pricing.created',
+          'ai_design_pricing', saved.data.$id, { style_key: styleKey, base_price_toman: price });
+      } catch {
+        return reply(res, { ok: false, code: 'PRICING_SAVED_AUDIT_FAILED', partial: true, row: saved.data }, 502);
+      }
       return reply(res, { ok: true, code: match ? 'PRICING_UPDATED' : 'PRICING_CREATED', row: saved.data });
     }
 
