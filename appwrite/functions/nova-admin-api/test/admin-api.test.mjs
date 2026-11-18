@@ -169,3 +169,106 @@ test('assignment writes the scalar orders.assigned_user_id field used by the sch
   assert.match(source, /assigned_user_id: assigneeId/);
   assert.doesNotMatch(source, /assigned_to/);
 });
+
+
+const publicHeaders = { origin: 'https://kahe1374.github.io', 'x-appwrite-key': 'ephemeral-test-key' };
+const publicOrder = {
+  action: 'public_create_order', name: 'Test Customer', phone: '09123456789',
+  type: 'Kitchen cabinet', order_type: 'cabinet', city: 'Tehran',
+  details: 'Test order', idempotency_key: '12345678-1234-4234-8234-123456789abc'
+};
+
+test('public order intake is disabled by default and cannot write', async () => {
+  let calls = 0;
+  const handler = load(async () => { calls++; throw new Error('disabled path must not write'); });
+  const res = response();
+  await handler({ req: { method: 'POST', headers: publicHeaders, body: publicOrder }, res, log() {}, error() {} });
+  assert.equal(res.status, 423);
+  assert.equal(res.body.code, 'PUBLIC_ORDER_INTAKE_DISABLED');
+  assert.equal(calls, 0);
+});
+
+test('public order intake validates origin, mobile and idempotency key before writes', async () => {
+  let writes = 0;
+  const handler = load(async () => { writes++; return appwriteResponse({}); }, { NOVA_PUBLIC_ORDER_INTAKE_ENABLED: 'true' });
+  for (const [headers, body, status] of [
+    [{ ...publicHeaders, origin: 'https://evil.example' }, publicOrder, 403],
+    [publicHeaders, { ...publicOrder, phone: '123' }, 400],
+    [publicHeaders, { ...publicOrder, idempotency_key: 'not-a-uuid' }, 400]
+  ]) {
+    const res = response();
+    await handler({ req: { method: 'POST', headers, body }, res, log() {}, error() {} });
+    assert.equal(res.status, status);
+  }
+  assert.equal(writes, 0);
+});
+
+test('public order intake creates private customer, order, status history and audit rows', async () => {
+  const calls = [];
+  const handler = load(async (url, options = {}) => {
+    const path = String(url);
+    const body = options.body ? JSON.parse(options.body) : null;
+    calls.push({ path, method: options.method || 'GET', body });
+    if ((options.method || 'GET') === 'POST') {
+      if (path.includes('/tables/customers/rows')) return appwriteResponse({ $id: 'customer-row-id' });
+      if (path.includes('/tables/orders/rows')) return appwriteResponse({ $id: publicOrder.idempotency_key });
+      if (path.includes('/tables/order_status_history/rows')) return appwriteResponse({ $id: 'history-row-id' });
+      if (path.includes('/tables/audit_log/rows')) return appwriteResponse({ $id: 'audit-row-id' });
+    }
+    throw new Error('unexpected Appwrite call ' + path);
+  }, { NOVA_PUBLIC_ORDER_INTAKE_ENABLED: 'true' });
+  const res = response();
+  await handler({ req: { method: 'POST', headers: publicHeaders, body: publicOrder }, res, log() {}, error() {} });
+  assert.equal(res.status, 201);
+  assert.equal(res.body.code, 'ORDER_CREATED');
+  const customer = calls.find(x => x.path.includes('/tables/customers/rows'));
+  const order = calls.find(x => x.path.includes('/tables/orders/rows'));
+  const history = calls.find(x => x.path.includes('/tables/order_status_history/rows'));
+  const audit = calls.find(x => x.path.includes('/tables/audit_log/rows'));
+  assert.equal(customer.body.permissions.length, 0);
+  assert.equal(customer.body.data.mobile, '+989123456789');
+  assert.equal(order.body.rowId, publicOrder.idempotency_key);
+  assert.equal(order.body.permissions.length, 0);
+  assert.equal(order.body.data.customer, 'customer-row-id');
+  assert.equal(order.body.data.currency, 'IRR');
+  assert.equal(order.body.data.paid_amount, 0);
+  assert.equal(history.body.data.order, publicOrder.idempotency_key);
+  assert.equal(audit.body.data.action, 'order.created.public');
+  assert.equal(calls.length, 4);
+});
+
+test('public order intake rolls back customer when order creation fails', async () => {
+  const calls = [];
+  const handler = load(async (url, options = {}) => {
+    const path = String(url);
+    calls.push({ path, method: options.method || 'GET' });
+    if (path.includes('/tables/customers/rows') && options.method === 'POST') return appwriteResponse({ $id: 'customer-row-id' });
+    if (path.includes('/tables/orders/rows') && options.method === 'POST') return appwriteResponse({}, false, 400);
+    if (path.includes('/tables/customers/rows/customer-row-id') && options.method === 'DELETE') return appwriteResponse({});
+    throw new Error('unexpected Appwrite call ' + path);
+  }, { NOVA_PUBLIC_ORDER_INTAKE_ENABLED: 'true' });
+  const res = response();
+  await handler({ req: { method: 'POST', headers: publicHeaders, body: publicOrder }, res, log() {}, error() {} });
+  assert.equal(res.status, 502);
+  assert.equal(res.body.code, 'ORDER_SAVE_FAILED');
+  assert.equal(calls.at(-1).method, 'DELETE');
+});
+
+test('public order idempotency returns the existing order and removes the duplicate customer', async () => {
+  const calls = [];
+  const handler = load(async (url, options = {}) => {
+    const path = String(url);
+    calls.push({ path, method: options.method || 'GET' });
+    if (path.includes('/tables/customers/rows') && options.method === 'POST') return appwriteResponse({ $id: 'duplicate-customer' });
+    if (path.includes('/tables/orders/rows') && options.method === 'POST') return appwriteResponse({}, false, 409);
+    if (path.includes('/tables/customers/rows/duplicate-customer') && options.method === 'DELETE') return appwriteResponse({});
+    if (path.includes('/tables/orders/rows/' + publicOrder.idempotency_key)) return appwriteResponse({ $id: publicOrder.idempotency_key, order_number: 'NV-123456789ABC' });
+    throw new Error('unexpected Appwrite call ' + path);
+  }, { NOVA_PUBLIC_ORDER_INTAKE_ENABLED: 'true' });
+  const res = response();
+  await handler({ req: { method: 'POST', headers: publicHeaders, body: publicOrder }, res, log() {}, error() {} });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.code, 'ORDER_ALREADY_RECEIVED');
+  assert.equal(res.body.duplicate, true);
+  assert.equal(calls.at(-1).method, 'GET');
+});
