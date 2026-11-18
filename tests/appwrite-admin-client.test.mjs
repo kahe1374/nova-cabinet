@@ -10,11 +10,12 @@ test('browser client uses only the public Appwrite endpoint and project identifi
   assert.doesNotMatch(source, /APPWRITE_API_KEY|x-appwrite-key|secret[_-]?key/i);
 });
 
-test('browser client verifies exact owner identity and verified email before creating a JWT', () => {
-  assert.match(source, /user\.email\.toLowerCase\(\) !== 'vahiiidk74@gmail\.com'/);
+test('browser client verifies exact owner identity and verified email using the active session', () => {
+  assert.match(source, /OWNER_EMAIL = 'vahiiidk74@gmail\.com'/);
+  assert.match(source, /const user = await account\.get\(\)/);
+  assert.match(source, /user\.email\.toLowerCase\(\) !== OWNER_EMAIL/);
   assert.match(source, /user\.emailVerification !== true/);
-  assert.match(source, /account\.createJWT\(\)/);
-  assert.ok(source.indexOf('user.emailVerification !== true') < source.indexOf('account.createJWT()'));
+  assert.doesNotMatch(source, /createJWT\(\)/);
 });
 
 test('function execution is synchronous and errors preserve partial-write information', () => {
@@ -26,5 +27,5 @@ test('function execution is synchronous and errors preserve partial-write inform
 test('client cannot call before authentication and exposes a session clear operation', () => {
   assert.match(source, /if \(!ready\) throw new Error\('ADMIN_API_NOT_AUTHENTICATED'\)/);
   assert.match(source, /function clear\(\)/);
-  assert.match(source, /client\.setJWT\(''\)/);
+  assert.match(source, /function clear\(\) \{ ready = false; \}/);
 });
