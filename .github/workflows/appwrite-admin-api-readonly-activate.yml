@@ -44,10 +44,12 @@ jobs:
           }
           async function main() {
             const current = await request('/functions/'+encodeURIComponent(id));
-            if (current.execute?.length !== 1 || current.execute[0] !== owner) throw new Error('Unexpected execute permissions; refusing activation.');
-            if (current.enabled === true && ((current.scopes||[]).length !== 1 || current.scopes[0] !== 'rows.read')) throw new Error('Enabled function has unexpected scopes; refusing deployment.');
+            const currentScopes=current.scopes||[];
+            const ownerReadOnly=current.execute?.length===1 && current.execute[0]===owner && currentScopes.length===1 && currentScopes[0]==='rows.read';
+            const publicIntake=current.execute?.length===1 && current.execute[0]==='any' && currentScopes.length===2 && currentScopes.includes('rows.read') && currentScopes.includes('rows.write');
+            if (!ownerReadOnly && !publicIntake) throw new Error('Unexpected function permissions; refusing deployment.');
             if (current.enabled !== true && current.enabled !== false) throw new Error('Function state is not safely verifiable.');
-            if (!(current.scopes||[]).includes('rows.read')) throw new Error('Function lacks rows.read scope.');
+            if (!currentScopes.includes('rows.read')) throw new Error('Function lacks rows.read scope.');
             const variableEndpoint='/functions/'+encodeURIComponent(id)+'/variables';
             const desiredVariables=[
               {variableId:'nova-public-intake-enabled',key:'NOVA_PUBLIC_ORDER_INTAKE_ENABLED',value:'true',secret:false},
