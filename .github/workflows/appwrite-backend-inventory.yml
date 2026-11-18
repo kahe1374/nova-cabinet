@@ -2,6 +2,9 @@ name: Appwrite backend inventory
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-backend-inventory.yml'
 
 permissions:
   contents: read
@@ -71,6 +74,14 @@ jobs:
                 }));
               }
             }
+
+            const platforms = await get('/projects/' + encodeURIComponent(process.env.APPWRITE_PROJECT_ID) + '/platforms?limit=100');
+            if (platforms) console.log('PROJECT_PLATFORMS_SUMMARY', JSON.stringify({
+              total: platforms.total,
+              platforms: (platforms.platforms || []).map(p => ({
+                id: p.$id, name: p.name, type: p.type, hostname: p.hostname
+              }))
+            }));
 
             const runtimes = await get('/functions/runtimes');
             if (runtimes) console.log('RUNTIMES_SUMMARY', JSON.stringify({
