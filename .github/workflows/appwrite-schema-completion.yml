@@ -183,32 +183,13 @@ jobs:
               }
             }
 
-            let orderColumns = await listColumns('orders');
-            let assigned = orderColumns.find(c => c.key === 'assigned_to');
-            if (!assigned) {
-              const created = await request('POST', `/tablesdb/${databaseId}/tables/orders/columns/relationship`, {
-                key: 'assigned_to', relatedTableId: 'app_users', type: 'manyToOne', twoWay: false, onDelete: 'setNull'
-              });
-              console.log('assigned_to create response:', JSON.stringify({
-                key: created.key, status: created.status, error: created.error,
-                relatedTable: created.relatedTable, relationType: created.relationType
-              }));
-            }
-            for (let attempt = 0; attempt < 30; attempt++) {
-              orderColumns = await listColumns('orders');
-              assigned = orderColumns.find(c => c.key === 'assigned_to');
-              if (assigned && assigned.status === 'available') break;
-              if (assigned && (assigned.status === 'failed' || assigned.status === 'stuck')) {
-                throw new Error(`orders.assigned_to ${assigned.status}: ${assigned.error || 'No Appwrite error detail'}`);
-              }
-              await sleep(2000);
-            }
-            if (assigned && assigned.status === 'available') {
-              console.log('Relationship available: orders.assigned_to');
-            } else {
-              console.log('Relationship pending; latest state:', JSON.stringify(assigned || null));
-              throw new Error('orders.assigned_to is still processing after 60 seconds; inspect the column error/status in Appwrite before retrying.');
-            }
+            const orderColumns = await listColumns('orders');
+            console.log('ORDERS_COLUMNS_DIAGNOSTIC:', JSON.stringify(orderColumns.map(c => ({
+              key: c.key, type: c.type, status: c.status, error: c.error,
+              relatedTable: c.relatedTable, relationType: c.relationType, twoWay: c.twoWay
+            }))));
+            const operationsResult = await request('GET', `/tablesdb/${databaseId}/operations?limit=100`);
+            console.log('APPWRITE_OPERATIONS_DIAGNOSTIC:', JSON.stringify(operationsResult));
 
             console.log('Schema completion finished. No rows were created, changed, or deleted.');
           }
