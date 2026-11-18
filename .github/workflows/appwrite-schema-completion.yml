@@ -166,6 +166,8 @@ jobs:
                   body.onDelete = col.onDelete;
                   delete body.relationType;
                   delete body.twoWay;
+                } else if (body.required === undefined) {
+                  body.required = false;
                 }
                 const result = await request('POST', `/tablesdb/${databaseId}/tables/${encodeURIComponent(spec.id)}/columns/${route}`, body);
                 if (result.conflict) {
