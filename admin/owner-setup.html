@@ -122,7 +122,7 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
     const btn = $('loginBtn'); btn.disabled = true;
     try {
       const secret = $('otpCode').value.trim();
-      if (!pendingUserId || !/^\\d{6}$/.test(secret)) throw new Error('کد ۶ رقمی را درست وارد کن.');
+      if (!pendingUserId || !/^\d{6}$/.test(secret)) throw new Error('کد ۶ رقمی را درست وارد کن.');
       await account.createSession({userId:pendingUserId, secret});
       const user = await refreshAccount();
       if (user.emailVerification !== true) {
