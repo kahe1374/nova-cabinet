@@ -21,7 +21,7 @@ async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, acc
   const res=makeRes();
   const handler=(await import('../appwrite/functions/nova-admin-api/index.js?test='+Math.random())).default;
   try {
-    await handler({method:'POST',headers:{'x-appwrite-user-jwt':jwt,'x-appwrite-key':key},body:{action:'health'}},res,{},{});
+    await handler({req:{method:'POST',headers:{'x-appwrite-user-jwt':jwt,'x-appwrite-key':key},body:{action:'health'}},res,log(){},error(){}});
   } finally {
     global.fetch=oldFetch;
     if (oldKey === undefined) delete process.env.APPWRITE_FUNCTION_API_KEY;
