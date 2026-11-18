@@ -1,0 +1,69 @@
+name: Prepare authenticated owner bootstrap access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  configure-execute-access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Grant authenticated-user execution only while function stays disabled
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-owner-bootstrap
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = {
+            'X-Appwrite-Project': project,
+            'X-Appwrite-Key': key,
+            'Content-Type': 'application/json'
+          };
+          async function main() {
+            const url = endpoint + '/functions/' + encodeURIComponent(id);
+            const beforeResponse = await fetch(url, { headers });
+            const before = await beforeResponse.json().catch(() => ({}));
+            if (!beforeResponse.ok) throw new Error('Cannot inspect function. HTTP ' + beforeResponse.status);
+            const scopes = before.scopes || [];
+            if (before.enabled !== false ||
+                scopes.length !== 2 ||
+                !scopes.includes('rows.read') ||
+                !scopes.includes('rows.write')) {
+              throw new Error('Function is not in the expected disabled least-privilege state.');
+            }
+            const response = await fetch(url, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({ name: before.name, execute: ['users'] })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error('Execute permission update failed. HTTP ' + response.status);
+            const execute = data.execute || [];
+            if (data.enabled !== false || execute.length !== 1 || execute[0] !== 'users' ||
+                (data.scopes || []).length !== 2 ||
+                !(data.scopes || []).includes('rows.read') ||
+                !(data.scopes || []).includes('rows.write')) {
+              throw new Error('Authenticated-only execute access or disabled-state verification failed.');
+            }
+            console.log('FUNCTION_ENABLED=false');
+            console.log('EXECUTE_USERS_ONLY=true');
+            console.log('EXECUTE_ANY=false');
+            console.log('ROWS_READ_SCOPE=true');
+            console.log('ROWS_WRITE_SCOPE=true');
+            console.log('NO_FUNCTION_ACTIVATION=true');
+          }
+          main().catch(error => {
+            console.error('ACCESS_CONFIGURATION_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
