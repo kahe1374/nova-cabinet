@@ -88,6 +88,14 @@ jobs:
             console.log('SCHEMA_DIAGNOSTIC_PASSED=true');
             console.log('READ_ONLY=true');
             console.log('NO_SCHEMA_OR_ROW_CHANGES=true');
+            const fn = await get('/functions/nova-admin-api');
+            console.log('FUNCTION_SECURITY=' + JSON.stringify({
+              enabled: fn.enabled === true,
+              execute: fn.execute || [],
+              scopes: fn.scopes || [],
+              deploymentId: fn.deploymentId || null,
+              environmentVariableNames: (fn.vars || []).map(v => v.key).sort()
+            }));
           }
           main().catch(error => {
             console.error('SCHEMA_DIAGNOSTIC_FAILED:', error.message);
