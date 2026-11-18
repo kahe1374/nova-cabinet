@@ -96,6 +96,10 @@ jobs:
               deploymentId: fn.deploymentId || null,
               environmentVariableNames: (fn.vars || []).map(v => v.key).sort()
             }));
+            const variableState=await get('/functions/nova-admin-api/variables');
+            console.log('FUNCTION_VARIABLES=' + JSON.stringify((variableState.variables||[]).map(v=>({
+              id:v.$id||v.id||null,key:v.key,secret:v.secret===true
+            }))));
           }
           main().catch(error => {
             console.error('SCHEMA_DIAGNOSTIC_FAILED:', error.message);
