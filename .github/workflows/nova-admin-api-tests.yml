@@ -25,4 +25,4 @@ jobs:
       - name: Syntax check
         run: node --check appwrite/functions/nova-admin-api/index.js
       - name: Run mocked security tests
-        run: node --test tests/nova-admin-api.test.js
+        run: node --test tests/nova-admin-api.test.js appwrite/functions/nova-admin-api/test/admin-api.test.mjs
