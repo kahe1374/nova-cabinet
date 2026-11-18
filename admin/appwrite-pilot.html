@@ -32,13 +32,10 @@ const client=new Client().setEndpoint(ENDPOINT).setProject(PROJECT), account=new
 const $=id=>document.getElementById(id);let pendingUserId='';
 function say(id,msg){$(id).textContent=msg}
 async function api(action){
- let jwt;
- try { jwt=await account.createJWT(); }
- catch(e) { throw new Error('JWT_CREATE_FAILED: '+(e?.message||String(e))); }
- if(!jwt?.jwt) throw new Error('JWT_CREATE_FAILED: EMPTY_JWT');
- client.setJWT(jwt.jwt);
  let result;
  try {
+  // Appwrite Client SDK forwards the active session automatically.
+  // This avoids a separate /account/jwts request and its browser CORS failure.
   result=await functions.createExecution({functionId:FUNCTION,body:JSON.stringify({action}),async:false,method:'POST'});
  } catch(e) {
   throw new Error('FUNCTION_EXECUTION_FETCH_FAILED: '+(e?.message||String(e)));
