@@ -147,7 +147,7 @@ export default async ({ req, res, log, error }) => {
         : ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing',
           'update_order_status', 'assign_order', 'upsert_ai_pricing'],
       readOnly
-    });
+    }, 200, responseHeaders);
 
     if (action === 'list_orders') {
       const [orders, customers] = await Promise.all([listRows('orders', key, 500), listRows('customers', key, 500)]);
