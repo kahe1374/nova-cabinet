@@ -17,7 +17,7 @@ const ALLOWED_ORIGINS = new Set(['https://kahe1374.github.io']);
 const publicRateBuckets = new Map();
 function consumePublicRateLimit(req, mobile) {
   const forwarded = header(req.headers, 'x-forwarded-for').split(',')[0].trim();
-  const ip = header(req.headers, 'cf-connecting-ip') || header(req.headers, 'x-real-ip') || forwarded;
+  const ip = header(req.headers, 'x-appwrite-client-ip') || header(req.headers, 'cf-connecting-ip') || header(req.headers, 'x-real-ip') || forwarded;
   const key = ip ? 'ip:' + ip.slice(0, 64) : 'mobile:' + mobile;
   const now = Date.now();
   const recent = (publicRateBuckets.get(key) || []).filter((time) => now - time < 10 * 60 * 1000);
