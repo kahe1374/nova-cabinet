@@ -98,6 +98,12 @@ async function writeAudit(key, actorId, action, entityType, entityId, details) {
 
 export default async ({ req, res, log, error }) => {
   try {
+    const origin = header(req.headers, 'origin');
+    if (origin && !ALLOWED_ORIGINS.has(origin)) {
+      return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403);
+    }
+    const responseHeaders = corsHeaders(origin);
+    if (req.method === 'OPTIONS') return reply(res, {}, 204, responseHeaders);
     if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405, responseHeaders);
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
     const key = process.env.APPWRITE_FUNCTION_API_KEY || '';
@@ -151,20 +157,20 @@ export default async ({ req, res, log, error }) => {
         const customerId = typeof customerRef === 'string' ? customerRef : customerRef && customerRef.$id;
         return { ...order, customer: customerById.get(customerId) || (typeof customerRef === 'object' ? customerRef : null) };
       });
-      return reply(res, { ok: true, code: 'ORDERS_LOADED', rows, total: orders.total, truncated: orders.total > rows.length }, responseHeaders);
+      return reply(res, { ok: true, code: 'ORDERS_LOADED', rows, total: orders.total, truncated: orders.total > rows.length }, 200, responseHeaders);
     }
 
     if (action === 'list_ai_requests') {
       const result = await listRows('ai_design_requests', key, 500);
       const rows = result.rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
         .map(({ price_acceptance_token_hash, ...safeRow }) => safeRow);
-      return reply(res, { ok: true, code: 'AI_REQUESTS_LOADED', rows, total: result.total, truncated: result.total > rows.length }, responseHeaders);
+      return reply(res, { ok: true, code: 'AI_REQUESTS_LOADED', rows, total: result.total, truncated: result.total > rows.length }, 200, responseHeaders);
     }
 
     if (action === 'list_ai_pricing') {
       const result = await listRows('ai_design_pricing', key, 200);
       const rows = result.rows.sort((a, b) => String(a.style_key || '').localeCompare(String(b.style_key || '')));
-      return reply(res, { ok: true, code: 'AI_PRICING_LOADED', rows, total: result.total, truncated: result.total > rows.length }, responseHeaders);
+      return reply(res, { ok: true, code: 'AI_PRICING_LOADED', rows, total: result.total, truncated: result.total > rows.length }, 200, responseHeaders);
     }
 
     if (action === 'update_order_status') {
@@ -175,7 +181,7 @@ export default async ({ req, res, log, error }) => {
       const current = await getRow('orders', orderId, key);
       if (!current.response.ok || current.data.$id !== orderId) return reply(res, { ok: false, code: 'ORDER_NOT_FOUND' }, 404, responseHeaders);
       const oldStatus = current.data.status;
-      if (oldStatus === newStatus) return reply(res, { ok: true, code: 'STATUS_UNCHANGED', row: current.data }, responseHeaders);
+      if (oldStatus === newStatus) return reply(res, { ok: true, code: 'STATUS_UNCHANGED', row: current.data }, 200, responseHeaders);
       const updated = await updateRow('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() }, key);
       if (!updated.response.ok) return reply(res, { ok: false, code: 'ORDER_UPDATE_FAILED' }, 502, responseHeaders);
       const history = await createRow('order_status_history', {
@@ -188,7 +194,7 @@ export default async ({ req, res, log, error }) => {
       } catch {
         return reply(res, { ok: false, code: 'STATUS_AND_HISTORY_SAVED_AUDIT_FAILED', partial: true, row: updated.data, history_id: history.data.$id }, 502, responseHeaders);
       }
-      return reply(res, { ok: true, code: 'ORDER_STATUS_UPDATED', row: updated.data, history_id: history.data.$id }, responseHeaders);
+      return reply(res, { ok: true, code: 'ORDER_STATUS_UPDATED', row: updated.data, history_id: history.data.$id }, 200, responseHeaders);
     }
 
     if (action === 'assign_order') {
@@ -205,7 +211,7 @@ export default async ({ req, res, log, error }) => {
         }
       }
       const previous = current.data.assigned_user_id || null;
-      if (previous === assigneeId) return reply(res, { ok: true, code: 'ASSIGNMENT_UNCHANGED', row: current.data }, responseHeaders);
+      if (previous === assigneeId) return reply(res, { ok: true, code: 'ASSIGNMENT_UNCHANGED', row: current.data }, 200, responseHeaders);
       const updated = await updateRow('orders', orderId, { assigned_user_id: assigneeId, updated_at: new Date().toISOString() }, key);
       if (!updated.response.ok) return reply(res, { ok: false, code: 'ORDER_ASSIGNMENT_FAILED' }, 502, responseHeaders);
       try {
@@ -213,7 +219,7 @@ export default async ({ req, res, log, error }) => {
       } catch {
         return reply(res, { ok: false, code: 'ASSIGNMENT_SAVED_AUDIT_FAILED', partial: true, row: updated.data }, 502, responseHeaders);
       }
-      return reply(res, { ok: true, code: 'ORDER_ASSIGNED', row: updated.data }, responseHeaders);
+      return reply(res, { ok: true, code: 'ORDER_ASSIGNED', row: updated.data }, 200, responseHeaders);
     }
 
     if (action === 'upsert_ai_pricing') {
@@ -237,7 +243,7 @@ export default async ({ req, res, log, error }) => {
       } catch {
         return reply(res, { ok: false, code: 'PRICING_SAVED_AUDIT_FAILED', partial: true, row: saved.data }, 502, responseHeaders);
       }
-      return reply(res, { ok: true, code: match ? 'PRICING_UPDATED' : 'PRICING_CREATED', row: saved.data }, responseHeaders);
+      return reply(res, { ok: true, code: match ? 'PRICING_UPDATED' : 'PRICING_CREATED', row: saved.data }, 200, responseHeaders);
     }
 
     return reply(res, { ok: false, code: 'ACTION_NOT_SUPPORTED' }, 400, responseHeaders);
