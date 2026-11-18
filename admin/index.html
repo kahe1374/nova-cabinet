@@ -1,461 +1,94 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#171716">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171716"><meta name="robots" content="noindex,nofollow">
 <title>پنل مدیریت | NOVA CABINET</title>
 <style>
 :root{color-scheme:dark;--bg:#171716;--panel:#24231f;--gold:#c6a66b;--text:#eee9df;--muted:#aaa394;--line:#ffffff20}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0,#51412a55,transparent 45%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.8}
-main{width:min(1050px,94%);margin:7vh auto}.card{background:#22221feF;border:1px solid var(--line);padding:26px;border-radius:12px;box-shadow:0 20px 60px #0005}
-h1,h2{margin-top:0}h1 span{color:var(--gold)}p,.muted{color:var(--muted)}input,button,select{font:inherit}input,select{background:#151514;color:var(--text);border:1px solid var(--line);padding:12px;border-radius:6px;width:100%;margin:8px 0}
-button{border:1px solid var(--gold);background:var(--gold);color:#171716;padding:11px 18px;border-radius:6px;font-weight:bold;cursor:pointer}button:disabled{opacity:.55;cursor:wait}
-.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.hidden{display:none!important}.status{padding:12px;background:#151514;border-radius:6px;color:var(--muted);margin:14px 0}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:700px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}th{color:var(--gold);font-weight:600}td select{min-width:190px}.tag{color:var(--gold);font-size:13px}.top{margin-bottom:18px}
-.toolbar{display:grid;grid-template-columns:1fr 220px;gap:10px;margin:8px 0 14px}.toolbar input,.toolbar select{margin:0}.order-sub{display:block;color:var(--muted);font-size:12px;max-width:340px;white-space:normal}.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--gold);font-size:12px}.empty{padding:24px;text-align:center;color:var(--muted)}
-@media(max-width:600px){main{margin:3vh auto}.card{padding:18px}.toolbar{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<main>
-  <section id="login" class="card">
-    <div class="tag">NOVA CABINET / SECURE ACCESS</div>
-    <h1>پنل <span>مدیریت</span></h1>
-    <p>برای ورود به پنل مدیریت، مراحل زیر را انجام بده.</p>
-    <form id="loginForm">
-      <div id="phoneStep">
-        <label for="adminPhone">شماره موبایل مدیر</label>
-        <input id="adminPhone" type="tel" inputmode="tel" autocomplete="username" placeholder="شماره موبایل مدیر را وارد کن" required>
-        <button id="continueLogin" type="button">ادامه</button>
-      </div>
-      <div id="passwordStep" class="hidden">
-        <label for="password">رمز عبور مدیر</label>
-        <input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور پنل مدیریت" required>
-        <div class="row">
-          <button id="backToPhone" type="button">بازگشت</button>
-          <button id="passwordLogin" type="submit">ورود به پنل</button>
-        </div>
-      </div>
-    </form>
-    <button id="requestPasswordReset" type="button" class="hidden" style="margin-top:10px;background:transparent;color:var(--gold)">بازیابی رمز عبور از طریق ایمیل</button>
-    <div id="loginStatus" class="status" role="status" aria-live="polite">ورود امن با حساب مدیر انجام می‌شود.</div>
-  </section>
-
-  <section id="recovery" class="card hidden">
-    <div class="tag">NOVA CABINET / PASSWORD SETUP</div>
-    <h1>تعیین <span>رمز عبور</span></h1>
-    <p>برای حساب مدیر یک رمز عبور جدید انتخاب کن.</p>
-    <form id="recoveryForm">
-      <label for="newPassword">رمز عبور جدید</label>
-      <input id="newPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="حداقل ۸ نویسه">
-      <label for="confirmPassword">تکرار رمز عبور</label>
-      <input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="رمز را دوباره وارد کن">
-      <button id="savePassword" type="submit">ثبت رمز عبور</button>
-    </form>
-    <div id="recoveryStatus" class="status" role="status" aria-live="polite">رمز جدید را دو بار وارد کن.</div>
-  </section>
-
-  <section id="dashboard" class="hidden">
-    <div class="row top">
-      <div><div class="tag">NOVA CABINET</div><h1>مدیریت سفارش‌ها</h1><div id="identity" class="muted"></div></div>
-      <button id="logout">خروج امن</button>
-    </div>
-    <div class="card">
-      <div class="row"><h2>سفارش‌ها</h2><button id="refresh">به‌روزرسانی</button></div>
-      <div class="toolbar"><input id="orderSearch" type="search" placeholder="جست‌وجوی شماره سفارش، نام، موبایل یا عنوان"><select id="orderStatusFilter" aria-label="فیلتر وضعیت"><option value="">همه وضعیت‌ها</option></select></div>
-      <div id="dashStatus" class="status">در حال بارگذاری...</div><section id="aiPricingPanel" class="status" style="margin:18px 0"><h3 style="margin-top:0;color:var(--gold)">تنظیم قیمت طراحی هوشمند</h3><p>فقط مدیر کامل می‌تواند قیمت پایه سبک‌ها را تغییر دهد. مبالغ به تومان هستند.</p><div id="aiPricingFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><button id="saveAiPricing" type="button">ذخیره قیمت‌ها</button><div id="aiPricingStatus" class="muted" role="status"></div></section><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><button id="refreshAi" type="button">به‌روزرسانی درخواست‌ها</button></div><div id="aiDashStatus" class="status">در حال بارگذاری...</div><div class="table-wrap"><table><thead><tr><th>کد پیگیری</th><th>مشتری / تماس</th><th>سبک و حالت</th><th>فایل ورودی</th><th>خروجی طراحی</th><th>پرداخت</th><th>وضعیت</th><th>یادداشت مدیر</th><th>ذخیره</th></tr></thead><tbody id="aiRequestsBody"></tbody></table></div>
-      <div class="table-wrap"><table><thead><tr><th>شماره سفارش</th><th>مشتری / تماس</th><th>شرح درخواست</th><th>نوع</th><th>وضعیت</th><th>تاریخ ثبت</th><th>اقدام</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
-    </div>
-  </section>
-</main>
+main{width:min(1100px,94%);margin:4vh auto}.card{background:#22221f;border:1px solid var(--line);padding:22px;border-radius:12px;margin:14px 0}
+h1,h2{margin-top:0}.tag{color:var(--gold);font-size:12px}p,.muted{color:var(--muted)}
+input,button{font:inherit;padding:11px;border-radius:6px}input{background:#151514;color:var(--text);border:1px solid var(--line);width:100%;margin:8px 0}
+button{border:1px solid var(--gold);background:var(--gold);color:#171716;font-weight:bold;cursor:pointer}button:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.hidden{display:none!important}
+.status{padding:12px;background:#151514;border-radius:6px;color:var(--muted);margin:12px 0;overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.item{border:1px solid var(--line);border-radius:8px;padding:14px;overflow-wrap:anywhere}.item strong{color:var(--gold)}
+.table{overflow:auto}table{border-collapse:collapse;width:100%;min-width:680px}td,th{padding:10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}th{color:var(--gold)}
+.toolbar{display:grid;grid-template-columns:1fr 220px;gap:10px;margin:8px 0 14px}.toolbar input,.toolbar select{margin:0}
+select{font:inherit;background:#151514;color:var(--text);border:1px solid var(--line);padding:10px;border-radius:6px}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--gold);font-size:12px}
+.empty{padding:22px;text-align:center;color:var(--muted)}.notice{border-right:3px solid var(--gold);padding:8px 12px}
+@media(max-width:600px){.card{padding:15px}.toolbar{grid-template-columns:1fr}}
+</style></head>
+<body><main>
+<div class="row"><div><div class="tag">NOVA CABINET / APPWRITE ADMIN</div><h1>پنل مدیریت امن</h1></div><button id="logout" class="hidden">خروج امن</button></div>
+<section id="login" class="card"><h2>ورود مالک</h2><p>کد یک‌بارمصرف فقط به ایمیل تأییدشده مالک ارسال می‌شود.</p>
+<label for="email">ایمیل مالک</label><input id="email" type="email" value="Vahiiidk74@gmail.com" readonly>
+<button id="send">ارسال کد ورود</button><div id="otpBox" class="hidden"><label for="otp">کد ورود ایمیل</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button id="verify">تأیید و ورود</button></div>
+<div id="loginStatus" class="status" role="status" aria-live="polite">برای شروع، کد ورود را ارسال کن.</div></section>
+<section id="dashboard" class="hidden">
+<div class="card"><div class="row"><h2>وضعیت اتصال</h2><button id="refresh">به‌روزرسانی همه اطلاعات</button></div><div id="health" class="status">در حال بررسی...</div><p class="notice">حالت فعلی فقط‌خواندنی است؛ ثبت، ویرایش و حذف از این پنل غیرفعال است. داده‌های Supabase تغییری نمی‌کنند.</p></div>
+<div class="card"><div class="row"><h2>سفارش‌ها</h2><span id="ordersCount" class="muted"></span></div><div class="toolbar"><input id="orderSearch" type="search" placeholder="جست‌وجوی شماره، مشتری یا عنوان"><select id="orderStatusFilter" aria-label="فیلتر وضعیت"><option value="">همه وضعیت‌ها</option></select></div><div id="ordersStatus" class="status">در انتظار دریافت...</div><div id="orders" class="table"></div></div>
+<div class="card"><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><span id="aiCount" class="muted"></span></div><div id="aiStatus" class="status">در انتظار دریافت...</div><div id="ai" class="grid"></div></div>
+<div class="card"><div class="row"><h2>تعرفه‌های طراحی</h2><span id="pricingCount" class="muted"></span></div><div id="pricingStatus" class="status">در انتظار دریافت...</div><div id="pricing" class="grid"></div></div>
+</section></main>
 <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
-
-const SUPABASE_URL = 'https://sjapgxjllnlttrhjxkez.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
-const REDIRECT_URL = 'https://kahe1374.github.io/nova-cabinet/admin/';
-const ADMIN_EMAIL = 'vahiiidk74@gmail.com'; // Internal Supabase Auth identity; password remains private.
-const ADMIN_PHONE = '09223685532'; // Login identifier shown to the administrator.
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
-const $ = (id) => document.getElementById(id);
-const statusLabels = {
-  new:'جدید', under_review:'در حال بررسی', awaiting_quote_approval:'در انتظار تأیید پیش‌فاکتور',
-  awaiting_payment:'در انتظار پرداخت', approved_for_production:'تأیید تولید', in_production:'در حال تولید',
-  quality_control:'کنترل کیفیت', ready_for_delivery:'آماده تحویل', delivered:'تحویل شده',
-  completed:'تکمیل شده', cancelled:'لغو شده'
-};
-const allowedStatuses = Object.keys(statusLabels);
-const aiStatusLabels={awaiting_payment:'در انتظار پرداخت',queued:'در صف طراحی',processing:'در حال طراحی',preview_ready:'پیش‌نمایش آماده',revision_requested:'درخواست اصلاح',completed:'تکمیل شده',cancelled:'لغو شده'};
-const paymentLabels={pending:'در انتظار پرداخت',paid:'پرداخت شده',refunded:'عودت وجه'};
-let currentRole = null;
-
-function showMessage(id, message) { $(id).textContent = message; }
-$('continueLogin').addEventListener('click', () => {
-  $('phoneStep').classList.add('hidden');
-  $('passwordStep').classList.remove('hidden');
-  $('password').focus();
-  $('requestPasswordReset').classList.add('hidden');
-  showMessage('loginStatus', 'شماره تأیید شد؛ رمز عبور را وارد کن.');
-});
-$('requestPasswordReset').addEventListener('click', async () => {
-  const button = $('requestPasswordReset');
-  button.disabled = true;
-  showMessage('loginStatus', 'در حال ارسال لینک بازیابی به ایمیل حساب مدیر...');
-  const { error } = await supabase.auth.resetPasswordForEmail(ADMIN_EMAIL, {
-    redirectTo: REDIRECT_URL
-  });
-  button.disabled = false;
-  showMessage('loginStatus', error
-    ? 'ارسال لینک بازیابی انجام نشد. تنظیمات ایمیل Supabase یا محدودیت ارسال را باید بررسی کنیم: ' + error.message
-    : 'اگر حساب مدیر وجود داشته باشد، لینک بازیابی به ایمیل ثبت‌شده ارسال می‌شود. صندوق ورودی و پوشه هرزنامه را بررسی کن.');
-});
-$('backToPhone').addEventListener('click', () => {
-  $('password').value = '';
-  $('passwordStep').classList.add('hidden');
-  $('phoneStep').classList.remove('hidden');
-  $('requestPasswordReset').classList.add('hidden');
-  showMessage('loginStatus', 'شماره موبایل مدیر را وارد کن.');
-});
-function showLogin(message) {
-  $('login').classList.remove('hidden');
-  $('dashboard').classList.add('hidden');
-  if (message) showMessage('loginStatus', message);
+import { Client, Account, Functions } from 'https://cdn.jsdelivr.net/npm/appwrite@29.0.0/+esm';
+const ENDPOINT='https://fra.cloud.appwrite.io/v1', PROJECT='6afcbe4e002df50df86f', FUNCTION='nova-admin-api', OWNER='vahiiidk74@gmail.com';
+const client=new Client().setEndpoint(ENDPOINT).setProject(PROJECT), account=new Account(client), functions=new Functions(client);
+const $=id=>document.getElementById(id);let pendingUserId='',ordersCache=[];
+const orderLabels={new:'جدید',under_review:'در حال بررسی',awaiting_quote_approval:'در انتظار تأیید پیش‌فاکتور',awaiting_payment:'در انتظار پرداخت',approved_for_production:'تأیید تولید',in_production:'در حال تولید',quality_control:'کنترل کیفیت',ready_for_delivery:'آماده تحویل',delivered:'تحویل شده',completed:'تکمیل شده',cancelled:'لغو شده'};
+const aiLabels={awaiting_payment:'در انتظار پرداخت',queued:'در صف طراحی',processing:'در حال طراحی',preview_ready:'پیش‌نمایش آماده',revision_requested:'درخواست اصلاح',completed:'تکمیل شده',cancelled:'لغو شده'};
+const payLabels={pending:'در انتظار پرداخت',paid:'پرداخت شده',refunded:'عودت وجه'};
+function say(id,msg){$(id).textContent=msg}
+function node(tag,content,cls){const el=document.createElement(tag);if(content!==undefined)el.textContent=content;if(cls)el.className=cls;return el}
+function cell(row,label,key){const d=node('div');d.append(node('strong',label+': '),document.createTextNode(row[key]??'—'));return d}
+async function api(action){
+ let result;
+ try{result=await functions.createExecution({functionId:FUNCTION,body:JSON.stringify({action}),async:false,method:'POST'});}
+ catch(e){throw new Error('ارتباط با تابع برقرار نشد: '+(e?.message||String(e)));}
+ let data={};try{data=JSON.parse(result.responseBody||'{}')}catch{throw new Error('پاسخ API قابل خواندن نیست.')}
+ const status=Number(result.responseStatusCode||0);
+ if(status<200||status>=300||data.ok!==true)throw new Error('خطای API ('+status+'): '+(data.code||'درخواست ناموفق'));
+ return data;
 }
-function showRecovery(message) {
-  $('login').classList.add('hidden');
-  $('dashboard').classList.add('hidden');
-  $('recovery').classList.remove('hidden');
-  if (message) showMessage('recoveryStatus',message);
+function renderOrders(){
+ const query=$('orderSearch').value.trim().toLocaleLowerCase('fa'),filter=$('orderStatusFilter').value;
+ const rows=ordersCache.filter(r=>{const c=r.customer||{};const hay=[r.order_number,r.title,r.description,c.full_name,c.mobile].filter(Boolean).join(' ').toLocaleLowerCase('fa');return(!query||hay.includes(query))&&(!filter||r.status===filter)});
+ $('orders').replaceChildren();$('ordersCount').textContent=rows.length+' از '+ordersCache.length;
+ if(!rows.length){$('orders').append(node('div',ordersCache.length?'موردی با این جست‌وجو یا فیلتر پیدا نشد.':'هنوز سفارشی در Appwrite ثبت نشده است.','empty'));return;}
+ const table=node('table'),thead=node('thead'),hr=node('tr');for(const h of ['شماره سفارش','مشتری / تماس','شرح درخواست','نوع','وضعیت','تاریخ ثبت'])hr.append(node('th',h));thead.append(hr);table.append(thead);
+ const tbody=node('tbody');for(const r of rows){const tr=node('tr'),c=r.customer||{};const vals=[r.order_number||'—',[c.full_name,c.mobile].filter(Boolean).join(' · ')||'—',r.title||r.description||'—',r.order_type==='workshop_service'?'خدمات کارگاهی':'کابینت و دکوراسیون',orderLabels[r.status]||r.status||'—',r.created_at?new Date(r.created_at).toLocaleString('fa-IR'):'—'];for(const v of vals)tr.append(node('td',String(v)));tbody.append(tr);}table.append(tbody);$('orders').append(table);
 }
-let cachedOrders = [];
-function renderOrders() {
-  const query = $('orderSearch').value.trim().toLocaleLowerCase('fa');
-  const statusFilter = $('orderStatusFilter').value;
-  const filtered = cachedOrders.filter(order => {
-    const customer = Array.isArray(order.customers) ? order.customers[0] : order.customers;
-    const haystack = [order.order_number,order.title,order.description,customer?.full_name,customer?.mobile]
-      .filter(Boolean).join(' ').toLocaleLowerCase('fa');
-    return (!query || haystack.includes(query)) && (!statusFilter || order.status === statusFilter);
-  });
-  const body = $('ordersBody'); body.replaceChildren();
-  if (!filtered.length) {
-    const tr=document.createElement('tr'),td=document.createElement('td');
-    td.colSpan=7;td.className='empty';td.textContent=cachedOrders.length?'موردی با این جست‌وجو یا فیلتر پیدا نشد.':'هنوز سفارشی ثبت نشده است.';
-    tr.append(td);body.append(tr);
-  }
-  for (const order of filtered) {
-    const tr = document.createElement('tr');
-    const customer = Array.isArray(order.customers) ? order.customers[0] : order.customers;
-    const customerCell = document.createElement('td');
-    const name=document.createElement('div');name.textContent=customer?.full_name || 'نامشخص';customerCell.append(name);
-    if(customer?.mobile){const tel=document.createElement('a');tel.href='tel:'+customer.mobile;tel.textContent=customer.mobile;tel.className='order-sub';customerCell.append(tel);}
-    const titleCell=document.createElement('td');
-    const title=document.createElement('strong');title.textContent=order.title || 'بدون عنوان';titleCell.append(title);
-    if(order.description){const desc=document.createElement('span');desc.className='order-sub';desc.textContent=order.description;titleCell.append(desc);}
-    const typeCell=document.createElement('td');typeCell.textContent=order.order_type==='workshop_service'?'خدمات کارگاهی':'کابینت و دکوراسیون';
-    const statusCell=document.createElement('td');const statusTag=document.createElement('span');statusTag.className='pill';statusTag.textContent=statusLabels[order.status]??order.status;statusCell.append(statusTag);
-    const dateCell=document.createElement('td');dateCell.textContent=order.created_at?new Date(order.created_at).toLocaleString('fa-IR'):'—';
-    const numberCell=document.createElement('td');numberCell.textContent=order.order_number || '—';
-    tr.append(numberCell,customerCell,titleCell,typeCell,statusCell,dateCell);
-    const action=document.createElement('td');
-    if (['owner','factory_manager'].includes(currentRole)) {
-      const select=document.createElement('select');select.setAttribute('aria-label','وضعیت سفارش '+(order.order_number||''));
-      for(const [value,label] of Object.entries(statusLabels)){const option=document.createElement('option');option.value=value;option.textContent=label;option.selected=value===order.status;select.append(option);}
-      const save=document.createElement('button');save.type='button';save.textContent='ذخیره وضعیت';
-      save.addEventListener('click',async()=>{
-        const nextStatus=select.value;
-        if(nextStatus===order.status){showMessage('dashStatus','وضعیت این سفارش تغییری نکرده است.');return;}
-        save.disabled=true;showMessage('dashStatus','در حال ذخیره وضعیت سفارش...');
-        const {data:updated,error:updateError}=await supabase.from('orders')
-          .update({status:nextStatus,updated_at:new Date().toISOString()}).eq('id',order.id).select('id').maybeSingle();
-        if(updateError||!updated){save.disabled=false;showMessage('dashStatus','ذخیره وضعیت انجام نشد: '+(updateError?.message||'سفارشی به‌روزرسانی نشد؛ سطح دسترسی را بررسی کن.'));return;}
-        const {error:historyError}=await supabase.from('order_status_history').insert({
-          order_id:order.id,old_status:order.status,new_status:nextStatus,note:'تغییر وضعیت از پنل مدیریت'
-        });
-        save.disabled=false;
-        showMessage('dashStatus',historyError?'وضعیت ذخیره شد، اما ثبت سابقه با خطا روبه‌رو شد: '+historyError.message:'وضعیت سفارش و سابقه تغییر با موفقیت ذخیره شد.');
-        await loadOrders();
-      });
-      action.append(select,save);
-    } else action.textContent='فقط مشاهده';
-    tr.append(action);body.append(tr);
-  }
-  showMessage('dashStatus',filtered.length+' سفارش از '+cachedOrders.length+' سفارش نمایش داده می‌شود.');
+function renderAI(rows){
+ $('ai').replaceChildren();$('aiCount').textContent=rows.length+' درخواست';
+ if(!rows.length){$('ai').append(node('div','درخواستی در Appwrite ثبت نشده است.','empty'));return;}
+ for(const r of rows){const card=node('div',undefined,'item');card.append(cell(r,'کد پیگیری','request_number'),cell(r,'نام','full_name'),cell(r,'موبایل','mobile'),cell(r,'سبک','style'),cell(r,'حالت طراحی','design_mode'),cell(r,'وضعیت', 'status'),cell(r,'پرداخت','payment_status'),cell(r,'فایل ورودی','original_file_name'),cell(r,'قیمت پیشنهادی','quoted_price_toman'));$('ai').append(card);}
 }
-async function loadOrders() {
-  showMessage('dashStatus','در حال دریافت سفارش‌ها...');
-  const {data,error}=await supabase.from('orders')
-    .select('id,order_number,order_type,title,description,status,created_at,quoted_amount,paid_amount,assigned_to,customers(full_name,mobile)')
-    .order('created_at',{ascending:false}).limit(200);
-  if(error){showMessage('dashStatus','دریافت سفارش‌ها ناموفق بود: '+error.message);return;}
-  cachedOrders=data??[];
-  renderOrders();
-  await loadAiRequests();
+function renderPricing(rows){
+ $('pricing').replaceChildren();$('pricingCount').textContent=rows.length+' تعرفه';
+ if(!rows.length){$('pricing').append(node('div','تعرفه‌ای در Appwrite ثبت نشده است.','empty'));return;}
+ for(const r of rows){const card=node('div',undefined,'item');card.append(cell(r,'سبک','style_label'),cell(r,'کد سبک','style_key'),cell(r,'قیمت پایه (تومان)','base_price_toman'));$('pricing').append(card);}
 }
-
-async function loadAiPricing() {
-  const panel=$('aiPricingPanel');
-  if(currentRole!=='owner'){panel.classList.add('hidden');return;}
-  panel.classList.remove('hidden');
-  const {data,error}=await supabase.from('ai_design_pricing').select('style_key,style_label,base_price_toman').order('style_key');
-  if(error){showMessage('aiPricingStatus','دریافت قیمت‌ها ناموفق بود: '+error.message);return;}
-  const fields=$('aiPricingFields');fields.replaceChildren();
-  for(const item of data||[]){
-    const label=document.createElement('label');label.textContent=item.style_label;
-    const input=document.createElement('input');input.type='number';input.min='700000';input.max='3000000';input.step='10000';input.required=true;input.value=item.base_price_toman;input.dataset.styleKey=item.style_key;input.style.width='100%';
-    label.append(input);fields.append(label);
-  }
-  showMessage('aiPricingStatus','قیمت‌ها بارگذاری شدند. ضریب متوسط ۲۰٪ و پیچیده ۴۰٪ است؛ سقف قیمت نهایی ۳ میلیون تومان.');
+async function load(){
+ $('refresh').disabled=true;say('health','در حال بررسی دسترسی مالک...');
+ try{
+  const h=await api('health');if(h.readOnly!==true)throw new Error('حالت فقط‌خواندنی از سمت سرور تأیید نشد.');
+  say('health','اتصال برقرار است؛ دسترسی مالک تأیید شد و حالت فقط‌خواندنی فعال است.');
+  say('ordersStatus','در حال دریافت سفارش‌ها...');say('aiStatus','در حال دریافت درخواست‌ها...');say('pricingStatus','در حال دریافت تعرفه‌ها...');
+  const [o,a,p]=await Promise.all([api('list_orders'),api('list_ai_requests'),api('list_ai_pricing')]);
+  ordersCache=o.rows||[];renderOrders();renderAI(a.rows||[]);renderPricing(p.rows||[]);
+  say('ordersStatus','دریافت سفارش‌ها کامل شد.');say('aiStatus','دریافت درخواست‌های طراحی کامل شد.');say('pricingStatus','دریافت تعرفه‌ها کامل شد.');
+ }catch(e){say('health','خطا: '+e.message);throw e;}finally{$('refresh').disabled=false;}
 }
-async function saveAiPricing(){
-  const button=$('saveAiPricing');const inputs=[...$('aiPricingFields').querySelectorAll('input')];
-  if(!inputs.length)return;
-  const invalid=inputs.find(input=>!Number.isInteger(Number(input.value))||Number(input.value)<700000||Number(input.value)>3000000);
-  if(invalid){showMessage('aiPricingStatus','هر قیمت پایه باید بین ۷۰۰٬۰۰۰ تا ۳٬۰۰۰٬۰۰۰ تومان باشد.');return;}
-  button.disabled=true;
-  const {data:{user}}=await supabase.auth.getUser();
-  for(const input of inputs){
-    const {error}=await supabase.from('ai_design_pricing').update({base_price_toman:Number(input.value),updated_at:new Date().toISOString(),updated_by:user?.id}).eq('style_key',input.dataset.styleKey);
-    if(error){showMessage('aiPricingStatus','ذخیره قیمت ناموفق بود: '+error.message);button.disabled=false;return;}
-  }
-  button.disabled=false;showMessage('aiPricingStatus','قیمت‌های پایه با موفقیت ذخیره شدند.');await loadAiPricing();
-}
-$('saveAiPricing').addEventListener('click',saveAiPricing);
-async function loadAiRequests() {
-  showMessage('aiDashStatus','در حال دریافت درخواست‌های طراحی...');
-  const { data, error } = await supabase.from('ai_design_requests')
-    .select('id,request_number,full_name,mobile,design_mode,style,complexity_level,quoted_price_toman,file_key,original_file_name,payment_status,status,upload_completed_at,admin_note,created_at,fal_request_id,output_file_key,output_description')
-    .order('created_at',{ascending:false}).limit(100);
-  if (error) {
-    showMessage('aiDashStatus','دریافت درخواست‌ها ناموفق بود: '+error.message);
-    return;
-  }
-  const body = $('aiRequestsBody');
-  body.replaceChildren();
-  for (const item of data ?? []) {
-    const tr = document.createElement('tr');
-    const customer = [item.full_name,item.mobile].filter(Boolean).join(' · ');
-    const mode = item.design_mode === 'preserve' ? 'حفظ ساختار' : 'طراحی آزاد';
-    for (const value of [item.request_number,customer,item.style+' · '+mode+' · '+(item.complexity_level==='complex'?'پیچیده':item.complexity_level==='medium'?'متوسط':'ساده')+' · '+(item.quoted_price_toman?Number(item.quoted_price_toman).toLocaleString('fa-IR')+' تومان':'قیمت نامشخص')]) {
-      const td = document.createElement('td');
-      td.textContent = value || '—';
-      tr.append(td);
-    }
-
-    const fileCell = document.createElement('td');
-    if (item.file_key) {
-      const link = document.createElement('button');
-      link.type = 'button';
-      link.textContent = item.upload_completed_at ? 'مشاهده فایل' : 'بارگذاری ناقص';
-      link.disabled = !item.upload_completed_at;
-      link.addEventListener('click', async () => {
-        const { data: linkData, error: linkError } = await supabase.storage
-          .from('nova-ai-designs').createSignedUrl(item.file_key,300);
-        if (linkError) {
-          showMessage('aiDashStatus','دریافت لینک فایل ناموفق بود: '+linkError.message);
-          return;
-        }
-        window.open(linkData.signedUrl,'_blank','noopener');
-      });
-      fileCell.append(link);
-    } else {
-      fileCell.textContent = '—';
-    }
-    tr.append(fileCell);
-
-    const outputCell = document.createElement('td');
-    if (item.output_file_key) {
-      const outputButton = document.createElement('button');
-      outputButton.type = 'button';
-      outputButton.textContent = 'مشاهده پیش‌نمایش';
-      outputButton.addEventListener('click', async () => {
-        const { data: outputLink, error: outputError } = await supabase.storage
-          .from('nova-ai-designs').createSignedUrl(item.output_file_key, 300);
-        if (outputError) {
-          showMessage('aiDashStatus', 'دریافت خروجی طراحی ناموفق بود: ' + outputError.message);
-          return;
-        }
-        window.open(outputLink.signedUrl, '_blank', 'noopener');
-      });
-      outputCell.append(outputButton);
-      if (item.output_description) {
-        const desc = document.createElement('div');
-        desc.className = 'muted';
-        desc.textContent = item.output_description.slice(0, 180);
-        outputCell.append(desc);
-      }
-    } else {
-      outputCell.textContent = 'هنوز آماده نیست';
-    }
-    tr.append(outputCell);
-
-    const payCell = document.createElement('td');
-    const statusCell = document.createElement('td');
-    const noteCell = document.createElement('td');
-    const actionCell = document.createElement('td');
-
-    let paySelect = null;
-    let statusSelect = null;
-    let noteInput = null;
-
-    if (currentRole === 'owner') {
-      paySelect = document.createElement('select');
-      for (const [value,label] of Object.entries(paymentLabels)) {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = label;
-        option.selected = value === item.payment_status;
-        paySelect.append(option);
-      }
-      payCell.append(paySelect);
-
-      statusSelect = document.createElement('select');
-      for (const [value,label] of Object.entries(aiStatusLabels)) {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = label;
-        option.selected = value === item.status;
-        statusSelect.append(option);
-      }
-      statusCell.append(statusSelect);
-
-      noteInput = document.createElement('input');
-      noteInput.value = item.admin_note ?? '';
-      noteInput.placeholder = 'یادداشت داخلی';
-      noteCell.append(noteInput);
-
-      const generate = document.createElement('button');
-      generate.type = 'button';
-      generate.textContent = item.output_file_key ? 'تولید انجام شد' : item.fal_request_id ? 'بررسی نتیجه طراحی' : 'شروع طراحی هوشمند';
-      generate.disabled = item.output_file_key || item.payment_status !== 'paid' || !item.upload_completed_at;
-      generate.title = item.payment_status !== 'paid' ? 'ابتدا پرداخت را تأیید و ذخیره کنید' : !item.upload_completed_at ? 'فایل مشتری هنوز کامل بارگذاری نشده است' : '';
-      generate.addEventListener('click', async () => {
-        generate.disabled = true;
-        showMessage('aiDashStatus', item.fal_request_id ? 'در حال بررسی وضعیت طراحی...' : 'در حال ارسال تصویر برای طراحی هوشمند...');
-        const functionName = item.fal_request_id ? 'check-ai-design' : 'start-ai-design';
-        const { data: result, error: generationError } = await supabase.functions.invoke(functionName, {
-          body: { request_id: item.id }
-        });
-        generate.disabled = false;
-        if (generationError || !result?.ok) {
-          showMessage('aiDashStatus', 'عملیات طراحی انجام نشد: ' + (result?.error || generationError?.message || 'خطای نامشخص'));
-          return;
-        }
-        if (result.status === 'preview_ready') {
-          showMessage('aiDashStatus', 'پیش‌نمایش طراحی درخواست ' + item.request_number + ' آماده شد.');
-        } else if (!item.fal_request_id) {
-          showMessage('aiDashStatus', 'درخواست طراحی به صف هوش مصنوعی ارسال شد. چند لحظه بعد «بررسی نتیجه طراحی» را بزن.');
-        } else {
-          showMessage('aiDashStatus', result.status === 'queued'
-            ? 'در صف طراحی است' + (result.queue_position != null ? '؛ جایگاه صف: ' + result.queue_position : '') + '.'
-            : 'طراحی هنوز در حال انجام است؛ کمی بعد دوباره بررسی کن.');
-        }
-        await loadAiRequests();
-      });
-      actionCell.append(generate);
-
-      const save = document.createElement('button');
-      save.type = 'button';
-      save.textContent = 'ذخیره';
-      save.addEventListener('click', async () => {
-        save.disabled = true;
-        const { error: saveError } = await supabase.from('ai_design_requests')
-          .update({
-            payment_status: paySelect.value,
-            status: statusSelect.value,
-            admin_note: noteInput.value,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id',item.id);
-        save.disabled = false;
-        if (saveError) {
-          showMessage('aiDashStatus','ذخیره تغییرات ناموفق بود: '+saveError.message);
-          return;
-        }
-        showMessage('aiDashStatus','تغییرات درخواست '+item.request_number+' ذخیره شد.');
-        await loadAiRequests();
-      });
-      actionCell.append(save);
-    } else {
-      payCell.textContent = paymentLabels[item.payment_status] ?? item.payment_status ?? '—';
-      statusCell.textContent = aiStatusLabels[item.status] ?? item.status ?? '—';
-      noteCell.textContent = item.admin_note || '—';
-      actionCell.textContent = 'فقط مشاهده';
-    }
-
-    tr.append(payCell,statusCell,noteCell,actionCell);
-    body.append(tr);
-  }
-  showMessage('aiDashStatus',data?.length
-    ? 'تعداد '+data.length+' درخواست طراحی نمایش داده شده است.'
-    : 'هنوز درخواست طراحی هوشمندی ثبت نشده است.');
-}
-async function checkSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) { showLogin(); return; }
-  const { data: role, error } = await supabase.rpc('get_my_app_role');
-  if (error || !['owner','factory_manager'].includes(role)) {
-    await supabase.auth.signOut();
-    showLogin('این حساب دسترسی مدیریتی ندارد یا ایمیل آن هنوز تأیید نشده است.');
-    return;
-  }
-  currentRole=role;
-  $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden');
-  $('identity').textContent=(session.user.phone || session.user.email || 'مدیر')+' · '+(role==='owner'?'مدیر کامل':'مدیر کارخانه');
-  await loadOrders();
-  await loadAiPricing();
-}
-$('loginForm').addEventListener('submit',async (event)=>{
-  event.preventDefault();
-  const normalizePhone = (value) => value
-    .replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-    .replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
-    .replace(/\D/g,'')
-    .replace(/^98/,'0');
-  if(normalizePhone($('adminPhone').value) !== normalizePhone(ADMIN_PHONE)){
-    showMessage('loginStatus','شماره موبایل یا رمز عبور صحیح نیست.');
-    return;
-  }
-  const button=$('passwordLogin'); button.disabled=true; showMessage('loginStatus','در حال بررسی اطلاعات ورود...');
-  const { error }=await supabase.auth.signInWithPassword({
-    email:ADMIN_EMAIL,
-    password:$('password').value
-  });
-  button.disabled=false;
-  if(error){
-    $('requestPasswordReset').classList.remove('hidden');
-    showMessage('loginStatus','ورود ناموفق بود. اگر رمز را نمی‌دانی، از گزینه بازیابی رمز استفاده کن.');
-    return;
-  }
-  $('adminPhone').value=''; $('password').value='';
-  await checkSession();
-});
-
-$('recoveryForm').addEventListener('submit',async(event)=>{
-  event.preventDefault();
-  const password=$('newPassword').value;
-  if(password!==$('confirmPassword').value){showMessage('recoveryStatus','تکرار رمز با رمز جدید یکسان نیست.');return;}
-  const button=$('savePassword');button.disabled=true;
-  showMessage('recoveryStatus','در حال ثبت رمز جدید...');
-  const {error}=await supabase.auth.updateUser({password});
-  button.disabled=false;
-  if(error){showMessage('recoveryStatus','ثبت رمز انجام نشد: '+error.message);return;}
-  $('newPassword').value='';$('confirmPassword').value='';
-  $('recovery').classList.add('hidden');
-  showLogin('رمز عبور با موفقیت تعیین شد. اکنون با ایمیل و رمز جدید وارد شو.');
-  await supabase.auth.signOut();
-});
-$('logout').addEventListener('click',async()=>{await supabase.auth.signOut();currentRole=null;showLogin('از پنل خارج شدید.');});
-$('refresh').addEventListener('click',loadOrders);
-$('refreshAi').addEventListener('click',loadAiRequests);
-$('orderSearch').addEventListener('input',renderOrders);
-$('orderStatusFilter').addEventListener('change',renderOrders);
-for(const [value,label] of Object.entries(statusLabels)){const option=document.createElement('option');option.value=value;option.textContent=label;$('orderStatusFilter').append(option);}
-supabase.auth.onAuthStateChange((event,session)=>{
-  if(event==='PASSWORD_RECOVERY'){setTimeout(()=>showRecovery('لینک معتبر است؛ رمز جدید را تعیین کن.'),0);return;}
-  if(session) setTimeout(checkSession,0);
-});
-checkSession();
-</script>
-</body>
-</html>
+function showDashboard(){ $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logout').classList.remove('hidden');}
+async function verifyOwner(){const u=await account.get();if(u.email?.toLowerCase()!==OWNER||u.emailVerification!==true)throw new Error('این حساب مالک تأییدشده نیست.');showDashboard();await load();}
+$('send').onclick=async()=>{const b=$('send');b.disabled=true;try{const t=await account.createEmailToken({userId:'unique()',email:OWNER});pendingUserId=t.userId;$('otpBox').classList.remove('hidden');say('loginStatus','کد ورود به ایمیل مالک ارسال شد.')}catch(e){say('loginStatus','ارسال کد ناموفق بود: '+(e.message||String(e)))}finally{b.disabled=false;}};
+$('verify').onclick=async()=>{const b=$('verify');b.disabled=true;try{if(!pendingUserId)throw new Error('ابتدا کد ورود را درخواست کن.');await account.createSession({userId:pendingUserId,secret:$('otp').value.trim()});await verifyOwner();}catch(e){say('loginStatus','ورود یا دریافت اطلاعات انجام نشد: '+(e.message||String(e)))}finally{b.disabled=false;}};
+$('refresh').onclick=()=>load().catch(()=>{});
+$('logout').onclick=async()=>{await account.deleteSession({sessionId:'current'}).catch(()=>{});$('dashboard').classList.add('hidden');$('logout').classList.add('hidden');$('login').classList.remove('hidden');$('otp').value='';pendingUserId='';say('loginStatus','از حساب خارج شدی.');};
+$('orderSearch').addEventListener('input',renderOrders);$('orderStatusFilter').addEventListener('change',renderOrders);
+for(const [value,label] of Object.entries(orderLabels))$('orderStatusFilter').append(new Option(label,value));
+(async()=>{try{await verifyOwner();}catch(e){if(e?.code==='user_unauthorized'||e?.code==='general_unauthorized')return;say('loginStatus','برای ورود، کد یک‌بارمصرف را ارسال کن.');}})();
+</script></body></html>
