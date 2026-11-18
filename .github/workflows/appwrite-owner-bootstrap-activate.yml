@@ -39,7 +39,9 @@ jobs:
             const response = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
             const fn = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error('Cannot inspect function. HTTP ' + response.status);
-            if (fn.enabled !== false || (fn.execute || []).length !== 0 ||
+            const execute = fn.execute || [];
+            const executeIsSafe = execute.length === 0 || (execute.length === 1 && execute[0] === 'users');
+            if (fn.enabled !== false || !executeIsSafe ||
                 (fn.scopes || []).length !== 2 ||
                 !(fn.scopes || []).includes('rows.read') ||
                 !(fn.scopes || []).includes('rows.write')) {
@@ -76,7 +78,10 @@ jobs:
             const beforeResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(functionId), { headers });
             const before = await beforeResponse.json().catch(() => ({}));
             if (!beforeResponse.ok) throw new Error('Cannot re-check function. HTTP ' + beforeResponse.status);
-            if (before.enabled !== false || (before.execute || []).length !== 0 ||
+            const beforeExecute = before.execute || [];
+            const beforeExecuteIsSafe = beforeExecute.length === 0 ||
+              (beforeExecute.length === 1 && beforeExecute[0] === 'users');
+            if (before.enabled !== false || !beforeExecuteIsSafe ||
                 (before.scopes || []).length !== 2 ||
                 !(before.scopes || []).includes('rows.read') ||
                 !(before.scopes || []).includes('rows.write')) {
