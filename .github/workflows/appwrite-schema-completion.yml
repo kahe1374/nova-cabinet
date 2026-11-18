@@ -2,6 +2,9 @@ name: Appwrite schema completion diagnostic (read-only)
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-schema-completion.yml'
 
 permissions:
   contents: read
@@ -9,9 +12,9 @@ permissions:
 jobs:
   inspect-schema:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
-      - name: Verify the order assignment field without changing schema or data
+      - name: Inspect all Appwrite tables and critical order fields (GET only)
         env:
           APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
@@ -25,41 +28,59 @@ jobs:
             'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
             'X-Appwrite-Key': process.env.APPWRITE_API_KEY
           };
+          const tables = [
+            'app_users', 'lead_requests', 'customers', 'orders', 'order_items',
+            'workshop_requests', 'order_status_history', 'order_files',
+            'audit_log', 'ai_design_requests', 'ai_design_pricing'
+          ];
           async function get(path) {
-            const response = await fetch(endpoint + path, { headers });
+            const response = await fetch(endpoint + path, { method: 'GET', headers });
             const raw = await response.text();
             let data = {};
             try { data = raw ? JSON.parse(raw) : {}; } catch {}
             if (!response.ok) throw new Error('Appwrite read failed HTTP ' + response.status + ': ' + path);
             return data;
           }
+          async function inspect(tableId) {
+            const base = '/tablesdb/' + db + '/tables/' + encodeURIComponent(tableId);
+            const [table, columns] = await Promise.all([
+              get(base),
+              get(base + '/columns?limit=100')
+            ]);
+            const keys = (columns.columns || []).map(c => ({
+              key: c.key, type: c.type, required: c.required === true,
+              size: c.size ?? null, status: c.status
+            }));
+            const privateTable = Array.isArray(table.$permissions) && table.$permissions.length === 0;
+            const secure = table.enabled === true && table.rowSecurity === true && privateTable;
+            console.log('TABLE ' + tableId + ' ' + JSON.stringify({
+              enabled: table.enabled === true,
+              rowSecurity: table.rowSecurity === true,
+              private: privateTable,
+              columnCount: keys.length,
+              columns: keys
+            }));
+            return { tableId, secure, keys };
+          }
           async function main() {
             if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY');
-            const [table, columns] = await Promise.all([
-              get('/tablesdb/' + db + '/tables/orders'),
-              get('/tablesdb/' + db + '/tables/orders/columns?limit=100')
-            ]);
-            const items = columns.columns || [];
-            const assigned = items.find(c => c.key === 'assigned_user_id');
-            const legacyRelation = items.find(c => c.key === 'assigned_to');
-            console.log('ORDERS_TABLE_ENABLED=' + String(table.enabled === true));
-            console.log('ORDERS_ROW_SECURITY=' + String(table.rowSecurity === true));
-            console.log('ORDERS_TABLE_PRIVATE=' + String((table.$permissions || []).length === 0));
-            console.log('ASSIGNED_USER_ID=' + JSON.stringify(assigned ? {
-              key: assigned.key, type: assigned.type, required: assigned.required, size: assigned.size, status: assigned.status
-            } : null));
-            console.log('LEGACY_ASSIGNED_TO=' + JSON.stringify(legacyRelation ? {
-              key: legacyRelation.key, type: legacyRelation.type, status: legacyRelation.status
-            } : null));
-            if (table.rowSecurity !== true || (table.$permissions || []).length !== 0) {
-              throw new Error('Orders table privacy invariant failed; no changes made.');
-            }
-            if (!assigned || assigned.type !== 'varchar' || assigned.status !== 'available' || assigned.required === true || assigned.size < 36) {
-              throw new Error('orders.assigned_user_id is not the expected optional varchar(36); no changes made.');
+            const results = await Promise.all(tables.map(inspect));
+            const insecure = results.filter(x => !x.secure);
+            if (insecure.length) throw new Error('Table privacy/enabled invariant failed: ' + insecure.map(x => x.tableId).join(','));
+            const orders = results.find(x => x.tableId === 'orders');
+            const assigned = orders.keys.find(c => c.key === 'assigned_user_id');
+            const legacy = orders.keys.find(c => c.key === 'assigned_to');
+            console.log('ORDERS_ASSIGNED_USER_ID=' + JSON.stringify(assigned || null));
+            console.log('ORDERS_LEGACY_ASSIGNED_TO=' + JSON.stringify(legacy || null));
+            if (!assigned || assigned.type !== 'varchar' || assigned.status !== 'available' || assigned.required || assigned.size < 36) {
+              throw new Error('orders.assigned_user_id must be an optional available varchar with size >= 36.');
             }
             console.log('SCHEMA_DIAGNOSTIC_PASSED=true');
             console.log('READ_ONLY=true');
             console.log('NO_SCHEMA_OR_ROW_CHANGES=true');
           }
-          main().catch(error => { console.error('SCHEMA_DIAGNOSTIC_FAILED:', error.message); process.exit(1); });
+          main().catch(error => {
+            console.error('SCHEMA_DIAGNOSTIC_FAILED:', error.message);
+            process.exit(1);
+          });
           NODE
