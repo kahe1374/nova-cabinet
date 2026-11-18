@@ -1,0 +1,142 @@
+name: Prepare Appwrite AI design schema (private, additive)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-ai-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Add missing private AI tables and columns without touching existing rows
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const database = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const key = process.env.APPWRITE_API_KEY;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key, 'Content-Type': 'application/json' };
+
+          const definitions = {
+            ai_design_requests: [
+              ['request_number','varchar',{size:40,required:true}],
+              ['full_name','varchar',{size:160,required:true}],
+              ['mobile','varchar',{size:20,required:true}],
+              ['city','varchar',{size:100}],
+              ['design_mode','varchar',{size:20,required:true}],
+              ['style','varchar',{size:100,required:true}],
+              ['door_material','varchar',{size:120}],
+              ['countertop_material','varchar',{size:120}],
+              ['material_codes','text',{}],
+              ['instructions','text',{}],
+              ['structure_locked','boolean',{required:true,default:true}],
+              ['payment_status','varchar',{size:20,required:true}],
+              ['status','varchar',{size:32,required:true}],
+              ['file_key','text',{}],
+              ['original_file_name','varchar',{size:255}],
+              ['mime_type','varchar',{size:120}],
+              ['file_size_bytes','integer',{}],
+              ['created_at','datetime',{}],
+              ['updated_at','datetime',{}],
+              ['upload_completed_at','datetime',{}],
+              ['admin_note','text',{}],
+              ['fal_request_id','varchar',{size:180}],
+              ['fal_status_url','text',{}],
+              ['fal_response_url','text',{}],
+              ['output_file_key','text',{}],
+              ['output_description','text',{}],
+              ['generation_started_at','datetime',{}],
+              ['generated_at','datetime',{}],
+              ['complexity_level','varchar',{size:20,required:true,default:'simple'}],
+              ['quoted_price_toman','integer',{}],
+              ['price_accepted_at','datetime',{}],
+              ['price_accepted_amount_toman','integer',{}],
+              ['price_acceptance_token_hash','varchar',{size:128}]
+            ],
+            ai_design_pricing: [
+              ['style_key','varchar',{size:80,required:true}],
+              ['style_label','varchar',{size:160,required:true}],
+              ['base_price_toman','integer',{required:true}],
+              ['updated_at','datetime',{}],
+              ['updated_by','varchar',{size:36}]
+            ]
+          };
+
+          async function call(path, method='GET', body) {
+            const response = await fetch(endpoint + path, {
+              method, headers,
+              ...(body === undefined ? {} : { body: JSON.stringify(body) })
+            });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            return { response, data };
+          }
+
+          async function waitColumn(tableId, key) {
+            for (let i=0;i<24;i++) {
+              const found = await call('/tablesdb/' + database + '/tables/' + encodeURIComponent(tableId) + '/columns/' + encodeURIComponent(key));
+              if (found.response.ok && found.data.status === 'available') return found.data;
+              if (found.response.ok && found.data.status === 'failed') throw new Error('Column build failed: ' + tableId + '.' + key);
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+            throw new Error('Column did not become available: ' + tableId + '.' + key);
+          }
+
+          async function ensureTable(tableId) {
+            let result = await call('/tablesdb/' + database + '/tables/' + encodeURIComponent(tableId));
+            if (result.response.status === 404) {
+              result = await call('/tablesdb/' + database + '/tables', 'POST', {
+                tableId, name: tableId, permissions: [], rowSecurity: true
+              });
+              if (!result.response.ok) throw new Error('Table create failed ' + tableId + ': HTTP ' + result.response.status + ' ' + JSON.stringify({code:result.data.code,type:result.data.type,message:result.data.message}));
+            } else if (!result.response.ok) {
+              throw new Error('Table inspection failed ' + tableId + ': HTTP ' + result.response.status);
+            }
+            const verify = await call('/tablesdb/' + database + '/tables/' + encodeURIComponent(tableId));
+            if (!verify.response.ok || verify.data.rowSecurity !== true || (verify.data.$permissions || []).length !== 0) {
+              throw new Error('Table is not private with row security: ' + tableId);
+            }
+            console.log('PRIVATE_TABLE_READY=' + tableId);
+          }
+
+          async function ensureColumn(tableId, [key, type, options]) {
+            const path = '/tablesdb/' + database + '/tables/' + encodeURIComponent(tableId) + '/columns/' + type;
+            let result = await call(path, 'POST', { key, ...options });
+            if (result.response.status === 409) {
+              const existing = await call('/tablesdb/' + database + '/tables/' + encodeURIComponent(tableId) + '/columns/' + encodeURIComponent(key));
+              if (!existing.response.ok || existing.data.key !== key || existing.data.type !== type) {
+                throw new Error('Existing column conflicts with requested schema: ' + tableId + '.' + key);
+              }
+              result = existing;
+            } else if (!result.response.ok) {
+              throw new Error('Column create failed ' + tableId + '.' + key + ': HTTP ' + result.response.status + ' ' + JSON.stringify({code:result.data.code,type:result.data.type,message:result.data.message}));
+            }
+            const ready = await waitColumn(tableId, key);
+            if (ready.type !== type) throw new Error('Column type mismatch: ' + tableId + '.' + key);
+            console.log('COLUMN_READY=' + tableId + '.' + key + ':' + type);
+          }
+
+          async function main() {
+            for (const [tableId, columns] of Object.entries(definitions)) {
+              await ensureTable(tableId);
+              for (const column of columns) await ensureColumn(tableId, column);
+            }
+            console.log('AI_SCHEMA_READY=true');
+            console.log('ROW_SECURITY=true');
+            console.log('TABLE_PERMISSIONS_EMPTY=true');
+            console.log('EXISTING_ROWS_PRESERVED=true');
+            console.log('NO_SUPABASE_DATA_COPIED=true');
+            console.log('NO_PUBLIC_ACCESS_GRANTED=true');
+          }
+          main().catch(e => { console.error('AI_SCHEMA_PREPARATION_FAILED:', e.message); process.exit(1); });
+          NODE
