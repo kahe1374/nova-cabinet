@@ -1,0 +1,150 @@
+name: Appwrite Owner Bootstrap - Restricted Activation
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner_user_id:
+        description: "Verified Appwrite account ID for the owner (not a password or API key)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+      APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+      APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+      FUNCTION_ID: nova-owner-bootstrap
+      OWNER_USER_ID: ${{ inputs.owner_user_id }}
+    steps:
+      - name: Validate owner account ID and locked function
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          const ownerId = process.env.OWNER_USER_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          if (!/^[A-Za-z0-9._-]{1,36}$/.test(ownerId || '')) {
+            throw new Error('Invalid Appwrite owner account ID.');
+          }
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key };
+          async function main() {
+            const response = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
+            const fn = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error('Cannot inspect function. HTTP ' + response.status);
+            if (fn.enabled !== false || (fn.execute || []).length !== 0 ||
+                (fn.scopes || []).length !== 2 ||
+                !(fn.scopes || []).includes('rows.read') ||
+                !(fn.scopes || []).includes('rows.write')) {
+              throw new Error('Function is not in the expected disabled, no-execute, least-privilege state.');
+            }
+            console.log('OWNER_ID_FORMAT_VALID=true');
+            console.log('FUNCTION_PRECHECK_LOCKED=true');
+          }
+          main().catch(error => { console.error('PRECHECK_FAILED:', error.message); process.exit(1); });
+          NODE
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Validate and package owner bootstrap function
+        run: |
+          node --check appwrite/functions/nova-owner-bootstrap/index.js
+          mkdir -p "$RUNNER_TEMP/nova-owner-bootstrap"
+          cp appwrite/functions/nova-owner-bootstrap/index.js "$RUNNER_TEMP/nova-owner-bootstrap/index.js"
+          cd "$RUNNER_TEMP/nova-owner-bootstrap"
+          tar -czf "$RUNNER_TEMP/nova-owner-bootstrap-activate.tar.gz" .
+
+      - name: Deploy and activate only for the verified owner account
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const functionId = process.env.FUNCTION_ID;
+          const ownerId = process.env.OWNER_USER_ID;
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key };
+          async function main() {
+            const beforeResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(functionId), { headers });
+            const before = await beforeResponse.json().catch(() => ({}));
+            if (!beforeResponse.ok) throw new Error('Cannot re-check function. HTTP ' + beforeResponse.status);
+            if (before.enabled !== false || (before.execute || []).length !== 0 ||
+                (before.scopes || []).length !== 2 ||
+                !(before.scopes || []).includes('rows.read') ||
+                !(before.scopes || []).includes('rows.write')) {
+              throw new Error('Function lock changed during activation; refusing.');
+            }
+
+            const form = new FormData();
+            const archive = fs.readFileSync(process.env.RUNNER_TEMP + '/nova-owner-bootstrap-activate.tar.gz');
+            form.append('code', new Blob([archive], { type: 'application/gzip' }), 'nova-owner-bootstrap.tar.gz');
+            form.append('activate', 'true');
+            form.append('entrypoint', 'index.js');
+            form.append('commands', '');
+            const upload = await fetch(endpoint + '/functions/' + encodeURIComponent(functionId) + '/deployments', {
+              method: 'POST', headers, body: form
+            });
+            const uploadRaw = await upload.text();
+            let deployment = {};
+            try { deployment = uploadRaw ? JSON.parse(uploadRaw) : {}; } catch {}
+            if (!upload.ok || !deployment.$id) {
+              throw new Error('Deployment activation upload failed. HTTP ' + upload.status);
+            }
+            console.log('DEPLOYMENT_ID=' + deployment.$id);
+            console.log('DEPLOYMENT_UPLOAD_STATUS=' + deployment.status);
+
+            for (let attempt = 1; attempt <= 18; attempt++) {
+              const statusResponse = await fetch(
+                endpoint + '/functions/' + encodeURIComponent(functionId) + '/deployments/' + encodeURIComponent(deployment.$id),
+                { headers }
+              );
+              const status = await statusResponse.json().catch(() => ({}));
+              if (!statusResponse.ok) throw new Error('Cannot inspect deployment. HTTP ' + statusResponse.status);
+              console.log('BUILD_CHECK=' + attempt);
+              console.log('BUILD_STATUS=' + status.status);
+              if (['ready', 'active', 'failed'].includes(status.status)) {
+                deployment = status;
+                break;
+              }
+              await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+            if (!['ready', 'active'].includes(deployment.status)) {
+              throw new Error('Deployment did not become ready; function remains disabled.');
+            }
+
+            const update = await fetch(endpoint + '/functions/' + encodeURIComponent(functionId), {
+              method: 'PUT',
+              headers: { ...headers, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: before.name,
+                enabled: true,
+                execute: ['user:' + ownerId],
+                scopes: ['rows.read', 'rows.write']
+              })
+            });
+            const updateData = await update.json().catch(() => ({}));
+            if (!update.ok) throw new Error('Restricted function enable failed. HTTP ' + update.status);
+            if (updateData.enabled !== true ||
+                (updateData.execute || []).length !== 1 ||
+                (updateData.execute || [])[0] !== 'user:' + ownerId ||
+                (updateData.scopes || []).length !== 2 ||
+                !(updateData.scopes || []).includes('rows.read') ||
+                !(updateData.scopes || []).includes('rows.write')) {
+              throw new Error('Post-activation permissions verification failed.');
+            }
+            console.log('FUNCTION_ENABLED=true');
+            console.log('EXECUTE_PERMISSION=single-owner-user');
+            console.log('OWNER_ACCOUNT_ID=' + ownerId);
+            console.log('NO_PUBLIC_EXECUTE_ACCESS=true');
+            console.log('RESTRICTED_ACTIVATION_VERIFIED=true');
+          }
+          main().catch(error => { console.error('RESTRICTED_ACTIVATION_FAILED:', error.message); process.exit(1); });
+          NODE
