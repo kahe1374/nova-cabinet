@@ -72,6 +72,14 @@ jobs:
                     twoWay: c.twoWay
                   }))
                 }));
+
+                const rowCount = await get(
+                  '/tablesdb/' + db + '/tables/' + encodeURIComponent(table.$id) +
+                  '/rows?queries[]=' + encodeURIComponent(JSON.stringify({ method: 'limit', values: [1] }))
+                );
+                if (rowCount) console.log('ROW_COUNT', JSON.stringify({
+                  tableId: table.$id, total: rowCount.total
+                }));
               }
             }
 
