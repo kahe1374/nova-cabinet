@@ -1,12 +1,158 @@
-export default async ({ req, res, log }) => {
-  log("NOVA owner bootstrap placeholder invoked; no bootstrap action is implemented.");
+const APPWRITE_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const PROJECT_ID = '6afcbe4e002df50df86f';
+const DATABASE_ID = '6afcc05300302d503754';
+const TABLE_ID = 'app_users';
 
-  return res.json(
-    {
-      ok: false,
-      code: "BOOTSTRAP_NOT_CONFIGURED",
-      message: "Owner bootstrap is not configured yet."
-    },
-    503
+// This is the only account allowed to claim the initial owner role.
+// The account must already exist and have a verified email address.
+const OWNER_EMAIL = 'Vahiiidk74@gmail.com';
+const OWNER_NAME = 'Vahidkahe';
+const OWNER_MOBILE = '09223685532';
+
+function json(res, payload, status = 200) {
+  return res.json(payload, status);
+}
+
+function headerValue(headers, wanted) {
+  const key = Object.keys(headers || {}).find(
+    (name) => name.toLowerCase() === wanted.toLowerCase()
   );
+  return key ? headers[key] : '';
+}
+
+async function appwriteRequest(path, jwt, options = {}) {
+  const response = await fetch(APPWRITE_ENDPOINT + path, {
+    ...options,
+    headers: {
+      'X-Appwrite-Project': PROJECT_ID,
+      'X-Appwrite-JWT': jwt,
+      ...(options.headers || {})
+    }
+  });
+
+  const raw = await response.text();
+  let data = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    throw new Error('Appwrite returned an unreadable response.');
+  }
+
+  return { response, data };
+}
+
+export default async ({ req, res, log, error }) => {
+  try {
+    if (req.method !== 'POST') {
+      return json(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405);
+    }
+
+    const jwt = headerValue(req.headers, 'x-appwrite-user-jwt');
+    if (!jwt) {
+      return json(res, { ok: false, code: 'AUTHENTICATION_REQUIRED' }, 401);
+    }
+
+    // Verify the JWT with Appwrite itself; never trust identity fields in the request body.
+    const accountResult = await appwriteRequest('/account', jwt);
+    if (!accountResult.response.ok) {
+      return json(res, { ok: false, code: 'INVALID_SESSION' }, 401);
+    }
+
+    const account = accountResult.data;
+    if (
+      typeof account.email !== 'string' ||
+      account.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()
+    ) {
+      return json(res, { ok: false, code: 'NOT_AUTHORIZED_FOR_OWNER_BOOTSTRAP' }, 403);
+    }
+
+    if (account.emailVerification !== true) {
+      return json(res, { ok: false, code: 'EMAIL_NOT_VERIFIED' }, 403);
+    }
+
+    if (!account.$id || !/^[A-Za-z0-9._-]{1,36}$/.test(account.$id)) {
+      return json(res, { ok: false, code: 'INVALID_ACCOUNT_ID' }, 400);
+    }
+
+    // Deterministic row ID makes retries idempotent for this one Appwrite account.
+    const rowId = encodeURIComponent(account.$id);
+    const rowPath =
+      '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows/' + rowId;
+
+    const existing = await appwriteRequest(rowPath, jwt);
+    if (existing.response.ok) {
+      const row = existing.data;
+      if (
+        row.role === 'owner_admin' &&
+        row.email &&
+        row.email.toLowerCase() === OWNER_EMAIL.toLowerCase() &&
+        row.is_active === true
+      ) {
+        return json(res, { ok: true, code: 'OWNER_ALREADY_BOOTSTRAPPED' }, 200);
+      }
+      return json(res, { ok: false, code: 'ACCOUNT_ROW_CONFLICT' }, 409);
+    }
+
+    if (existing.response.status !== 404) {
+      error('Owner bootstrap could not safely inspect the account row. HTTP ' + existing.response.status);
+      return json(res, { ok: false, code: 'ROW_CHECK_FAILED' }, 503);
+    }
+
+    const userPermission = 'user:' + account.$id;
+    const created = await appwriteRequest(
+      '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows',
+      jwt,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rowId: account.$id,
+          data: {
+            full_name: OWNER_NAME,
+            mobile: OWNER_MOBILE,
+            email: OWNER_EMAIL,
+            role: 'owner_admin',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          permissions: [
+            'read("' + userPermission + '")',
+            'update("' + userPermission + '")'
+          ]
+        })
+      }
+    );
+
+    if (created.response.ok) {
+      log('NOVA initial owner row created successfully.');
+      return json(res, { ok: true, code: 'OWNER_BOOTSTRAPPED' }, 201);
+    }
+
+    // A concurrent retry may have created the deterministic row first.
+    if (created.response.status === 409) {
+      const retryCheck = await appwriteRequest(rowPath, jwt);
+      if (
+        retryCheck.response.ok &&
+        retryCheck.data.role === 'owner_admin' &&
+        retryCheck.data.email &&
+        retryCheck.data.email.toLowerCase() === OWNER_EMAIL.toLowerCase() &&
+        retryCheck.data.is_active === true
+      ) {
+        return json(res, { ok: true, code: 'OWNER_ALREADY_BOOTSTRAPPED' }, 200);
+      }
+    }
+
+    error('Owner bootstrap row creation failed. HTTP ' + created.response.status);
+    if (created.response.status === 401 || created.response.status === 403) {
+      return json(res, {
+        ok: false,
+        code: 'APP_USERS_CREATE_PERMISSION_REQUIRED'
+      }, 403);
+    }
+    return json(res, { ok: false, code: 'OWNER_BOOTSTRAP_FAILED' }, 503);
+  } catch (err) {
+    error('Owner bootstrap failed safely: ' + (err && err.message ? err.message : 'unknown error'));
+    return json(res, { ok: false, code: 'INTERNAL_ERROR' }, 500);
+  }
 };
