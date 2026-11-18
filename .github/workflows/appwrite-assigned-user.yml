@@ -1,4 +1,4 @@
-name: Appwrite responsible user relationship
+name: Appwrite assigned user ID column check
 
 on:
   workflow_dispatch:
@@ -7,11 +7,11 @@ permissions:
   contents: read
 
 jobs:
-  create-responsible-user:
+  create-assigned-user-id:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 4
     steps:
-      - name: Safely create a fresh relationship key
+      - name: Create optional scalar user ID column safely
         env:
           APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
@@ -21,59 +21,85 @@ jobs:
           node <<'NODE'
           const endpoint = process.env.APPWRITE_ENDPOINT;
           const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const key = 'assigned_user_id';
           const headers = {
             'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
             'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
             'Content-Type': 'application/json'
           };
+
           async function call(method, path, body) {
-            const r = await fetch(endpoint + path, {method, headers, body: body ? JSON.stringify(body) : undefined});
+            const r = await fetch(endpoint + path, {
+              method, headers,
+              body: body === undefined ? undefined : JSON.stringify(body)
+            });
             const raw = await r.text();
             let data = {};
             try { data = raw ? JSON.parse(raw) : {}; } catch {}
-            return {status:r.status,data,raw};
+            return { status: r.status, data, raw };
           }
+
           async function main() {
             if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY');
-            const path = `/tablesdb/${db}/tables/orders/columns`;
-            const existing = await call('GET', path + '?limit=100');
-            if (existing.status !== 200) throw new Error('Cannot inspect orders columns: HTTP ' + existing.status);
-            const found = (existing.data.columns || []).find(c => c.key === 'responsible_user');
-            if (found) {
-              console.log('RESPONSIBLE_USER_EXISTING:', JSON.stringify({
-                key:found.key,type:found.type,status:found.status,
-                relatedTableId:found.relatedTableId,relationType:found.relationType
+            const columnsPath = `/tablesdb/${db}/tables/orders/columns`;
+            const list = await call('GET', columnsPath + '?limit=100');
+            console.log('INITIAL_COLUMNS_HTTP:', list.status);
+            if (list.status !== 200) throw new Error('Could not inspect orders columns; stopped without changes.');
+
+            let column = (list.data.columns || []).find(c => c.key === key);
+            if (column) {
+              console.log('EXISTING_COLUMN:', JSON.stringify({
+                key: column.key, type: column.type, status: column.status, size: column.size
               }));
-              if (found.status !== 'available') throw new Error('Existing responsible_user is not available; no changes made.');
-              console.log('COMPLETE: relationship already available.');
+              if (column.type !== 'varchar') throw new Error('A column with this key exists but is not varchar; no changes made.');
+              if (column.status !== 'available') throw new Error('Existing column is not available; no changes made.');
+              console.log('COMPLETE: assigned_user_id already exists as an available varchar column.');
               return;
             }
-            const result = await call('POST', path + '/relationship', {
-              relatedTableId:'app_users', type:'manyToOne', twoWay:false,
-              key:'responsible_user', onDelete:'setNull'
+
+            const created = await call('POST', columnsPath + '/varchar', {
+              key, size: 36, required: false
             });
-            console.log('CREATE_HTTP_STATUS:', result.status);
-            console.log('CREATE_RESPONSE:', JSON.stringify(result.data));
-            if (result.status !== 201 && result.status !== 202) {
-              throw new Error('Relationship creation rejected; response above. No existing schema or rows were changed.');
-            }
-            for (let i=0;i<60;i++) {
-              const check=await call('GET', path + '?limit=100');
-              const col=(check.data.columns||[]).find(c=>c.key==='responsible_user');
-              if (col?.status==='available') {
-                console.log('RESPONSIBLE_USER_FINAL:',JSON.stringify({
-                  key:col.key,type:col.type,status:col.status,
-                  relatedTableId:col.relatedTableId,relationType:col.relationType
+            console.log('CREATE_HTTP_STATUS:', created.status);
+            console.log('CREATE_RESPONSE:', JSON.stringify(created.data));
+
+            if (created.status === 409) {
+              const verify = await call('GET', columnsPath + '?limit=100');
+              console.log('POST_409_RECHECK_HTTP:', verify.status);
+              const after409 = (verify.data.columns || []).find(c => c.key === key);
+              if (after409) {
+                console.log('POST_409_COLUMN_STATE:', JSON.stringify({
+                  key: after409.key, type: after409.type, status: after409.status
                 }));
-                console.log('COMPLETE: orders.responsible_user -> app_users is available.');
-                return;
               }
-              if (col && ['failed','stuck'].includes(col.status)) {
-                throw new Error('Relationship entered status '+col.status);
-              }
-              await new Promise(r=>setTimeout(r,2000));
+              throw new Error('Appwrite returned 409. Rechecked once; no retry, deletion, or other schema change was attempted.');
             }
-            throw new Error('Relationship did not become available within 120 seconds.');
+            if (created.status !== 201 && created.status !== 202) {
+              throw new Error('Column creation was rejected; no retry was attempted.');
+            }
+
+            for (let i = 0; i < 45; i++) {
+              const check = await call('GET', columnsPath + '?limit=100');
+              if (check.status === 200) {
+                column = (check.data.columns || []).find(c => c.key === key);
+                if (column && column.status === 'available') {
+                  console.log('FINAL_COLUMN:', JSON.stringify({
+                    key: column.key, type: column.type, status: column.status, size: column.size
+                  }));
+                  console.log('COMPLETE: orders.assigned_user_id is available as an optional varchar(36).');
+                  return;
+                }
+                if (column && ['failed', 'stuck'].includes(column.status)) {
+                  throw new Error('Column entered status ' + column.status + '.');
+                }
+              }
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            throw new Error('Column did not become available within 90 seconds; no further changes attempted.');
           }
-          main().catch(e=>{console.error(e.message);process.exit(1);});
+
+          main().catch(error => {
+            console.error('CHECK_FAILED:', error.message);
+            process.exit(1);
+          });
           NODE
