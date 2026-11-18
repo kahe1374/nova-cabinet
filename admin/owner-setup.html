@@ -44,6 +44,7 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
 </div>
 <div class="actions">
 <button id="verifyBtn" type="button">ارسال ایمیل تأیید</button>
+<button id="bootstrapBtn" class="secondary hidden" type="button">ثبت مالک اصلی در سامانه</button>
 <button id="logoutBtn" class="secondary" type="button">خروج از حساب</button>
 </div>
 </div>
@@ -62,6 +63,7 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
   const OWNER_NAME = 'Vahidkahe';
   const client = new Appwrite.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
   const account = new Appwrite.Account(client);
+  const functions = new Appwrite.Functions(client);
   const statusEl = document.getElementById('status');
   const authPanel = document.getElementById('authPanel');
   const accountPanel = document.getElementById('accountPanel');
@@ -91,6 +93,7 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
     document.getElementById('accountStatus').textContent = verified ? 'ایمیل تأیید شده' : 'ایمیل هنوز تأیید نشده';
     document.getElementById('verifyBtn').disabled = verified;
     document.getElementById('verifyBtn').textContent = verified ? 'ایمیل تأیید شده است' : 'ارسال ایمیل تأیید';
+    document.getElementById('bootstrapBtn').classList.toggle('hidden', !verified);
   }
   async function refreshAccount() {
     const user = await account.get();
@@ -147,6 +150,37 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
     try { await sendVerification(); }
     catch (error) { say(friendlyError(error), 'error'); }
     finally { btn.disabled = currentUser && currentUser.emailVerification === true; }
+  });
+
+  document.getElementById('bootstrapBtn').addEventListener('click', async () => {
+    if (!currentUser || currentUser.emailVerification !== true ||
+        currentUser.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
+      return say('ابتدا با حساب مالک وارد شو و ایمیل را تأیید کن.', 'error');
+    }
+    const btn = document.getElementById('bootstrapBtn');
+    btn.disabled = true;
+    try {
+      const result = await functions.createExecution({
+        functionId: FUNCTION_ID,
+        body: '{}',
+        async: false,
+        method: 'POST'
+      });
+      let payload = {};
+      try { payload = JSON.parse(result.responseBody || '{}'); } catch (_) {}
+      if (result.responseStatusCode >= 200 && result.responseStatusCode < 300 &&
+          (payload.code === 'OWNER_BOOTSTRAPPED' || payload.code === 'OWNER_ALREADY_BOOTSTRAPPED')) {
+        say('مالک اصلی با موفقیت در سامانه ثبت شد. حالا ورود به پنل مدیریت را می‌توان در مرحله بعد متصل کرد.');
+      } else if (payload.code === 'OWNER_ALREADY_EXISTS') {
+        say('در سامانه از قبل یک مالک ثبت شده است؛ ایجاد مالک دوم مجاز نیست.', 'error');
+      } else if (payload.code === 'BOOTSTRAP_LOCKED') {
+        say('قفل راه‌اندازی متعلق به حساب دیگری است؛ عملیات متوقف شد.', 'error');
+      } else {
+        say('تابع هنوز برای حساب تو فعال نشده یا عملیات کامل نشده است. نتیجه: ' + (payload.code || 'نامشخص'), 'error');
+      }
+    } catch (error) {
+      say('فعلاً امکان اجرای مرحله ثبت مالک وجود ندارد. ابتدا باید دسترسی محدود تابع برای حساب تو فعال شود.', 'error');
+    } finally { btn.disabled = false; }
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
