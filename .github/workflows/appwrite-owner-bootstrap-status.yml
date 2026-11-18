@@ -17,7 +17,7 @@ jobs:
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
           FUNCTION_ID: nova-owner-bootstrap
-          DEPLOYMENT_ID: 6afde8267a17339d4a8f
+          DEPLOYMENT_ID: 6afde9a07090a616d7d7
         run: |
           node <<'NODE'
           const endpoint = process.env.APPWRITE_ENDPOINT;
@@ -55,7 +55,14 @@ jobs:
             console.log('ACTIVE_DEPLOYMENT_MATCH=' + (fn.deploymentId === deploymentId));
             if (deployment.status === 'failed') throw new Error('Appwrite deployment build failed; inspect deployment build logs in Appwrite Console.');
             if (!['ready','active'].includes(deployment.status)) throw new Error('Deployment is still processing after 3 minutes; it remains inactive.');
+            if (fn.enabled !== false || (fn.execute || []).length !== 0 ||
+                (fn.scopes || []).length !== 2 ||
+                !(fn.scopes || []).includes('rows.read') ||
+                !(fn.scopes || []).includes('rows.write')) {
+              throw new Error('Function is not locked with the expected least-privilege scopes.');
+            }
             console.log('DEPLOYMENT_BUILD_COMPLETE=true');
+            console.log('LOCKED_STATE_VERIFIED=true');
             console.log('NO_FUNCTION_ACTIVATION_OR_PUBLIC_ACCESS=true');
           }
 
