@@ -60,7 +60,8 @@ jobs:
             console.log('ACTIVE_DEPLOYMENT_MATCH=' + (fn.deploymentId === deploymentId));
             if (deployment.status === 'failed') throw new Error('Appwrite deployment build failed; inspect deployment build logs in Appwrite Console.');
             if (!['ready','active'].includes(deployment.status)) throw new Error('Deployment is still processing after 3 minutes; it remains inactive.');
-            if (fn.enabled !== false || (fn.execute || []).length !== 0 ||
+            const execute = fn.execute || [];
+            if (fn.enabled !== false || execute.length !== 1 || execute[0] !== 'users' ||
                 (fn.scopes || []).length !== 2 ||
                 !(fn.scopes || []).includes('rows.read') ||
                 !(fn.scopes || []).includes('rows.write')) {
@@ -68,7 +69,8 @@ jobs:
             }
             console.log('DEPLOYMENT_BUILD_COMPLETE=true');
             console.log('LOCKED_STATE_VERIFIED=true');
-            console.log('NO_FUNCTION_ACTIVATION_OR_PUBLIC_ACCESS=true');
+            console.log('AUTHENTICATED_USERS_ONLY_EXECUTE=true');
+            console.log('FUNCTION_STILL_DISABLED=true');
           }
 
           main().catch(error => { console.error('STATUS_CHECK_FAILED:', error.message); process.exit(1); });
