@@ -48,6 +48,24 @@ jobs:
             if (current.enabled === true && ((current.scopes||[]).length !== 1 || current.scopes[0] !== 'rows.read')) throw new Error('Enabled function has unexpected scopes; refusing deployment.');
             if (current.enabled !== true && current.enabled !== false) throw new Error('Function state is not safely verifiable.');
             if (!(current.scopes||[]).includes('rows.read')) throw new Error('Function lacks rows.read scope.');
+            const variableEndpoint='/functions/'+encodeURIComponent(id)+'/variables';
+            const desiredVariables=[
+              {variableId:'nova-public-intake-enabled',key:'NOVA_PUBLIC_ORDER_INTAKE_ENABLED',value:'true',secret:false},
+              {variableId:'nova-admin-api-readonly',key:'NOVA_ADMIN_API_READ_ONLY',value:'true',secret:false}
+            ];
+            const existingVariables=await request(variableEndpoint);
+            for (const desired of desiredVariables) {
+              const existing=(existingVariables.variables||[]).find(v=>v.key===desired.key);
+              if (existing) {
+                const variableId=existing.$id||existing.id||existing.variableId;
+                if (!variableId) throw new Error('Existing Appwrite variable has no readable identifier: '+desired.key);
+                await request(variableEndpoint+'/'+encodeURIComponent(variableId),{
+                  method:'PUT',body:JSON.stringify({key:desired.key,value:desired.value,secret:desired.secret})
+                });
+              } else {
+                await request(variableEndpoint,{method:'POST',body:JSON.stringify(desired)});
+              }
+            }
             const tar = require('node:child_process').execFileSync('tar',['-czf','-','-C','appwrite/functions/nova-admin-api','.']);
             const form = new FormData();
             form.append('code',new Blob([tar],{type:'application/gzip'}),'nova-admin-api.tar.gz');
@@ -67,22 +85,6 @@ jobs:
               await new Promise(resolve=>setTimeout(resolve,5000));
             }
             if(!['ready','active'].includes(state.status)) throw new Error('Deployment did not become ready.');
-            const variableEndpoint='/functions/'+encodeURIComponent(id)+'/variables';
-            const desiredVariables=[
-              {key:'NOVA_PUBLIC_ORDER_INTAKE_ENABLED',value:'true',secret:false},
-              {key:'NOVA_ADMIN_API_READ_ONLY',value:'true',secret:false}
-            ];
-            const existingVariables=await request(variableEndpoint);
-            for (const desired of desiredVariables) {
-              const existing=(existingVariables.variables||[]).find(v=>v.key===desired.key);
-              if (existing) {
-                await request(variableEndpoint+'/'+encodeURIComponent(existing.$id),{
-                  method:'PUT',body:JSON.stringify(desired)
-                });
-              } else {
-                await request(variableEndpoint,{method:'POST',body:JSON.stringify(desired)});
-              }
-            }
             const latest=await request('/functions/'+encodeURIComponent(id));
             const payload={
               name:latest.name,runtime:latest.runtime,execute:['any'],events:latest.events||[],schedule:latest.schedule||'',
