@@ -1,0 +1,45 @@
+name: Check NOVA CABINET owner account
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-owner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check whether the designated owner already has an Appwrite account
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          OWNER_EMAIL: Vahiiidk74@gmail.com
+        run: |
+          set -euo pipefail
+          test -n "$APPWRITE_API_KEY"
+          response="$(curl --silent --show-error --fail-with-body --get \
+            "${APPWRITE_ENDPOINT}/users" \
+            -H "X-Appwrite-Project: ${APPWRITE_PROJECT_ID}" \
+            -H "X-Appwrite-Key: ${APPWRITE_API_KEY}" \
+            --data-urlencode "search=${OWNER_EMAIL}" \
+            --data-urlencode "limit=10")"
+          node -e '
+            const d = JSON.parse(process.argv[1]);
+            const users = Array.isArray(d.users) ? d.users : [];
+            const email = process.env.OWNER_EMAIL.toLowerCase();
+            const matches = users.filter(u => (u.email || "").toLowerCase() === email);
+            console.log("OWNER_ACCOUNT_MATCHES=" + matches.length);
+            for (const u of matches) {
+              console.log(JSON.stringify({
+                userId: u.$id,
+                emailVerified: !!u.emailVerification,
+                status: !!u.status,
+                phonePresent: !!u.phone
+              }));
+            }
+            console.log("READ_ONLY=true");
+            console.log("No account, password, role, label, session, or database row was created or changed.");
+          ' "$response"
