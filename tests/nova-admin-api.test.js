@@ -11,6 +11,8 @@ function makeRes() {
 }
 async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, account={}, ownerStatus=200, owner={}}={}) {
   const oldFetch = global.fetch;
+  const oldKey = process.env.APPWRITE_FUNCTION_API_KEY;
+  process.env.APPWRITE_FUNCTION_API_KEY = key;
   global.fetch = async (url, opts={}) => {
     if (url === ENDPOINT + '/account') return new Response(JSON.stringify(account), {status:accountStatus});
     if (url.includes('/tablesdb/') && url.includes('/tables/app_users/rows/')) return new Response(JSON.stringify(owner), {status:ownerStatus});
@@ -20,7 +22,11 @@ async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, acc
   const handler=(await import('../appwrite/functions/nova-admin-api/index.js?test='+Math.random())).default;
   try {
     await handler({method:'POST',headers:{'x-appwrite-user-jwt':jwt,'x-appwrite-key':key},body:{action:'health'}},res,{},{});
-  } finally { global.fetch=oldFetch; }
+  } finally {
+    global.fetch=oldFetch;
+    if (oldKey === undefined) delete process.env.APPWRITE_FUNCTION_API_KEY;
+    else process.env.APPWRITE_FUNCTION_API_KEY = oldKey;
+  }
   return res;
 }
 test('rejects missing user JWT before network access', async()=>{
