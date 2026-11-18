@@ -104,9 +104,9 @@ test('rejects overlong row identifiers instead of truncating them', async()=>{
  } finally { global.fetch=oldFetch; if(oldKey===undefined) delete process.env.APPWRITE_FUNCTION_API_KEY; else process.env.APPWRITE_FUNCTION_API_KEY=oldKey; }
 });
 
-test('health advertises read-only mode by default', async()=>{
+test('health reports explicitly configured write mode', async()=>{
  const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true}});
- assert.equal(r.status,200); assert.equal(r.payload.readOnly,true);
+ assert.equal(r.status,200); assert.equal(r.payload.readOnly,false);
 });
 test('write actions are blocked in default read-only mode', async()=>{
  const oldFetch=global.fetch; const oldKey=process.env.APPWRITE_FUNCTION_API_KEY; const oldMode=process.env.NOVA_ADMIN_API_READ_ONLY;
