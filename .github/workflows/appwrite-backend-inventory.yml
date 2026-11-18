@@ -83,6 +83,15 @@ jobs:
               }
             }
 
+            const buckets = await get('/storage/buckets?limit=100');
+            if (buckets) console.log('STORAGE_BUCKETS_SUMMARY', JSON.stringify({
+              total: buckets.total,
+              buckets: (buckets.buckets || []).map(b => ({
+                id: b.$id, name: b.name, enabled: b.enabled,
+                maximumFileSize: b.maximumFileSize, fileSecurity: b.fileSecurity
+              }))
+            }));
+
             const platforms = await get('/projects/' + encodeURIComponent(process.env.APPWRITE_PROJECT_ID) + '/platforms?limit=100');
             if (platforms) console.log('PROJECT_PLATFORMS_SUMMARY', JSON.stringify({
               total: platforms.total,
