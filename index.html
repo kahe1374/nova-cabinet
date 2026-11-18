@@ -1132,9 +1132,15 @@ status.append(acceptButton);f.reset();}catch(error){console.error('NOVA AI desig
   return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
  }
  async function saveLead(payload,button,status,form){
+  if(!form.dataset.novaIdempotencyBound){
+   const resetKey=()=>{delete form.dataset.novaIdempotencyKey;};
+   form.addEventListener('input',resetKey);form.addEventListener('change',resetKey);
+   form.dataset.novaIdempotencyBound='1';
+  }
   button.disabled=true;const original=button.textContent;button.textContent='در حال ثبت امن درخواست...';status.textContent='در حال ذخیره درخواست در سامانه نوا...';
   try{
-   const requestBody={...payload,idempotency_key:newIdempotencyKey(),website:''};
+   const requestId=form.dataset.novaIdempotencyKey||(form.dataset.novaIdempotencyKey=newIdempotencyKey());
+   const requestBody={...payload,idempotency_key:requestId,website:''};
    const res=await fetch(endpoint,{
     method:'POST',
     headers:{'Content-Type':'application/json','X-Appwrite-Project':projectId},
@@ -1149,7 +1155,7 @@ status.append(acceptButton);f.reset();}catch(error){console.error('NOVA AI desig
     throw new Error(data.code||'save_failed');
    }
    status.replaceChildren();const msg=document.createElement('span');msg.textContent='درخواست با موفقیت ثبت شد. کد پیگیری: '+data.order_number+' — تیم نوا برای هماهنگی با شما تماس می‌گیرد. ';status.append(msg);
-   const link=document.createElement('a');link.href='https://wa.me/989367374312?text='+encodeURIComponent('سلام، درخواست من در سایت NOVA CABINET ثبت شد. کد پیگیری: '+data.order_number);link.target='_blank';link.rel='noopener';link.textContent='پیگیری در واتساپ';link.className='btn';status.append(link);form.reset();
+   const link=document.createElement('a');link.href='https://wa.me/989367374312?text='+encodeURIComponent('سلام، درخواست من در سایت NOVA CABINET ثبت شد. کد پیگیری: '+data.order_number);link.target='_blank';link.rel='noopener';link.textContent='پیگیری در واتساپ';link.className='btn';status.append(link);form.reset();delete form.dataset.novaIdempotencyKey;
    return true;
   }catch(err){
    console.error('NOVA Appwrite lead save failed',err);
