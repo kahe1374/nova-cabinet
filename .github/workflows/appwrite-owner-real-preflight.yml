@@ -1,0 +1,82 @@
+name: NOVA owner real-environment preflight (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect owner account, bootstrap function and database (read-only)
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-owner-bootstrap
+          OWNER_EMAIL: Vahiiidk74@gmail.com
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const fnId = encodeURIComponent(process.env.FUNCTION_ID);
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key };
+
+          async function get(path) {
+            const response = await fetch(endpoint + path, { headers });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!response.ok) {
+              console.log('CHECK_HTTP=' + response.status);
+              console.log('CHECK_PATH=' + path.split('?')[0]);
+              console.log('CHECK_ERROR=' + JSON.stringify({code:data.code,type:data.type,message:data.message}));
+              throw new Error('Read-only Appwrite inspection failed.');
+            }
+            return data;
+          }
+
+          async function main() {
+            const query = encodeURIComponent(JSON.stringify({
+              method: 'equal', attribute: 'email', values: [process.env.OWNER_EMAIL]
+            }));
+            const users = await get('/users?queries[]=' + query + '&limit=5');
+            const matches = users.users || [];
+            console.log('OWNER_ACCOUNT_MATCH_COUNT=' + matches.length);
+            console.log('OWNER_ACCOUNT_EXISTS=' + (matches.length === 1));
+            console.log('OWNER_EMAIL_VERIFIED=' + (matches.length === 1 && matches[0].emailVerification === true));
+            console.log('OWNER_ACCOUNT_AMBIGUOUS=' + (matches.length > 1));
+
+            const fn = await get('/functions/' + fnId);
+            console.log('FUNCTION_EXISTS=true');
+            console.log('FUNCTION_ENABLED=' + fn.enabled);
+            console.log('FUNCTION_EXECUTE_USERS_ONLY=' + (Array.isArray(fn.execute) && fn.execute.length === 1 && fn.execute[0] === 'users'));
+            console.log('FUNCTION_SCOPES_EXACT=' + (Array.isArray(fn.scopes) && fn.scopes.length === 2 && fn.scopes.includes('rows.read') && fn.scopes.includes('rows.write')));
+            console.log('FUNCTION_DEPLOYMENT_ID_PRESENT=' + Boolean(fn.deploymentId));
+            if (fn.deploymentId) {
+              const deployment = await get('/functions/' + fnId + '/deployments/' + encodeURIComponent(fn.deploymentId));
+              console.log('ACTIVE_DEPLOYMENT_STATUS=' + deployment.status);
+              console.log('ACTIVE_DEPLOYMENT_READY=' + ['ready','active'].includes(deployment.status));
+            }
+
+            const table = await get('/tablesdb/' + db + '/tables/app_users');
+            console.log('APP_USERS_TABLE_ENABLED=' + table.enabled);
+            console.log('APP_USERS_ROW_SECURITY=' + table.rowSecurity);
+            const rows = await get('/tablesdb/' + db + '/tables/app_users/rows?limit=1');
+            console.log('APP_USERS_TOTAL_ROWS=' + rows.total);
+            console.log('APP_USERS_ROW_READ_CONFIRMED=true');
+
+            console.log('REAL_PREFLIGHT_READ_ONLY=true');
+            console.log('NO_ACCOUNT_CREATED=false');
+            console.log('NO_ROWS_OR_PERMISSIONS_CHANGED=true');
+          }
+          main().catch(error => { console.error('PREFLIGHT_FAILED=' + error.message); process.exit(1); });
+          NODE
