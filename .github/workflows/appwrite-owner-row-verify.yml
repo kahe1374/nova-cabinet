@@ -1,0 +1,66 @@
+name: Verify NOVA owner row (read-only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner_user_id:
+        description: "Appwrite owner account ID"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify owner row without exposing personal data
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          OWNER_USER_ID: ${{ inputs.owner_user_id }}
+          OWNER_EMAIL: Vahiiidk74@gmail.com
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const id = process.env.OWNER_USER_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/.test(id)) throw new Error('Invalid owner account ID format');
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key };
+          async function main() {
+            const url = endpoint + '/tablesdb/' + db + '/tables/app_users/rows/' + encodeURIComponent(id);
+            const response = await fetch(url, { headers });
+            const raw = await response.text();
+            let row = {};
+            try { row = raw ? JSON.parse(raw) : {}; } catch {}
+            if (response.status === 404) {
+              console.log('OWNER_ROW_EXISTS=false');
+              console.log('OWNER_REGISTRATION_VERIFIED=false');
+              return;
+            }
+            if (!response.ok) {
+              console.log('APPWRITE_HTTP_STATUS=' + response.status);
+              console.log('APPWRITE_ERROR_TYPE=' + (row.type || 'unknown'));
+              throw new Error('Could not verify owner row.');
+            }
+            const data = row.data || {};
+            const exists = row.$id === id;
+            const role = data.role === 'owner_admin';
+            const active = data.is_active === true;
+            const email = typeof data.email === 'string' && data.email.toLowerCase() === process.env.OWNER_EMAIL.toLowerCase();
+            console.log('OWNER_ROW_EXISTS=' + exists);
+            console.log('OWNER_ROLE_CORRECT=' + role);
+            console.log('OWNER_ACTIVE=' + active);
+            console.log('OWNER_EMAIL_MATCH=' + email);
+            console.log('OWNER_REGISTRATION_VERIFIED=' + (exists && role && active && email));
+          }
+          main().catch(error => { console.error('OWNER_ROW_VERIFY_FAILED=' + error.message); process.exit(1); });
+          NODE
