@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Inspect all Appwrite tables and critical order fields (GET only)
+      - name: Inspect Appwrite schema and public endpoint with no-write validation
         env:
           APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
@@ -97,9 +97,37 @@ jobs:
               environmentVariableNames: (fn.vars || []).map(v => v.key).sort()
             }));
             const variableState=await get('/functions/nova-admin-api/variables');
-            console.log('FUNCTION_VARIABLES=' + JSON.stringify((variableState.variables||[]).map(v=>({
+            const variables=(variableState.variables||[]);
+            console.log('FUNCTION_VARIABLES=' + JSON.stringify(variables.map(v=>({
               id:v.$id||v.id||null,key:v.key,secret:v.secret===true
             }))));
+            if (fn.enabled!==true || fn.execute?.length!==1 || fn.execute[0]!=='any' ||
+              fn.scopes?.length!==2 || !fn.scopes.includes('rows.read') || !fn.scopes.includes('rows.write')) {
+              throw new Error('Public function execution permissions/scopes are not in the expected state.');
+            }
+            const requiredVars=new Map(variables.map(v=>[v.key,v.value]));
+            if (requiredVars.get('NOVA_PUBLIC_ORDER_INTAKE_ENABLED')!=='true' ||
+              requiredVars.get('NOVA_ADMIN_API_READ_ONLY')!=='true') {
+              throw new Error('Function feature flags are missing or incorrect.');
+            }
+            const smoke=await fetch(endpoint+'/functions/nova-admin-api/executions',{
+              method:'POST',
+              headers:{'X-Appwrite-Project':process.env.APPWRITE_PROJECT_ID,'Content-Type':'application/json'},
+              body:JSON.stringify({
+                body:JSON.stringify({action:'public_create_order',name:'x',phone:'123',type:'schema-smoke',idempotency_key:'invalid'}),
+                async:false,method:'POST',headers:{origin:'https://kahe1374.github.io'}
+              })
+            });
+            const execution=await smoke.json().catch(()=>({}));
+            let smokeBody={};
+            try { smokeBody=JSON.parse(execution.responseBody||'{}'); } catch {}
+            if (!smoke.ok || execution.status!=='completed' || execution.responseStatusCode!==400 ||
+              smokeBody.code!=='INVALID_PUBLIC_ORDER') {
+              throw new Error('Public endpoint no-write smoke test failed: '+JSON.stringify({
+                http:smoke.status,status:execution.status,responseStatusCode:execution.responseStatusCode,code:smokeBody.code
+              }));
+            }
+            console.log('PUBLIC_ENDPOINT_NO_WRITE_SMOKE_PASSED=true');
           }
           main().catch(error => {
             console.error('SCHEMA_DIAGNOSTIC_FAILED:', error.message);
