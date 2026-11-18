@@ -12,7 +12,9 @@ function makeRes() {
 async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, account={}, ownerStatus=200, owner={}, method='POST', body={action:'health'}}={}) {
   const oldFetch = global.fetch;
   const oldKey = process.env.APPWRITE_FUNCTION_API_KEY;
+  const oldReadOnly = process.env.NOVA_ADMIN_API_READ_ONLY;
   process.env.APPWRITE_FUNCTION_API_KEY = key;
+  process.env.NOVA_ADMIN_API_READ_ONLY = 'false';
   global.fetch = async (url, opts={}) => {
     if (url === ENDPOINT + '/account') return new Response(JSON.stringify(account), {status:accountStatus});
     if (url.includes('/tablesdb/') && url.includes('/tables/app_users/rows/')) return new Response(JSON.stringify(owner), {status:ownerStatus});
@@ -26,6 +28,8 @@ async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, acc
     global.fetch=oldFetch;
     if (oldKey === undefined) delete process.env.APPWRITE_FUNCTION_API_KEY;
     else process.env.APPWRITE_FUNCTION_API_KEY = oldKey;
+    if (oldReadOnly === undefined) delete process.env.NOVA_ADMIN_API_READ_ONLY;
+    else process.env.NOVA_ADMIN_API_READ_ONLY = oldReadOnly;
   }
   return res;
 }
