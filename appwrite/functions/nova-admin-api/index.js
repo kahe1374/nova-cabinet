@@ -14,12 +14,29 @@ function header(headers, name) {
   return key ? headers[key] : '';
 }
 const ALLOWED_ORIGINS = new Set(['https://kahe1374.github.io']);
+const publicRateBuckets = new Map();
+function consumePublicRateLimit(req, mobile) {
+  const forwarded = header(req.headers, 'x-forwarded-for').split(',')[0].trim();
+  const ip = header(req.headers, 'cf-connecting-ip') || header(req.headers, 'x-real-ip') || forwarded;
+  const key = ip ? 'ip:' + ip.slice(0, 64) : 'mobile:' + mobile;
+  const now = Date.now();
+  const recent = (publicRateBuckets.get(key) || []).filter((time) => now - time < 10 * 60 * 1000);
+  if (recent.length >= 5) { publicRateBuckets.set(key, recent); return false; }
+  recent.push(now);
+  publicRateBuckets.set(key, recent);
+  if (publicRateBuckets.size > 1000) {
+    for (const [bucketKey, times] of publicRateBuckets) {
+      if (!times.some((time) => now - time < 10 * 60 * 1000)) publicRateBuckets.delete(bucketKey);
+    }
+  }
+  return true;
+}
 function corsHeaders(origin) {
   return {
     ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
     'Vary': 'Origin',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Appwrite-User-JWT',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Appwrite-Project, X-Appwrite-User-JWT',
     'Access-Control-Max-Age': '86400'
   };
 }
@@ -103,7 +120,7 @@ function normalizePublicMobile(value) {
   return mobile.startsWith('09') ? '+98' + mobile.slice(1) :
     mobile.startsWith('0098') ? '+' + mobile.slice(2) : mobile;
 }
-async function handlePublicOrder(body, key, res, responseHeaders, error) {
+async function handlePublicOrder(body, key, req, res, responseHeaders, error) {
   if (String(process.env.NOVA_PUBLIC_ORDER_INTAKE_ENABLED || 'false').toLowerCase() !== 'true') {
     return reply(res, { ok: false, code: 'PUBLIC_ORDER_INTAKE_DISABLED' }, 423, responseHeaders);
   }
@@ -123,6 +140,9 @@ async function handlePublicOrder(body, key, res, responseHeaders, error) {
       !['cabinet', 'workshop_service'].includes(orderType) ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
     return reply(res, { ok: false, code: 'INVALID_PUBLIC_ORDER' }, 400, responseHeaders);
+  }
+  if (!consumePublicRateLimit(req, mobile)) {
+    return reply(res, { ok: false, code: 'PUBLIC_RATE_LIMITED', retry_after_seconds: 600 }, 429, responseHeaders);
   }
   const now = new Date().toISOString();
   const customer = await createRow('customers', {
@@ -193,7 +213,7 @@ export default async ({ req, res, log, error }) => {
     }
     if (req.method === 'OPTIONS') return reply(res, {}, 204, responseHeaders);
     if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405, responseHeaders);
-    const earlyKey = header(req.headers, 'x-appwrite-key');
+    const earlyKey = header(req.headers, 'x-appwrite-key') || process.env.APPWRITE_FUNCTION_API_KEY || '';
     let earlyBody = {};
     try {
       const raw = typeof req.body === 'string' ? (req.body || '{}') : JSON.stringify(req.body || {});
@@ -206,7 +226,7 @@ export default async ({ req, res, log, error }) => {
     if (earlyBody.action === 'public_create_order') {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
       if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
-      return handlePublicOrder(earlyBody, earlyKey, res, responseHeaders, error);
+      return handlePublicOrder(earlyBody, earlyKey, req, res, responseHeaders, error);
     }
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
     const key = earlyKey;
