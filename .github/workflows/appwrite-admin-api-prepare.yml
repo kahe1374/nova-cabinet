@@ -95,7 +95,7 @@ jobs:
             }
             console.log('FUNCTION_ID=' + id);
             console.log('FUNCTION_DISABLED=true');
-            console.log('EXECUTE_ACCESS_EMPTY=true');
+            console.log('OWNER_ONLY_EXECUTE_PERMISSION=true');
             console.log('FUNCTION_SCOPES_OWNER_API_READ_WRITE=true');
           }
           main().catch(e => { console.error('PREPARATION_FAILED:', e.message); process.exit(1); });
@@ -158,7 +158,7 @@ jobs:
             }
             console.log('DEPLOYMENT_BUILD_COMPLETE=true');
             console.log('FUNCTION_REMAINS_DISABLED=true');
-            console.log('FUNCTION_EXECUTE_ACCESS_EMPTY=true');
+            console.log('FUNCTION_OWNER_ONLY_EXECUTE_PERMISSION=true');
             console.log('NO_PRODUCTION_ADMIN_SWITCH=true');
           }
           main().catch(e => { console.error('DEPLOYMENT_FAILED:', e.message); process.exit(1); });
