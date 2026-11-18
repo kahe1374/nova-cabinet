@@ -9,7 +9,7 @@ const OWNER_EMAIL = 'Vahiiidk74@gmail.com';
 function makeRes() {
   return { payload: null, status: 200, json(p, s=200) { this.payload=p; this.status=s; return p; } };
 }
-async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, account={}, ownerStatus=200, owner={}}={}) {
+async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, account={}, ownerStatus=200, owner={}, method='POST', body={action:'health'}}={}) {
   const oldFetch = global.fetch;
   const oldKey = process.env.APPWRITE_FUNCTION_API_KEY;
   process.env.APPWRITE_FUNCTION_API_KEY = key;
@@ -21,7 +21,7 @@ async function invoke({jwt='test-jwt', key='runtime-key', accountStatus=200, acc
   const res=makeRes();
   const handler=(await import('../appwrite/functions/nova-admin-api/index.js?test='+Math.random())).default;
   try {
-    await handler({req:{method:'POST',headers:{'x-appwrite-user-jwt':jwt,'x-appwrite-key':key},body:{action:'health'}},res,log(){},error(){}});
+    await handler({req:{method,headers:{'x-appwrite-user-jwt':jwt,'x-appwrite-key':key},body},res,log(){},error(){}});
   } finally {
     global.fetch=oldFetch;
     if (oldKey === undefined) delete process.env.APPWRITE_FUNCTION_API_KEY;
@@ -46,4 +46,25 @@ test('requires matching active owner row', async()=>{
 test('health only after owner identity and row verified', async()=>{
  const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true}});
  assert.equal(r.status,200); assert.equal(r.payload.code,'OWNER_AUTHENTICATED'); assert.equal(r.payload.readOnly,false);
+});
+
+test('rejects non-POST methods', async()=>{
+ const r=await invoke({method:'GET'});
+ assert.equal(r.status,405); assert.equal(r.payload.code,'METHOD_NOT_ALLOWED');
+});
+test('rejects inactive owner row', async()=>{
+ const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:false}});
+ assert.equal(r.status,403); assert.equal(r.payload.code,'OWNER_ACCESS_DENIED');
+});
+test('rejects unsupported actions after authentication', async()=>{
+ const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true},body:{action:'delete_everything'}});
+ assert.equal(r.status,400); assert.equal(r.payload.code,'ACTION_NOT_SUPPORTED');
+});
+test('rejects invalid order status before any order lookup', async()=>{
+ const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true},body:{action:'update_order_status',order_id:'123456789012345678901234567890123456',status:'admin'}});
+ assert.equal(r.status,400); assert.equal(r.payload.code,'INVALID_ORDER_OR_STATUS');
+});
+test('rejects out-of-range AI pricing before database writes', async()=>{
+ const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true},body:{action:'upsert_ai_pricing',style_key:'modern',style_label:'Modern',base_price_toman:1}});
+ assert.equal(r.status,400); assert.equal(r.payload.code,'INVALID_PRICING');
 });
