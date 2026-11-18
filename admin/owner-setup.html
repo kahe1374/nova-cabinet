@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#171716">
-<title>راه‌اندازی مالک | NOVA CABINET</title>
+<meta name="robots" content="noindex,nofollow">
+<title>راه‌اندازی امن مالک | NOVA CABINET</title>
 <style>
 :root{color-scheme:dark;--bg:#171716;--panel:#24231f;--gold:#c6a66b;--text:#eee9df;--muted:#aaa394;--line:#ffffff20}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 20% 0,#51412a55,transparent 45%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.9;display:grid;place-items:center;padding:22px}
@@ -23,17 +24,18 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
 <section class="card">
 <div class="brand">NOVA CABINET / OWNER SECURITY</div>
 <h1>راه‌اندازی امن مالک</h1>
-<p>این صفحه فقط برای ایجاد یا ورود حساب مالک اصلی است. نقش مدیریتی از سمت سرور تعیین می‌شود؛ واردکردن رمز در این صفحه آن را برای سایت ذخیره نمی‌کند.</p>
+<p>برای ساخت حساب مالک، کد یک‌بارمصرف به ایمیل اصلی ارسال می‌شود. هیچ رمز عبوری در این صفحه لازم نیست یا ذخیره نمی‌شود. فقط کدی را وارد کن که خودت در ایمیل دریافت کرده‌ای.</p>
 <div id="authPanel">
 <label for="ownerEmail">ایمیل مالک</label>
 <input id="ownerEmail" type="email" value="Vahiiidk74@gmail.com" readonly autocomplete="username">
-<label for="ownerPassword">رمز عبور</label>
-<input id="ownerPassword" type="password" minlength="8" maxlength="256" autocomplete="current-password" placeholder="رمز عبور حساب Appwrite">
-<label for="ownerName">نام نمایشی</label>
-<input id="ownerName" type="text" maxlength="128" value="Vahidkahe" autocomplete="name">
 <div class="actions">
-<button id="loginBtn" type="button">ورود به حساب</button>
-<button id="registerBtn" class="secondary" type="button">ساخت حساب مالک</button>
+<button id="sendBtn" type="button">ارسال کد ورود به ایمیل</button>
+</div>
+<div id="otpPanel" class="hidden">
+<label for="otpCode">کد ۶ رقمی ایمیل</label>
+<input id="otpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="کد دریافتی">
+<div class="small muted" id="phraseText"></div>
+<div class="actions"><button id="loginBtn" type="button">تأیید کد و ورود</button></div>
 </div>
 </div>
 <div id="accountPanel" class="hidden">
@@ -43,14 +45,14 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
 <div id="accountId" dir="ltr"></div>
 </div>
 <div class="actions">
-<button id="verifyBtn" type="button">ارسال ایمیل تأیید</button>
+<button id="verifyBtn" type="button">ارسال لینک تأیید ایمیل</button>
 <button id="bootstrapBtn" class="secondary hidden" type="button">ثبت مالک اصلی در سامانه</button>
 <button id="logoutBtn" class="secondary" type="button">خروج از حساب</button>
 </div>
 </div>
-<div id="status" class="status" role="status" aria-live="polite">برای شروع، وارد حساب مالک شو یا حساب را بساز.</div>
+<div id="status" class="status" role="status" aria-live="polite">برای شروع، کد ورود را به ایمیل مالک ارسال کن.</div>
 <hr>
-<p class="small warning">نکته امنیتی: رمز عبور را فقط در همین صفحه وارد کن. آن را در پیام یا GitHub نفرست. هنوز هیچ دسترسی مدیریتی به این حساب داده نشده است.</p>
+<p class="small warning">کد ایمیل را در اختیار هیچ‌کس قرار نده. نقش مالک فقط پس از تأیید ایمیل و اجرای کنترل‌شده سمت سرور ثبت می‌شود.</p>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/appwrite@29.0.0"></script>
@@ -60,135 +62,129 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
   const PROJECT_ID = '6afcbe4e002df50df86f';
   const FUNCTION_ID = 'nova-owner-bootstrap';
   const OWNER_EMAIL = 'Vahiiidk74@gmail.com';
-  const OWNER_NAME = 'Vahidkahe';
   const client = new Appwrite.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
   const account = new Appwrite.Account(client);
   const functions = new Appwrite.Functions(client);
-  const statusEl = document.getElementById('status');
-  const authPanel = document.getElementById('authPanel');
-  const accountPanel = document.getElementById('accountPanel');
-  const passwordEl = document.getElementById('ownerPassword');
-  const emailEl = document.getElementById('ownerEmail');
-  const nameEl = document.getElementById('ownerName');
+  const $ = id => document.getElementById(id);
+  let pendingUserId = null;
   let currentUser = null;
 
   function say(message, kind) {
-    statusEl.textContent = message;
-    statusEl.className = 'status' + (kind === 'error' ? ' warning' : '');
+    $('status').textContent = message;
+    $('status').className = 'status' + (kind === 'error' ? ' warning' : '');
   }
   function friendlyError(error) {
     const code = error && error.code;
-    if (code === 409) return 'این ایمیل قبلاً حساب دارد؛ از بخش ورود استفاده کن.';
-    if (code === 401) return 'ایمیل یا رمز عبور صحیح نیست.';
+    if (code === 401) return 'کد معتبر نیست یا منقضی شده است؛ کد تازه بگیر.';
+    if (code === 409) return 'برای این ایمیل حسابی از قبل وجود دارد؛ با ارسال کد تازه وارد شو.';
     if (code === 429) return 'درخواست‌ها زیاد بوده؛ چند دقیقه بعد دوباره تلاش کن.';
-    if (code === 400) return 'اطلاعات واردشده معتبر نیست. رمز باید حداقل ۸ نویسه باشد.';
-    return 'عملیات انجام نشد. اتصال اینترنت و تنظیمات دامنه Appwrite را بررسی کن.';
+    if (code === 400) return 'درخواست معتبر نیست. تنظیمات ایمیل و دامنه Appwrite را بررسی کن.';
+    return (error && error.message) ? error.message : 'عملیات انجام نشد؛ تنظیمات دامنه Web در Appwrite را بررسی کن.';
   }
   function showUser(user) {
     currentUser = user;
-    authPanel.classList.add('hidden');
-    accountPanel.classList.remove('hidden');
-    document.getElementById('accountId').textContent = user.$id;
+    $('authPanel').classList.add('hidden');
+    $('accountPanel').classList.remove('hidden');
+    $('accountId').textContent = user.$id;
     const verified = user.emailVerification === true;
-    document.getElementById('accountStatus').textContent = verified ? 'ایمیل تأیید شده' : 'ایمیل هنوز تأیید نشده';
-    document.getElementById('verifyBtn').disabled = verified;
-    document.getElementById('verifyBtn').textContent = verified ? 'ایمیل تأیید شده است' : 'ارسال ایمیل تأیید';
-    document.getElementById('bootstrapBtn').classList.toggle('hidden', !verified);
+    $('accountStatus').textContent = verified ? 'ایمیل تأیید شده' : 'ایمیل هنوز تأیید نشده';
+    $('verifyBtn').classList.toggle('hidden', verified);
+    $('bootstrapBtn').classList.toggle('hidden', !verified);
   }
   async function refreshAccount() {
     const user = await account.get();
     if (!user.email || user.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
-      await account.deleteSession({ sessionId: 'current' }).catch(() => {});
+      await account.deleteSession({sessionId:'current'}).catch(() => {});
       throw new Error('این حساب مجاز به راه‌اندازی مالک نیست.');
     }
     showUser(user);
     return user;
   }
 
-  document.getElementById('registerBtn').addEventListener('click', async () => {
-    const password = passwordEl.value;
-    const name = (nameEl.value || OWNER_NAME).trim();
-    if (password.length < 8) return say('رمز عبور باید حداقل ۸ نویسه باشد.', 'error');
-    if (emailEl.value.trim().toLowerCase() !== OWNER_EMAIL.toLowerCase()) return say('ایمیل مالک معتبر نیست.', 'error');
-    const btn = document.getElementById('registerBtn');
-    btn.disabled = true;
+  $('sendBtn').addEventListener('click', async () => {
+    const btn = $('sendBtn'); btn.disabled = true;
     try {
-      await account.create({ userId: Appwrite.ID.unique(), email: OWNER_EMAIL, password, name });
-      await account.createEmailPasswordSession({ email: OWNER_EMAIL, password });
-      passwordEl.value = '';
-      const user = await refreshAccount();
-      say('حساب ساخته شد. اکنون ایمیل را تأیید کن تا مرحله مالک‌سازی ادامه پیدا کند.');
-      if (user.emailVerification !== true) await sendVerification();
+      const token = await account.createEmailToken({
+        userId: Appwrite.ID.unique(),
+        email: OWNER_EMAIL,
+        phrase: true
+      });
+      pendingUserId = token.userId;
+      $('otpPanel').classList.remove('hidden');
+      $('phraseText').textContent = token.phrase ? 'عبارت امنیتی را با عبارت داخل ایمیل تطبیق بده: ' + token.phrase : 'کد فقط در ایمیل خودت نمایش داده می‌شود.';
+      say('درخواست ارسال کد انجام شد. صندوق ورودی و پوشه هرزنامه را بررسی کن.');
     } catch (error) {
-      say(error.message === 'این حساب مجاز به راه‌اندازی مالک نیست.' ? error.message : friendlyError(error), 'error');
+      say(friendlyError(error), 'error');
     } finally { btn.disabled = false; }
   });
 
-  document.getElementById('loginBtn').addEventListener('click', async () => {
-    const password = passwordEl.value;
-    if (!password) return say('رمز عبور را وارد کن.', 'error');
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = true;
+  $('loginBtn').addEventListener('click', async () => {
+    const btn = $('loginBtn'); btn.disabled = true;
     try {
-      await account.createEmailPasswordSession({ email: OWNER_EMAIL, password });
-      passwordEl.value = '';
+      const secret = $('otpCode').value.trim();
+      if (!pendingUserId || !/^\\d{6}$/.test(secret)) throw new Error('کد ۶ رقمی را درست وارد کن.');
+      await account.createSession({userId:pendingUserId, secret});
       const user = await refreshAccount();
-      say(user.emailVerification === true ? 'ورود موفق بود و ایمیل تأیید شده است.' : 'ورود موفق بود؛ ایمیل هنوز تأیید نشده است.');
+      if (user.emailVerification !== true) {
+        try {
+          const url = window.location.origin + window.location.pathname;
+          await account.createEmailVerification({url});
+          say('ورود انجام شد. لینک تأیید ایمیل هم ارسال شد؛ روی لینک داخل ایمیل بزن و سپس همین صفحه را دوباره باز کن.');
+        } catch (error) {
+          say('ورود انجام شد، اما ارسال لینک تأیید ممکن نشد: ' + friendlyError(error) + '. دامنه سایت را در Appwrite Web platforms ثبت کن.', 'error');
+        }
+      } else {
+        say('ایمیل تأیید شده است. اکنون می‌توان مرحله ثبت مالک را انجام داد.');
+      }
+      $('otpPanel').classList.add('hidden');
     } catch (error) {
-      say(error.message === 'این حساب مجاز به راه‌اندازی مالک نیست.' ? error.message : friendlyError(error), 'error');
+      say(friendlyError(error), 'error');
     } finally { btn.disabled = false; }
   });
 
-  async function sendVerification() {
-    const url = window.location.origin + window.location.pathname;
-    await account.createEmailVerification({ url });
-    say('ایمیل تأیید ارسال شد. صندوق ورودی و پوشه هرزنامه را بررسی کن؛ سپس روی لینک داخل ایمیل بزن.');
-  }
-  document.getElementById('verifyBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('verifyBtn');
-    btn.disabled = true;
-    try { await sendVerification(); }
-    catch (error) { say(friendlyError(error), 'error'); }
-    finally { btn.disabled = currentUser && currentUser.emailVerification === true; }
+  $('verifyBtn').addEventListener('click', async () => {
+    const btn = $('verifyBtn'); btn.disabled = true;
+    try {
+      const url = window.location.origin + window.location.pathname;
+      await account.createEmailVerification({url});
+      say('لینک تأیید به ایمیلت ارسال شد. پس از کلیک روی لینک، همین صفحه را دوباره باز کن.');
+    } catch (error) {
+      say(friendlyError(error) + ' دامنه سایت باید در Appwrite به‌عنوان Web platform ثبت شده باشد.', 'error');
+    } finally { btn.disabled = false; }
   });
 
-  document.getElementById('bootstrapBtn').addEventListener('click', async () => {
+  $('bootstrapBtn').addEventListener('click', async () => {
     if (!currentUser || currentUser.emailVerification !== true ||
         currentUser.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
-      return say('ابتدا با حساب مالک وارد شو و ایمیل را تأیید کن.', 'error');
+      return say('ابتدا وارد حساب مالک شو و ایمیل را تأیید کن.', 'error');
     }
-    const btn = document.getElementById('bootstrapBtn');
-    btn.disabled = true;
+    const btn = $('bootstrapBtn'); btn.disabled = true;
     try {
       const result = await functions.createExecution({
-        functionId: FUNCTION_ID,
-        body: '{}',
-        async: false,
-        method: 'POST'
+        functionId: FUNCTION_ID, body: '{}', async: false, method: 'POST'
       });
       let payload = {};
       try { payload = JSON.parse(result.responseBody || '{}'); } catch (_) {}
       if (result.responseStatusCode >= 200 && result.responseStatusCode < 300 &&
           (payload.code === 'OWNER_BOOTSTRAPPED' || payload.code === 'OWNER_ALREADY_BOOTSTRAPPED')) {
-        say('مالک اصلی با موفقیت در سامانه ثبت شد. حالا ورود به پنل مدیریت را می‌توان در مرحله بعد متصل کرد.');
+        say('مالک اصلی با موفقیت ثبت شد.');
       } else if (payload.code === 'OWNER_ALREADY_EXISTS') {
         say('در سامانه از قبل یک مالک ثبت شده است؛ ایجاد مالک دوم مجاز نیست.', 'error');
       } else if (payload.code === 'BOOTSTRAP_LOCKED') {
         say('قفل راه‌اندازی متعلق به حساب دیگری است؛ عملیات متوقف شد.', 'error');
       } else {
-        say('تابع هنوز برای حساب تو فعال نشده یا عملیات کامل نشده است. نتیجه: ' + (payload.code || 'نامشخص'), 'error');
+        say('ثبت مالک هنوز ممکن نیست. تابع سمت سرور عمداً غیرفعال است یا هنوز فعال نشده؛ نتیجه: ' + (payload.code || 'نامشخص'), 'error');
       }
     } catch (error) {
-      say('فعلاً امکان اجرای مرحله ثبت مالک وجود ندارد. ابتدا باید دسترسی محدود تابع برای حساب تو فعال شود.', 'error');
+      say('ثبت نقش مالک انجام نشد. تابع سمت سرور هنوز عمداً غیرفعال است یا مجوز اجرای آن آماده نیست.', 'error');
     } finally { btn.disabled = false; }
   });
 
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    try { await account.deleteSession({ sessionId: 'current' }); }
-    catch (_) {}
+  $('logoutBtn').addEventListener('click', async () => {
+    await account.deleteSession({sessionId:'current'}).catch(() => {});
     currentUser = null;
-    accountPanel.classList.add('hidden');
-    authPanel.classList.remove('hidden');
+    $('accountPanel').classList.add('hidden');
+    $('authPanel').classList.remove('hidden');
     say('از حساب خارج شدی.');
   });
 
@@ -198,18 +194,16 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
     const secret = params.get('secret');
     if (!userId || !secret) return false;
     try {
-      await account.updateEmailVerification({ userId, secret });
+      await account.updateEmailVerification({userId, secret});
       history.replaceState({}, document.title, window.location.pathname);
       try {
         const user = await refreshAccount();
-        say(user.emailVerification === true ? 'ایمیل با موفقیت تأیید شد. اکنون می‌توانی مرحله ثبت مالک را انجام دهی.' : 'لینک پردازش شد؛ وضعیت حساب را دوباره بررسی کن.');
+        say(user.emailVerification === true ? 'ایمیل با موفقیت تأیید شد. اکنون مرحله ثبت مالک در دسترس است.' : 'لینک پردازش شد؛ وضعیت حساب را دوباره بررسی کن.');
       } catch (_) {
-        authPanel.classList.remove('hidden');
-        accountPanel.classList.add('hidden');
-        say('ایمیل با موفقیت تأیید شد. حالا با همان ایمیل و رمز عبور وارد شو تا راه‌اندازی ادامه پیدا کند.');
+        say('ایمیل تأیید شد. کد ورود تازه بگیر تا ادامه دهی.');
       }
     } catch (error) {
-      say('تأیید ایمیل انجام نشد. ممکن است لینک منقضی شده باشد؛ وارد حساب شو و ایمیل تازه درخواست کن.', 'error');
+      say('تأیید ایمیل انجام نشد؛ ممکن است لینک منقضی شده باشد. کد ورود بگیر و لینک تازه درخواست کن.', 'error');
     }
     return true;
   }
@@ -220,7 +214,7 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
       if (!handled) {
         try {
           const user = await refreshAccount();
-          say(user.emailVerification === true ? 'حساب مالک وارد شده و ایمیل تأیید شده است.' : 'حساب وارد شده؛ برای ادامه ایمیل را تأیید کن.');
+          say(user.emailVerification === true ? 'حساب مالک وارد شده و ایمیل تأیید شده است.' : 'حساب وارد شده؛ ایمیل را تأیید کن.');
         } catch (_) {}
       }
     } catch (_) {}
