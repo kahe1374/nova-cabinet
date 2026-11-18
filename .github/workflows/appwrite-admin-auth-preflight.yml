@@ -1,0 +1,61 @@
+name: Appwrite admin authentication preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-auth-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Inspect app_users and orders schema without changing data
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const headers = {
+            'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
+            'X-Appwrite-Key': process.env.APPWRITE_API_KEY
+          };
+
+          async function get(path) {
+            const response = await fetch(endpoint + path, { headers });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            console.log('HTTP', response.status, path);
+            if (!response.ok) throw new Error('Appwrite inspection failed with HTTP ' + response.status + ': ' + (data.message || raw.slice(0, 300)));
+            return data;
+          }
+
+          async function main() {
+            if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY');
+            for (const tableId of ['app_users', 'orders']) {
+              const table = await get('/tablesdb/' + db + '/tables/' + encodeURIComponent(tableId));
+              const result = await get('/tablesdb/' + db + '/tables/' + encodeURIComponent(tableId) + '/columns?limit=100');
+              console.log('TABLE_SCHEMA', JSON.stringify({
+                tableId,
+                rowSecurity: table.rowSecurity,
+                enabled: table.enabled,
+                columns: (result.columns || []).map(c => ({
+                  key: c.key, type: c.type, required: c.required,
+                  status: c.status, relatedTable: c.relatedTable
+                }))
+              }));
+            }
+            console.log('PREFLIGHT_COMPLETE: read-only; no users, rows, permissions, or schema were changed.');
+          }
+
+          main().catch(error => {
+            console.error('PREFLIGHT_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
