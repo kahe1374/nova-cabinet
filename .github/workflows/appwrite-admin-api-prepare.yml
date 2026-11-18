@@ -17,6 +17,9 @@ jobs:
       - name: Validate admin API source
         run: node --check appwrite/functions/nova-admin-api/index.js
 
+      - name: Run admin API security regression tests
+        run: node --test appwrite/functions/nova-admin-api/test/admin-api.test.mjs
+
       - name: Create or verify a disabled, owner-only Appwrite Function
         env:
           APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
