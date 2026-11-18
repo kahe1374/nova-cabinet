@@ -110,7 +110,7 @@ jobs:
                 { key: 'file_key', type: 'text', required: true },
                 { key: 'original_name', type: 'varchar', size: 255, required: true },
                 { key: 'mime_type', type: 'varchar', size: 120 },
-                { key: 'file_size_bytes', type: 'bigint' },
+                { key: 'file_size_bytes', type: 'integer' },
                 { key: 'created_at', type: 'datetime' }
               ]
             },
@@ -165,7 +165,6 @@ jobs:
                   body.key = col.key;
                   body.onDelete = col.onDelete;
                   delete body.relationType;
-                  delete body.relatedTableId;
                   delete body.twoWay;
                 }
                 const result = await request('POST', `/tablesdb/${databaseId}/tables/${encodeURIComponent(spec.id)}/columns/${route}`, body);
