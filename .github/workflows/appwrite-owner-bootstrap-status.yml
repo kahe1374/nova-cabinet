@@ -2,6 +2,11 @@ name: Check NOVA owner function deployment
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment_id:
+        description: "Deployment ID returned by the locked deploy workflow"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,7 +22,7 @@ jobs:
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
           FUNCTION_ID: nova-owner-bootstrap
-          DEPLOYMENT_ID: 6afde9a07090a616d7d7
+          DEPLOYMENT_ID: ${{ inputs.deployment_id }}
         run: |
           node <<'NODE'
           const endpoint = process.env.APPWRITE_ENDPOINT;
