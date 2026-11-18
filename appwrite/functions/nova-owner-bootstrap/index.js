@@ -142,8 +142,9 @@ export default async ({ req, res, log, error }) => {
         body: JSON.stringify({
           rowId: lockId,
           data: {
-            full_name: 'NOVA SYSTEM LOCK',
+            full_name: account.$id,
             mobile: '00000000000',
+            email: OWNER_EMAIL,
             role: 'owner_bootstrap_lock',
             is_active: false,
             created_at: new Date().toISOString(),
@@ -155,13 +156,27 @@ export default async ({ req, res, log, error }) => {
     );
 
     if (lockResult.response.status === 409) {
-      // A prior attempt may have completed successfully before this retry.
+      // Allow safe retries by the same verified account, but never another account.
+      const existingLock = await request(
+        '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows/' + encodeURIComponent(lockId),
+        'X-Appwrite-Key',
+        functionKey
+      );
+      if (!existingLock.response.ok ||
+          existingLock.data.role !== 'owner_bootstrap_lock' ||
+          existingLock.data.full_name !== account.$id ||
+          typeof existingLock.data.email !== 'string' ||
+          existingLock.data.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
+        return json(res, { ok: false, code: 'BOOTSTRAP_LOCKED' }, 409);
+      }
       const rowsAfterLockConflict = await listAllAppUsers(functionKey);
       const priorOwner = rowsAfterLockConflict.find((row) => row.role === 'owner_admin');
-      if (priorOwner && isValidOwnerRow(priorOwner, account.$id)) {
-        return json(res, { ok: true, code: 'OWNER_ALREADY_BOOTSTRAPPED' }, 200);
+      if (priorOwner) {
+        if (isValidOwnerRow(priorOwner, account.$id)) {
+          return json(res, { ok: true, code: 'OWNER_ALREADY_BOOTSTRAPPED' }, 200);
+        }
+        return json(res, { ok: false, code: 'OWNER_ALREADY_EXISTS' }, 409);
       }
-      return json(res, { ok: false, code: 'BOOTSTRAP_LOCKED' }, 409);
     }
     if (!lockResult.response.ok) {
       error('Could not acquire the one-time owner bootstrap lock. HTTP ' + lockResult.response.status);
