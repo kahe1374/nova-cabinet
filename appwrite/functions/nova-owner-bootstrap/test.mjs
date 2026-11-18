@@ -197,7 +197,7 @@ test('allows the same verified account to retry after a prior lock acquisition',
   });
   try {
     const result = await h.call();
-    assert.equal(result.status, 201);
+    assert.equal(result.status, 201, JSON.stringify(h.errors));
     assert.equal(result.payload.code, 'OWNER_BOOTSTRAPPED');
     assert.ok(calls.some(call => call.url.endsWith('/rows/nova-owner-bootstrap-lock')));
   } finally { h.restore(); }
