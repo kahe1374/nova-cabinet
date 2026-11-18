@@ -120,12 +120,54 @@ jobs:
                 code: data.code, type: data.type, message: data.message
               }));
             }
+            if (!data.$id) throw new Error('Appwrite did not return a deployment ID.');
             console.log('DEPLOYMENT_CREATED=true');
             console.log('DEPLOYMENT_ID=' + data.$id);
             console.log('DEPLOYMENT_STATUS=' + data.status);
             console.log('DEPLOYMENT_ACTIVATED=false');
+
+            let deployment = data;
+            for (let attempt = 1; attempt <= 18; attempt++) {
+              const statusResponse = await fetch(
+                endpoint + '/functions/' + encodeURIComponent(functionId) +
+                '/deployments/' + encodeURIComponent(data.$id),
+                { headers }
+              );
+              const statusRaw = await statusResponse.text();
+              let statusData = {};
+              try { statusData = statusRaw ? JSON.parse(statusRaw) : {}; } catch {}
+              if (!statusResponse.ok) {
+                throw new Error('Cannot inspect deployment status. HTTP ' + statusResponse.status);
+              }
+              deployment = statusData;
+              console.log('BUILD_CHECK=' + attempt);
+              console.log('BUILD_STATUS=' + deployment.status);
+              if (['ready', 'active', 'failed'].includes(deployment.status)) break;
+              await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+
+            const finalCheck = await fetch(
+              endpoint + '/functions/' + encodeURIComponent(functionId),
+              { headers }
+            );
+            const finalFunction = await finalCheck.json().catch(() => ({}));
+            if (!finalCheck.ok) throw new Error('Cannot verify final function state.');
+            if (deployment.status === 'failed') throw new Error('Appwrite deployment build failed.');
+            if (!['ready', 'active'].includes(deployment.status)) {
+              throw new Error('Deployment did not become ready within 3 minutes.');
+            }
+            if (finalFunction.enabled !== false ||
+                (finalFunction.execute || []).length !== 0 ||
+                (finalFunction.scopes || []).length !== 2 ||
+                !(finalFunction.scopes || []).includes('rows.read') ||
+                !(finalFunction.scopes || []).includes('rows.write')) {
+              throw new Error('Function lock or least-privilege verification failed.');
+            }
+            console.log('DEPLOYMENT_BUILD_COMPLETE=true');
             console.log('FUNCTION_ENABLED=false');
             console.log('EXECUTE_PERMISSIONS=0');
+            console.log('FUNCTION_SCOPES=2');
+            console.log('NO_FUNCTION_ACTIVATION_OR_PUBLIC_ACCESS=true');
           }
 
           main().catch(error => {
