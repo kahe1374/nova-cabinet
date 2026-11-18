@@ -2,6 +2,10 @@ name: Activate NOVA admin API read-only pilot
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'appwrite/functions/nova-admin-api/**'
+      - '.github/workflows/appwrite-admin-api-readonly-activate.yml'
 
 permissions:
   contents: read
