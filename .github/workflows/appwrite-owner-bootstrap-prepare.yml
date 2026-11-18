@@ -64,7 +64,7 @@ jobs:
               body: JSON.stringify({
                 functionId: id,
                 name: 'NOVA Owner Bootstrap (Locked)',
-                runtime: 'node-22.0',
+                runtime: 'node-22',
                 execute: [],
                 enabled: false,
                 logging: false,
