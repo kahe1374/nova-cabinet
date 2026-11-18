@@ -68,3 +68,12 @@ test('rejects out-of-range AI pricing before database writes', async()=>{
  const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true},body:{action:'upsert_ai_pricing',style_key:'modern',style_label:'Modern',base_price_toman:1}});
  assert.equal(r.status,400); assert.equal(r.payload.code,'INVALID_PRICING');
 });
+
+test('rejects oversized request bodies', async()=>{
+ const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true},body:' '.repeat(16385)});
+ assert.equal(r.status,413); assert.equal(r.payload.code,'REQUEST_TOO_LARGE');
+});
+test('rejects non-object JSON bodies', async()=>{
+ const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true},body:'[]'});
+ assert.equal(r.status,400); assert.equal(r.payload.code,'INVALID_REQUEST_BODY');
+});
