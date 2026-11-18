@@ -131,6 +131,18 @@ jobs:
           async function main() {
             if (!process.env.APPWRITE_API_KEY) throw new Error('Missing GitHub Actions secret APPWRITE_API_KEY');
 
+            // Read-only diagnostic: do not create or modify schema during this run.
+            const orderColumnsDiagnostic = await listColumns('orders');
+            console.log('ORDERS_ASSIGNED_TO_FROM_LIST:', JSON.stringify(orderColumnsDiagnostic.filter(c => c.key === 'assigned_to')));
+            try {
+              const direct = await request('GET', `/tablesdb/${databaseId}/tables/orders/columns/assigned_to`);
+              console.log('ORDERS_ASSIGNED_TO_DIRECT_GET:', JSON.stringify(direct));
+            } catch (error) {
+              console.log('ORDERS_ASSIGNED_TO_DIRECT_GET_ERROR:', error.message);
+            }
+            console.log('READ_ONLY_DIAGNOSTIC_COMPLETE. No schema or row changes were made.');
+            process.exit(0);
+
             let existingTables = await listTables();
             for (const spec of tables) {
               let table = existingTables.find(t => t.$id === spec.id);
