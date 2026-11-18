@@ -2,6 +2,9 @@ name: Prepare NOVA public order intake (disabled, private)
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-public-order-intake-prepare.yml'
 
 permissions:
   contents: read
