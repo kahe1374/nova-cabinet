@@ -1,0 +1,98 @@
+name: Prepare secure owner bootstrap function
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-function:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create a locked, inactive Appwrite Function
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-owner-bootstrap
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+
+          const headers = {
+            'X-Appwrite-Project': project,
+            'X-Appwrite-Key': key,
+            'Content-Type': 'application/json'
+          };
+
+          async function request(path, options = {}) {
+            const response = await fetch(endpoint + path, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            return { response, data };
+          }
+
+          async function main() {
+            const existing = await request('/functions/' + encodeURIComponent(id));
+            if (existing.response.ok) {
+              const f = existing.data;
+              if (f.enabled !== false || (f.execute || []).length !== 0 || (f.scopes || []).length !== 0) {
+                throw new Error('A function with this ID already exists but is not locked as expected. No changes were made.');
+              }
+              console.log('FUNCTION_ALREADY_EXISTS_LOCKED=true');
+              console.log('FUNCTION_ID=' + id);
+              console.log('FUNCTION_ENABLED=false');
+              console.log('EXECUTE_PERMISSIONS=0');
+              console.log('FUNCTION_SCOPES=0');
+              return;
+            }
+
+            if (existing.response.status !== 404) {
+              throw new Error('Could not inspect existing function. HTTP ' + existing.response.status);
+            }
+
+            const created = await request('/functions', {
+              method: 'POST',
+              body: JSON.stringify({
+                functionId: id,
+                name: 'NOVA Owner Bootstrap (Locked)',
+                runtime: 'node-22.0',
+                execute: [],
+                enabled: false,
+                logging: false,
+                timeout: 15,
+                entrypoint: 'index.js',
+                commands: 'npm install',
+                scopes: []
+              })
+            });
+
+            if (!created.response.ok) {
+              throw new Error('Function creation failed. HTTP ' + created.response.status + ' ' + JSON.stringify({
+                code: created.data.code,
+                type: created.data.type,
+                message: created.data.message
+              }));
+            }
+
+            console.log('FUNCTION_CREATED=true');
+            console.log('FUNCTION_ID=' + id);
+            console.log('FUNCTION_ENABLED=' + created.data.enabled);
+            console.log('EXECUTE_PERMISSIONS=' + (created.data.execute || []).length);
+            console.log('FUNCTION_SCOPES=' + (created.data.scopes || []).length);
+            console.log('NO_DEPLOYMENT_CREATED=true');
+          }
+
+          main().catch(error => {
+            console.error('PREPARATION_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
