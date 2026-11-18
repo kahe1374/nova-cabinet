@@ -122,7 +122,7 @@ test('write actions are blocked in default read-only mode', async()=>{
  try {
   const handler=(await import('../appwrite/functions/nova-admin-api/index.js?readonly-test')).default;
   const res=makeRes();
-  await handler({req:{method:'POST',headers:{'x-appwrite-user-jwt':'jwt'},body:{action:'update_order_status',order_id:'order-1',status:'new'}},res,log(){},error(){}});
+  await handler({req:{method:'POST',headers:{'x-appwrite-user-jwt':'jwt','x-appwrite-key':'runtime-key'},body:{action:'update_order_status',order_id:'order-1',status:'new'}},res,log(){},error(){}});
   assert.equal(res.status,423); assert.equal(res.payload.code,'API_READ_ONLY'); assert.equal(writes,0);
  } finally {
   global.fetch=oldFetch;
