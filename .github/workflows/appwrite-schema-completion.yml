@@ -191,7 +191,6 @@ jobs:
                 type: 'manyToOne',
                 twoWay: false,
                 key: 'assigned_to',
-                twoWayKey: '',
                 onDelete: 'setNull'
               });
               console.log('ASSIGNED_TO_CREATE_RESPONSE:', JSON.stringify(created));
