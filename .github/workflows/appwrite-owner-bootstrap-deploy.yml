@@ -66,6 +66,9 @@ jobs:
           });
           NODE
 
+      - name: Validate function JavaScript
+        run: node --check appwrite/functions/nova-owner-bootstrap/index.js
+
       - name: Package function source
         run: |
           cd appwrite/functions/nova-owner-bootstrap
