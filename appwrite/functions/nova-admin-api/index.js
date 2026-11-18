@@ -120,12 +120,15 @@ export default async ({ req, res, log, error }) => {
       return reply(res, { ok: false, code: 'INVALID_JSON' }, 400);
     }
     const action = body.action || 'health';
+    const readOnly = String(process.env.NOVA_ADMIN_API_READ_ONLY || 'true').toLowerCase() !== 'false';
+    const writeActions = new Set(['update_order_status', 'assign_order', 'upsert_ai_pricing']);
+    if (writeActions.has(action) && readOnly) return reply(res, { ok: false, code: 'API_READ_ONLY', readOnly: true }, 423);
 
     if (action === 'health') return reply(res, {
       ok: true, code: 'OWNER_AUTHENTICATED',
       capabilities: ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing',
         'update_order_status', 'assign_order', 'upsert_ai_pricing'],
-      readOnly: false
+      readOnly
     });
 
     if (action === 'list_orders') {
