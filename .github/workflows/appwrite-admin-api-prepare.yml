@@ -39,7 +39,7 @@ jobs:
                 method: 'POST', headers,
                 body: JSON.stringify({
                   functionId: id,
-                  name: 'NOVA Admin API (read-only pilot)',
+                  name: 'NOVA Admin API (owner-only, locked pilot)',
                   runtime: 'node-22',
                   execute: [],
                   events: [],
@@ -49,7 +49,7 @@ jobs:
                   logging: true,
                   entrypoint: 'index.js',
                   commands: '',
-                  scopes: ['rows.read']
+                  scopes: ['rows.read', 'rows.write']
                 })
               });
               current = await response.json().catch(() => ({}));
@@ -58,13 +58,13 @@ jobs:
               throw new Error('Function lookup failed HTTP ' + response.status);
             }
             const safeExecute = (current.execute || []).length === 0;
-            if (current.enabled !== false || !safeExecute || (current.scopes || []).length !== 1 || !(current.scopes || []).includes('rows.read')) {
+            if (current.enabled !== false || !safeExecute || (current.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (current.scopes || []).includes(scope))) {
               throw new Error('Existing function is not disabled with empty execute access and rows.read-only scope. Refusing to modify it.');
             }
             console.log('FUNCTION_ID=' + id);
             console.log('FUNCTION_DISABLED=true');
             console.log('EXECUTE_ACCESS_EMPTY=true');
-            console.log('FUNCTION_SCOPE_ROWS_READ_ONLY=true');
+            console.log('FUNCTION_SCOPES_OWNER_API_READ_WRITE=true');
           }
           main().catch(e => { console.error('PREPARATION_FAILED:', e.message); process.exit(1); });
           NODE
@@ -93,7 +93,7 @@ jobs:
             const check = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
             const fn = await check.json().catch(() => ({}));
             if (!check.ok || fn.enabled !== false || (fn.execute || []).length !== 0 ||
-                (fn.scopes || []).length !== 1 || !(fn.scopes || []).includes('rows.read')) {
+                (fn.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (fn.scopes || []).includes(scope))) {
               throw new Error('Function safety state changed; deployment aborted.');
             }
             const form = new FormData();
@@ -119,7 +119,7 @@ jobs:
             const finalResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
             const finalFn = await finalResponse.json().catch(() => ({}));
             if (!finalResponse.ok || finalFn.enabled !== false || (finalFn.execute || []).length !== 0 ||
-                (finalFn.scopes || []).length !== 1 || !(finalFn.scopes || []).includes('rows.read')) {
+                (finalFn.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (finalFn.scopes || []).includes(scope))) {
               throw new Error('Final locked-state verification failed.');
             }
             console.log('DEPLOYMENT_BUILD_COMPLETE=true');
