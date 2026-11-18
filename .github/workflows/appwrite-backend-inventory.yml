@@ -1,0 +1,89 @@
+name: Appwrite backend inventory
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect Appwrite tables, columns and available runtimes (read-only)
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const headers = {
+            'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
+            'X-Appwrite-Key': process.env.APPWRITE_API_KEY
+          };
+
+          async function get(path) {
+            const response = await fetch(endpoint + path, { headers });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            console.log('HTTP', response.status, path);
+            if (!response.ok) {
+              console.log('READ_ERROR', JSON.stringify({
+                code: data.code, type: data.type, message: data.message
+              }));
+              return null;
+            }
+            return data;
+          }
+
+          async function main() {
+            if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY');
+
+            const tables = await get('/tablesdb/' + db + '/tables?limit=100');
+            if (tables) {
+              const items = tables.tables || [];
+              console.log('TABLES_SUMMARY', JSON.stringify({
+                total: tables.total,
+                tables: items.map(t => ({
+                  id: t.$id, name: t.name, enabled: t.enabled,
+                  rowSecurity: t.rowSecurity
+                }))
+              }));
+
+              for (const table of items) {
+                const columns = await get(
+                  '/tablesdb/' + db + '/tables/' +
+                  encodeURIComponent(table.$id) + '/columns?limit=100'
+                );
+                if (columns) console.log('COLUMNS_SUMMARY', JSON.stringify({
+                  tableId: table.$id,
+                  columns: (columns.columns || []).map(c => ({
+                    key: c.key, type: c.type, required: c.required,
+                    array: c.array, size: c.size, relatedTable: c.relatedTable,
+                    relationType: c.relationType, side: c.side,
+                    twoWay: c.twoWay
+                  }))
+                }));
+              }
+            }
+
+            const runtimes = await get('/functions/runtimes');
+            if (runtimes) console.log('RUNTIMES_SUMMARY', JSON.stringify({
+              runtimes: (runtimes.runtimes || []).map(r => ({
+                id: r.id, name: r.name, version: r.version
+              }))
+            }));
+
+            console.log('BACKEND_INVENTORY_COMPLETE: read-only; no users, rows, permissions, functions, or schema were changed.');
+          }
+
+          main().catch(error => {
+            console.error('INVENTORY_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
