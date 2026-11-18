@@ -97,12 +97,12 @@ async function writeAudit(key, actorId, action, entityType, entityId, details) {
 }
 
 export default async ({ req, res, log, error }) => {
+  const origin = header(req.headers, 'origin');
+  const responseHeaders = corsHeaders(origin);
   try {
-    const origin = header(req.headers, 'origin');
     if (origin && !ALLOWED_ORIGINS.has(origin)) {
-      return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403);
+      return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
     }
-    const responseHeaders = corsHeaders(origin);
     if (req.method === 'OPTIONS') return reply(res, {}, 204, responseHeaders);
     if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405, responseHeaders);
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
