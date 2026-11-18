@@ -1163,19 +1163,19 @@ status.append(acceptButton);f.reset();}catch(error){console.error('NOVA AI desig
  if(assistant&&summary){
   const refresh=()=>{const d=new FormData(assistant);summary.textContent='پیشنهاد اولیه نوا: '+d.get('service')+' با سبک '+d.get('style')+'، ابعاد '+d.get('size')+'، بودجه '+d.get('budget')+' و زمان اجرا '+d.get('time')+'. برای انتخاب نهایی، بررسی فضا و متریال لازم است.';};
   assistant.addEventListener('change',refresh);refresh();
-  assistant.addEventListener('submit',async e=>{e.preventDefault();if(!assistant.reportValidity())return;refresh();const d=new FormData(assistant),button=assistant.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'مشاوره هوشمند - '+d.get('service'),order_type:'cabinet',details:summary.textContent+'\\nزمان اجرا: '+d.get('time')},button,summary,assistant);});
+  assistant.addEventListener('submit',async e=>{e.preventDefault();if(!assistant.reportValidity())return;refresh();const d=new FormData(assistant),button=assistant.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'مشاوره هوشمند - '+d.get('service'),order_type:'cabinet',details:summary.textContent+'\nزمان اجرا: '+d.get('time')},button,summary,assistant);});
  }
  const estimate=document.getElementById('novaEstimateForm'),estimateResult=document.getElementById('novaEstimateResult');
  if(estimate&&estimateResult){
   const refresh=()=>{const d=new FormData(estimate),m=Math.max(0,Number(d.get('meters'))||0);estimateResult.textContent='متراژ واردشده: '+m.toLocaleString('fa-IR')+' متر طول — '+d.get('project')+'، سبک '+d.get('style')+'، متریال '+d.get('material')+'. مبلغ نهایی پس از بررسی ابعاد، نقشه، یراق‌آلات و استعلام روز اعلام می‌شود.';};
   estimate.addEventListener('input',refresh);estimate.addEventListener('change',refresh);refresh();
-  estimate.addEventListener('submit',async e=>{e.preventDefault();if(!estimate.reportValidity())return;refresh();const d=new FormData(estimate),button=estimate.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'استعلام قیمت - '+d.get('project'),order_type:'cabinet',details:estimateResult.textContent+'\\nتوضیحات مشتری: '+d.get('details')},button,estimateResult,estimate);});
+  estimate.addEventListener('submit',async e=>{e.preventDefault();if(!estimate.reportValidity())return;refresh();const d=new FormData(estimate),button=estimate.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'استعلام قیمت - '+d.get('project'),order_type:'cabinet',details:estimateResult.textContent+'\nتوضیحات مشتری: '+d.get('details')},button,estimateResult,estimate);});
  }
  const visit=document.getElementById('novaVisitForm');
  if(visit){
   const date=visit.elements.date,today=new Date(),localToday=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);date.min=localToday;
   let status=document.getElementById('novaVisitStatus');if(!status){status=document.createElement('div');status.id='novaVisitStatus';status.className='status';visit.insertAdjacentElement('afterend',status);}
-  visit.addEventListener('submit',async e=>{e.preventDefault();if(!visit.reportValidity())return;const d=new FormData(visit),button=visit.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:d.get('city'),type:'درخواست بازدید و اندازه‌گیری - '+d.get('project'),order_type:'workshop_service',address:d.get('address'),details:'تاریخ پیشنهادی: '+d.get('date')+'\\nبازه زمانی: '+d.get('time')+'\\nاین زمان تا تأیید تیم نوا قطعی نیست.'},button,status,visit);});
+  visit.addEventListener('submit',async e=>{e.preventDefault();if(!visit.reportValidity())return;const d=new FormData(visit),button=visit.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:d.get('city'),type:'درخواست بازدید و اندازه‌گیری - '+d.get('project'),order_type:'workshop_service',address:d.get('address'),details:'تاریخ پیشنهادی: '+d.get('date')+'\nبازه زمانی: '+d.get('time')+'\nاین زمان تا تأیید تیم نوا قطعی نیست.'},button,status,visit);});
  }
 })();
 </script>
