@@ -1,0 +1,28 @@
+name: Test Nova admin API (mocked, no production access)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'appwrite/functions/nova-admin-api/**'
+      - 'tests/nova-admin-api.test.js'
+      - '.github/workflows/nova-admin-api-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check
+        run: node --check appwrite/functions/nova-admin-api/index.js
+      - name: Run mocked security tests
+        run: node --test tests/nova-admin-api.test.js
