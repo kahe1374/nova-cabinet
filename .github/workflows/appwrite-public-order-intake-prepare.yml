@@ -1,0 +1,100 @@
+name: Prepare NOVA public order intake (disabled, private)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and run mocked tests
+        run: |
+          node --check appwrite/functions/nova-public-order-intake/index.js
+          node --test appwrite/functions/nova-public-order-intake/test/intake.test.mjs
+      - name: Create or verify disabled function with no execute grants
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-public-order-intake
+        run: |
+          node <<'NODE'
+          const endpoint=process.env.APPWRITE_ENDPOINT, project=process.env.APPWRITE_PROJECT_ID;
+          const key=process.env.APPWRITE_API_KEY, id=process.env.FUNCTION_ID;
+          if(!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers={'X-Appwrite-Project':project,'X-Appwrite-Key':key,'Content-Type':'application/json'};
+          async function main(){
+            let r=await fetch(endpoint+'/functions/'+encodeURIComponent(id),{headers});
+            let fn=await r.json().catch(()=>({}));
+            if(r.status===404){
+              r=await fetch(endpoint+'/functions',{method:'POST',headers,body:JSON.stringify({
+                functionId:id,name:'NOVA Public Order Intake (disabled preparation)',runtime:'node-22',
+                execute:[],events:[],schedule:'',timeout:30,enabled:false,logging:true,
+                entrypoint:'index.js',commands:'',scopes:['rows.write']
+              })});
+              fn=await r.json().catch(()=>({}));
+              if(!r.ok) throw new Error('Function creation failed HTTP '+r.status);
+            } else if(!r.ok) throw new Error('Function inspection failed HTTP '+r.status);
+            if(fn.enabled!==false||(fn.execute||[]).length!==0||(fn.scopes||[]).length!==1||fn.scopes[0]!=='rows.write')
+              throw new Error('Function must remain disabled, non-executable and rows.write-only. Refusing changes.');
+            console.log('FUNCTION_DISABLED=true');
+            console.log('EXECUTE_GRANTS=0');
+            console.log('FUNCTION_SCOPE=rows.write');
+          }
+          main().catch(e=>{console.error('PREPARE_FAILED:',e.message);process.exit(1);});
+          NODE
+      - name: Package source
+        run: |
+          cd appwrite/functions/nova-public-order-intake
+          tar -czf "$RUNNER_TEMP/nova-public-order-intake.tar.gz" .
+      - name: Upload inactive deployment only
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-public-order-intake
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const endpoint=process.env.APPWRITE_ENDPOINT,project=process.env.APPWRITE_PROJECT_ID;
+          const key=process.env.APPWRITE_API_KEY,id=process.env.FUNCTION_ID;
+          if(!key) throw new Error('Missing APPWRITE_API_KEY');
+          async function main(){
+            const headers={'X-Appwrite-Project':project,'X-Appwrite-Key':key};
+            const check=await fetch(endpoint+'/functions/'+encodeURIComponent(id),{headers});
+            const fn=await check.json().catch(()=>({}));
+            if(!check.ok||fn.enabled!==false||(fn.execute||[]).length!==0||(fn.scopes||[]).length!==1||fn.scopes[0]!=='rows.write')
+              throw new Error('Safety state changed; refusing deployment.');
+            const form=new FormData();
+            form.append('code',new Blob([fs.readFileSync(process.env.RUNNER_TEMP+'/nova-public-order-intake.tar.gz')],{type:'application/gzip'}),'nova-public-order-intake.tar.gz');
+            form.append('activate','false');form.append('entrypoint','index.js');form.append('commands','');
+            const upload=await fetch(endpoint+'/functions/'+encodeURIComponent(id)+'/deployments',{method:'POST',headers,body:form});
+            const data=await upload.json().catch(()=>({}));
+            if(!upload.ok||!data.$id) throw new Error('Inactive deployment upload failed HTTP '+upload.status);
+            console.log('DEPLOYMENT_ID='+data.$id);
+            let state=data;
+            for(let i=0;i<18;i++){
+              const r=await fetch(endpoint+'/functions/'+encodeURIComponent(id)+'/deployments/'+encodeURIComponent(data.$id),{headers});
+              state=await r.json().catch(()=>({}));
+              if(!r.ok) throw new Error('Deployment status read failed');
+              console.log('BUILD_STATUS='+state.status);
+              if(['ready','active','failed'].includes(state.status)) break;
+              await new Promise(resolve=>setTimeout(resolve,10000));
+            }
+            if(!['ready','active'].includes(state.status)) throw new Error('Inactive deployment build did not complete.');
+            const finalResponse=await fetch(endpoint+'/functions/'+encodeURIComponent(id),{headers});
+            const finalFn=await finalResponse.json().catch(()=>({}));
+            if(!finalResponse.ok||finalFn.enabled!==false||(finalFn.execute||[]).length!==0)
+              throw new Error('Function is no longer disabled or private.');
+            console.log('INACTIVE_DEPLOYMENT_READY=true');
+            console.log('FUNCTION_ENABLED=false');
+            console.log('EXECUTE_GRANTS=0');
+            console.log('NO_CUSTOMER_OR_ORDER_WRITES=true');
+          }
+          main().catch(e=>{console.error('DEPLOYMENT_FAILED:',e.message);process.exit(1);});
+          NODE
