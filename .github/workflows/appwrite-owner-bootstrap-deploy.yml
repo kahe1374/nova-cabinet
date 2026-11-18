@@ -60,7 +60,7 @@ jobs:
               throw new Error('Least-privilege or locked-state verification failed.');
             }
             console.log('FUNCTION_ENABLED=false');
-            console.log('EXECUTE_USERS_ONLY=' + (finalExecute.length === 1 && finalExecute[0] === 'users'));
+            console.log('EXECUTE_USERS_ONLY=' + (configuredExecute.length === 1 && configuredExecute[0] === 'users'));
             console.log('ROWS_READ_SCOPE=true');
             console.log('ROWS_WRITE_SCOPE=true');
           }
@@ -176,9 +176,9 @@ jobs:
             }
             console.log('DEPLOYMENT_BUILD_COMPLETE=true');
             console.log('FUNCTION_ENABLED=false');
-            console.log('EXECUTE_PERMISSIONS=0');
+            console.log('EXECUTE_USERS_ONLY=' + (finalExecute.length === 1 && finalExecute[0] === 'users'));
             console.log('FUNCTION_SCOPES=2');
-            console.log('NO_FUNCTION_ACTIVATION_OR_PUBLIC_ACCESS=true');
+            console.log('FUNCTION_STILL_DISABLED=true');
           }
 
           main().catch(error => {
