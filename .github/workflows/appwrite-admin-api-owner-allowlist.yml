@@ -1,0 +1,76 @@
+name: Configure owner-only execute allowlist (keep function disabled)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  owner-allowlist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Configure exact owner execution permission without enabling function
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-admin-api
+          OWNER_ACCOUNT_ID: 6afdf252002cc39270ab
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          const owner = process.env.OWNER_ACCOUNT_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = {
+            'X-Appwrite-Project': project,
+            'X-Appwrite-Key': key,
+            'Content-Type': 'application/json'
+          };
+          async function main() {
+            const url = endpoint + '/functions/' + encodeURIComponent(id);
+            const currentResponse = await fetch(url, { headers });
+            const current = await currentResponse.json().catch(() => ({}));
+            if (!currentResponse.ok) throw new Error('Function lookup failed HTTP ' + currentResponse.status);
+            if (current.enabled !== false) throw new Error('Refusing: function must remain disabled.');
+            const scopes = current.scopes || [];
+            if (scopes.length !== 2 || !['rows.read', 'rows.write'].every(x => scopes.includes(x))) {
+              throw new Error('Refusing: unexpected function scopes.');
+            }
+            const deploymentResponse = await fetch(url + '/deployments?queries[]=' + encodeURIComponent('orderDesc("$createdAt")') + '&limit=1', { headers });
+            const deploymentData = await deploymentResponse.json().catch(() => ({}));
+            if (!deploymentResponse.ok || !deploymentData.deployments?.[0] ||
+                !['ready', 'active'].includes(deploymentData.deployments[0].status)) {
+              throw new Error('Refusing: no ready deployment is available.');
+            }
+            const payload = {
+              name: current.name,
+              runtime: current.runtime,
+              execute: ['user:' + owner],
+              events: current.events || [],
+              schedule: current.schedule || '',
+              timeout: current.timeout,
+              enabled: false,
+              logging: current.logging !== false,
+              entrypoint: current.entrypoint || 'index.js',
+              commands: current.commands || '',
+              scopes
+            };
+            const update = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
+            const result = await update.json().catch(() => ({}));
+            if (!update.ok) throw new Error('Allowlist update failed HTTP ' + update.status + ' ' + JSON.stringify({code:result.code,type:result.type,message:result.message}));
+            if (result.enabled !== false || (result.execute || []).length !== 1 ||
+                result.execute[0] !== 'user:' + owner) {
+              throw new Error('Post-update verification failed.');
+            }
+            console.log('FUNCTION_DISABLED=true');
+            console.log('OWNER_ONLY_EXECUTE_PERMISSION=true');
+            console.log('OWNER_ACCOUNT_ID=' + owner);
+            console.log('NO_PUBLIC_EXECUTE_ACCESS=true');
+          }
+          main().catch(e => { console.error('OWNER_ALLOWLIST_FAILED:', e.message); process.exit(1); });
+          NODE
