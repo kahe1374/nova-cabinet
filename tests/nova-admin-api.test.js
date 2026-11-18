@@ -82,3 +82,20 @@ test('rejects multibyte request bodies exceeding the byte limit', async()=>{
  const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true},body:'漢'.repeat(6000)});
  assert.equal(r.status,413); assert.equal(r.payload.code,'REQUEST_TOO_LARGE');
 });
+
+test('rejects overlong row identifiers instead of truncating them', async()=>{
+ const oldFetch=global.fetch; const oldKey=process.env.APPWRITE_FUNCTION_API_KEY;
+ process.env.APPWRITE_FUNCTION_API_KEY='runtime-key';
+ let tableLookups=0;
+ global.fetch=async(url)=> {
+  if(url===ENDPOINT+'/account') return new Response(JSON.stringify({$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true}),{status:200});
+  if(url.includes('/tables/app_users/rows/')) return new Response(JSON.stringify({$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true}),{status:200});
+  tableLookups++; return new Response('{}',{status:404});
+ };
+ try {
+  const handler=(await import('../appwrite/functions/nova-admin-api/index.js?long-id-test')).default;
+  const res=makeRes();
+  await handler({req:{method:'POST',headers:{'x-appwrite-user-jwt':'jwt','x-appwrite-key':'untrusted-header-key'},body:{action:'update_order_status',order_id:'x'.repeat(37),status:'new'}},res,log(){},error(){}});
+  assert.equal(res.status,400); assert.equal(res.payload.code,'INVALID_ORDER_OR_STATUS'); assert.equal(tableLookups,0);
+ } finally { global.fetch=oldFetch; if(oldKey===undefined) delete process.env.APPWRITE_FUNCTION_API_KEY; else process.env.APPWRITE_FUNCTION_API_KEY=oldKey; }
+});
