@@ -69,6 +69,11 @@ async function updateRow(tableId, rowId, data, key) {
 function cleanString(value, max) {
   return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
+function cleanRowId(value) {
+  if (typeof value !== 'string') return '';
+  const normalized = value.trim();
+  return normalized.length > 0 && normalized.length <= 36 ? normalized : '';
+}
 async function writeAudit(key, actorId, action, entityType, entityId, details) {
   const result = await createRow('audit_log', {
     actor: actorId,
@@ -148,7 +153,7 @@ export default async ({ req, res, log, error }) => {
     }
 
     if (action === 'update_order_status') {
-      const orderId = cleanString(body.order_id, 36);
+      const orderId = cleanRowId(body.order_id);
       const newStatus = cleanString(body.status, 40);
       const note = cleanString(body.note, 2000);
       if (!orderId || !ORDER_STATUSES.has(newStatus)) return reply(res, { ok: false, code: 'INVALID_ORDER_OR_STATUS' }, 400);
@@ -173,7 +178,7 @@ export default async ({ req, res, log, error }) => {
 
     if (action === 'assign_order') {
       const orderId = cleanString(body.order_id, 36);
-      const assigneeId = body.assigned_user_id === null || body.assigned_user_id === '' ? null : cleanString(body.assigned_user_id, 36);
+      const assigneeId = body.assigned_user_id === null || body.assigned_user_id === '' ? null : cleanRowId(body.assigned_user_id);
       if (!orderId || (body.assigned_user_id && !assigneeId)) return reply(res, { ok: false, code: 'INVALID_ASSIGNMENT' }, 400);
       const current = await getRow('orders', orderId, key);
       if (!current.response.ok || current.data.$id !== orderId) return reply(res, { ok: false, code: 'ORDER_NOT_FOUND' }, 404);
