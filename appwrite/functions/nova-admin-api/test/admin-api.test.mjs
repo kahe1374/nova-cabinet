@@ -119,3 +119,11 @@ test('AI request response strips price acceptance token hashes', () => {
   assert.match(source, /\.map\(\(\{ price_acceptance_token_hash, \.\.\.safeRow \}\) => safeRow\)/);
   assert.match(source, /price_acceptance_token_hash/);
 });
+
+test('assignment action uses strict row identifier validation', () => {
+  assert.match(source, /if \(!orderId \|\| \(body\.assigned_user_id && !assigneeId\)\) return reply\(res, \{ ok: false, code: 'INVALID_ASSIGNMENT' \}, 400\)/);
+  assert.match(source, /const orderId = cleanRowId\(body\.order_id\);[\s\S]*?const assigneeId/);
+});
+test('read-only health does not advertise write capabilities', () => {
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing'\]/);
+});
