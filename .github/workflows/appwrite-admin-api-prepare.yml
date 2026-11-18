@@ -58,8 +58,22 @@ jobs:
               throw new Error('Function lookup failed HTTP ' + response.status);
             }
             const safeExecute = (current.execute || []).length === 0;
-            if (current.enabled !== false || !safeExecute || (current.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (current.scopes || []).includes(scope))) {
-              throw new Error('Existing function is not disabled with empty execute access and rows.read-only scope. Refusing to modify it.');
+            const scopes = current.scopes || [];
+            const isReadOnly = scopes.length === 1 && scopes.includes('rows.read');
+            const isTargetScope = scopes.length === 2 && ['rows.read', 'rows.write'].every(scope => scopes.includes(scope));
+            if (current.enabled !== false || !safeExecute || (!isReadOnly && !isTargetScope)) {
+              throw new Error('Existing function is not in an approved disabled state. Refusing to modify it.');
+            }
+            if (isReadOnly) {
+              const upgraded = await fetch(endpoint + '/functions/' + encodeURIComponent(id), {
+                method: 'PATCH', headers,
+                body: JSON.stringify({ scopes: ['rows.read', 'rows.write'] })
+              });
+              const updated = await upgraded.json().catch(() => ({}));
+              if (!upgraded.ok || updated.enabled !== false || (updated.execute || []).length !== 0 ||
+                  (updated.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (updated.scopes || []).includes(scope))) {
+                throw new Error('Could not safely grant the admin function its required row scopes.');
+              }
             }
             console.log('FUNCTION_ID=' + id);
             console.log('FUNCTION_DISABLED=true');
