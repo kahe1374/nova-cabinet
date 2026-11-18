@@ -104,8 +104,16 @@ export default async ({ req, res, log, error }) => {
     }
 
     let body = {};
-    try { body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {}); }
-    catch { return reply(res, { ok: false, code: 'INVALID_JSON' }, 400); }
+    try {
+      const rawBody = typeof req.body === 'string' ? (req.body || '{}') : JSON.stringify(req.body || {});
+      if (rawBody.length > 16384) return reply(res, { ok: false, code: 'REQUEST_TOO_LARGE' }, 413);
+      body = typeof req.body === 'string' ? JSON.parse(rawBody) : (req.body || {});
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return reply(res, { ok: false, code: 'INVALID_REQUEST_BODY' }, 400);
+      }
+    } catch {
+      return reply(res, { ok: false, code: 'INVALID_JSON' }, 400);
+    }
     const action = body.action || 'health';
 
     if (action === 'health') return reply(res, {
