@@ -1,0 +1,69 @@
+name: Appwrite database audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect Appwrite TablesDB (read-only)
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const headers = {
+            'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
+            'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
+            'Content-Type': 'application/json'
+          };
+
+          async function get(path) {
+            const response = await fetch(endpoint + path, { headers });
+            const body = await response.text();
+            if (!response.ok) {
+              throw new Error(`Appwrite API ${response.status}: ${body.slice(0, 1200)}`);
+            }
+            return JSON.parse(body);
+          }
+
+          async function main() {
+            if (!process.env.APPWRITE_API_KEY) {
+              throw new Error('Missing GitHub Actions secret APPWRITE_API_KEY');
+            }
+            const databaseId = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+            const result = await get(`/tablesdb/${databaseId}/tables?limit=100`);
+            const tables = result.tables || [];
+            console.log(`Database audit: ${tables.length} table(s) found.`);
+            for (const table of tables) {
+              const tableId = encodeURIComponent(table.$id);
+              const columnsResult = await get(`/tablesdb/${databaseId}/tables/${tableId}/columns?limit=100`);
+              const columns = columnsResult.columns || [];
+              console.log(JSON.stringify({
+                tableId: table.$id,
+                name: table.name,
+                rowSecurity: table.rowSecurity,
+                columns: columns.map(column => ({
+                  key: column.key,
+                  type: column.type,
+                  required: column.required,
+                  array: column.array,
+                  status: column.status
+                }))
+              }, null, 2));
+            }
+          }
+
+          main().catch(error => {
+            console.error(error.message);
+            process.exit(1);
+          });
+          NODE
