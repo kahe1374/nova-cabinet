@@ -62,11 +62,11 @@ async function listRows(tableId, key, maxRows = 500) {
 async function getRow(tableId, rowId, key) {
   return api('/tablesdb/' + DATABASE_ID + '/tables/' + encodeURIComponent(tableId) + '/rows/' + encodeURIComponent(rowId), key);
 }
-async function createRow(tableId, data, key) {
+async function createRow(tableId, data, key, rowId = 'unique()') {
   return api('/tablesdb/' + DATABASE_ID + '/tables/' + encodeURIComponent(tableId) + '/rows', key, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rowId: 'unique()', data, permissions: [] })
+    body: JSON.stringify({ rowId, data, permissions: [] })
   });
 }
 async function updateRow(tableId, rowId, data, key) {
@@ -96,6 +96,94 @@ async function writeAudit(key, actorId, action, entityType, entityId, details) {
   if (!result.response.ok) throw new Error('AUDIT_LOG_WRITE_FAILED');
 }
 
+
+function normalizePublicMobile(value) {
+  const mobile = String(value ?? '').replace(/[\\s-]/g, '');
+  if (!/^(09\\d{9}|\\+989\\d{9}|00989\\d{9})$/.test(mobile)) return '';
+  return mobile.startsWith('09') ? '+98' + mobile.slice(1) :
+    mobile.startsWith('0098') ? '+' + mobile.slice(2) : mobile;
+}
+async function handlePublicOrder(body, key, res, responseHeaders, error) {
+  if (String(process.env.NOVA_PUBLIC_ORDER_INTAKE_ENABLED || 'false').toLowerCase() !== 'true') {
+    return reply(res, { ok: false, code: 'PUBLIC_ORDER_INTAKE_DISABLED' }, 423, responseHeaders);
+  }
+  const name = cleanString(body.name, 160);
+  const mobile = normalizePublicMobile(body.phone);
+  const title = cleanString(body.type, 200);
+  const orderType = cleanString(body.order_type || 'cabinet', 30);
+  const city = cleanString(body.city, 100);
+  const province = cleanString(body.province, 100);
+  const address = cleanString(body.address, 2000);
+  const details = cleanString(body.details, 3000);
+  const token = cleanString(body.idempotency_key, 36);
+  if (typeof body.website === 'string' && body.website.trim()) {
+    return reply(res, { ok: true, code: 'REQUEST_ACCEPTED' }, 200, responseHeaders);
+  }
+  if (name.length < 2 || !mobile || !title ||
+      !['cabinet', 'workshop_service'].includes(orderType) ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
+    return reply(res, { ok: false, code: 'INVALID_PUBLIC_ORDER' }, 400, responseHeaders);
+  }
+  const now = new Date().toISOString();
+  const customer = await createRow('customers', {
+    full_name: name, mobile, province: province || null, city: city || null,
+    address: address || null, notes: details || null,
+    created_at: now, updated_at: now
+  }, key);
+  if (!customer.response.ok || !customer.data.$id) {
+    return reply(res, { ok: false, code: 'CUSTOMER_SAVE_FAILED' }, 502, responseHeaders);
+  }
+  const orderNumber = 'NV-' + token.replaceAll('-', '').slice(0, 12).toUpperCase();
+  const order = await createRow('orders', {
+    order_number: orderNumber, customer: customer.data.$id, title,
+    description: details || null, order_type: orderType, status: 'new',
+    currency: 'IRR', paid_amount: 0, created_at: now, updated_at: now
+  }, key, token);
+  if (!order.response.ok || !order.data.$id) {
+    const cleanup = await api('/tablesdb/' + DATABASE_ID + '/tables/customers/rows/' +
+      encodeURIComponent(customer.data.$id), key, { method: 'DELETE' });
+    if (order.response.status === 409) {
+      const existing = await getRow('orders', token, key);
+      if (existing.response.ok && existing.data.$id === token) {
+        return reply(res, { ok: true, code: 'ORDER_ALREADY_RECEIVED',
+          order_number: existing.data.order_number, duplicate: true }, 200, responseHeaders);
+      }
+    }
+    if (!cleanup.response.ok) {
+      error('NOVA public intake customer rollback failed: HTTP ' + cleanup.response.status);
+      return reply(res, { ok: false, code: 'PUBLIC_ORDER_PARTIAL_FAILURE', partial: true }, 502, responseHeaders);
+    }
+    return reply(res, { ok: false, code: 'ORDER_SAVE_FAILED' }, 502, responseHeaders);
+  }
+  const history = await createRow('order_status_history', {
+    order: token, old_status: null, new_status: 'new',
+    note: 'درخواست از فرم عمومی سایت ثبت شد', changed_by: null, changed_at: now
+  }, key);
+  if (!history.response.ok || !history.data.$id) {
+    const removeOrder = await api('/tablesdb/' + DATABASE_ID + '/tables/orders/rows/' + encodeURIComponent(token), key, { method: 'DELETE' });
+    const removeCustomer = await api('/tablesdb/' + DATABASE_ID + '/tables/customers/rows/' + encodeURIComponent(customer.data.$id), key, { method: 'DELETE' });
+    if (!removeOrder.response.ok || !removeCustomer.response.ok) {
+      return reply(res, { ok: false, code: 'PUBLIC_ORDER_ROLLBACK_FAILED', partial: true }, 502, responseHeaders);
+    }
+    return reply(res, { ok: false, code: 'ORDER_HISTORY_SAVE_FAILED' }, 502, responseHeaders);
+  }
+  const audit = await createRow('audit_log', {
+    actor: null, action: 'order.created.public', entity_type: 'order',
+    entity_id: token, details: JSON.stringify({ order_number: orderNumber, order_type: orderType }),
+    created_at: now
+  }, key);
+  if (!audit.response.ok || !audit.data.$id) {
+    const removeHistory = await api('/tablesdb/' + DATABASE_ID + '/tables/order_status_history/rows/' + encodeURIComponent(history.data.$id), key, { method: 'DELETE' });
+    const removeOrder = await api('/tablesdb/' + DATABASE_ID + '/tables/orders/rows/' + encodeURIComponent(token), key, { method: 'DELETE' });
+    const removeCustomer = await api('/tablesdb/' + DATABASE_ID + '/tables/customers/rows/' + encodeURIComponent(customer.data.$id), key, { method: 'DELETE' });
+    if (!removeHistory.response.ok || !removeOrder.response.ok || !removeCustomer.response.ok) {
+      return reply(res, { ok: false, code: 'PUBLIC_ORDER_ROLLBACK_FAILED', partial: true }, 502, responseHeaders);
+    }
+    return reply(res, { ok: false, code: 'ORDER_AUDIT_SAVE_FAILED' }, 502, responseHeaders);
+  }
+  return reply(res, { ok: true, code: 'ORDER_CREATED', order_number: orderNumber }, 201, responseHeaders);
+}
+
 export default async ({ req, res, log, error }) => {
   const origin = header(req.headers, 'origin');
   const responseHeaders = corsHeaders(origin);
@@ -105,6 +193,21 @@ export default async ({ req, res, log, error }) => {
     }
     if (req.method === 'OPTIONS') return reply(res, {}, 204, responseHeaders);
     if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405, responseHeaders);
+    const earlyKey = header(req.headers, 'x-appwrite-key');
+    if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
+    let earlyBody = {};
+    try {
+      const raw = typeof req.body === 'string' ? (req.body || '{}') : JSON.stringify(req.body || {});
+      if (new TextEncoder().encode(raw).byteLength > 16384) return reply(res, { ok: false, code: 'REQUEST_TOO_LARGE' }, 413, responseHeaders);
+      earlyBody = typeof req.body === 'string' ? JSON.parse(raw) : (req.body || {});
+      if (!earlyBody || typeof earlyBody !== 'object' || Array.isArray(earlyBody)) return reply(res, { ok: false, code: 'INVALID_REQUEST_BODY' }, 400, responseHeaders);
+    } catch {
+      return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
+    }
+    if (earlyBody.action === 'public_create_order') {
+      if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
+      return handlePublicOrder(earlyBody, earlyKey, res, responseHeaders, error);
+    }
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
     const key = header(req.headers, 'x-appwrite-key');
     if (!jwt) return reply(res, { ok: false, code: 'AUTHENTICATION_REQUIRED' }, 401, responseHeaders);
