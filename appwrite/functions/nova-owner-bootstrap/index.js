@@ -47,10 +47,9 @@ async function listAllAppUsers(functionKey) {
   let expectedTotal = null;
 
   while (true) {
-    const params = new URLSearchParams({
-      limit: String(PAGE_SIZE),
-      offset: String(offset)
-    });
+    const params = new URLSearchParams();
+    params.append('queries[]', JSON.stringify({ method: 'limit', values: [PAGE_SIZE] }));
+    params.append('queries[]', JSON.stringify({ method: 'offset', values: [offset] }));
     const result = await request(
       '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows?' + params.toString(),
       'X-Appwrite-Key',
