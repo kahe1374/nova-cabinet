@@ -60,7 +60,7 @@ jobs:
               throw new Error('Least-privilege or locked-state verification failed.');
             }
             console.log('FUNCTION_ENABLED=false');
-            console.log('EXECUTE_PERMISSIONS=0');
+            console.log('EXECUTE_USERS_ONLY=' + (finalExecute.length === 1 && finalExecute[0] === 'users'));
             console.log('ROWS_READ_SCOPE=true');
             console.log('ROWS_WRITE_SCOPE=true');
           }
