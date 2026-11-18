@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - 'index.html'
       - 'appwrite/functions/nova-admin-api/**'
       - 'tests/nova-admin-api.test.js'
       - 'tests/appwrite-admin-client.test.mjs'
@@ -29,5 +30,21 @@ jobs:
         run: |
           node --check appwrite/functions/nova-admin-api/index.js
           node --check appwrite/functions/nova-public-order-intake/index.js
+      - name: Check customer form script syntax
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const marker = "const endpoint='https://fra.cloud.appwrite.io/v1/functions/nova-admin-api/executions';";
+          const at = html.indexOf(marker);
+          if (at < 0) throw new Error('Appwrite customer intake endpoint is missing.');
+          const start = html.lastIndexOf('<script>', at);
+          const end = html.indexOf('</script>', at);
+          if (start < 0 || end < 0) throw new Error('Customer intake script boundaries are invalid.');
+          const source = html.slice(start + '<script>'.length, end);
+          if (source.includes('sjapgxjllnlttrhjxkez.supabase.co/functions/v1/create-lead')) throw new Error('Legacy Supabase lead endpoint is still wired.');
+          fs.writeFileSync('/tmp/nova-customer-intake.js', source);
+          NODE
+          node --check /tmp/nova-customer-intake.js
       - name: Run mocked security tests
         run: node --test tests/nova-admin-api.test.js appwrite/functions/nova-admin-api/test/admin-api.test.mjs tests/appwrite-admin-client.test.mjs appwrite/functions/nova-public-order-intake/test/intake.test.mjs
