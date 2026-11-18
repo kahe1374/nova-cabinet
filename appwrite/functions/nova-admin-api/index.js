@@ -98,8 +98,8 @@ async function writeAudit(key, actorId, action, entityType, entityId, details) {
 
 
 function normalizePublicMobile(value) {
-  const mobile = String(value ?? '').replace(/[\\s-]/g, '');
-  if (!/^(09\\d{9}|\\+989\\d{9}|00989\\d{9})$/.test(mobile)) return '';
+  const mobile = String(value ?? '').replace(/[\s-]/g, '');
+  if (!/^(09\d{9}|\+989\d{9}|00989\d{9})$/.test(mobile)) return '';
   return mobile.startsWith('09') ? '+98' + mobile.slice(1) :
     mobile.startsWith('0098') ? '+' + mobile.slice(2) : mobile;
 }
