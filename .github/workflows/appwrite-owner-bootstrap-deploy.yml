@@ -14,6 +14,58 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Configure least-privilege scopes while keeping function locked
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-owner-bootstrap
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = {
+            'X-Appwrite-Project': project,
+            'X-Appwrite-Key': key,
+            'Content-Type': 'application/json'
+          };
+          async function main() {
+            const beforeResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
+            const before = await beforeResponse.json().catch(() => ({}));
+            if (!beforeResponse.ok) throw new Error('Cannot inspect function. HTTP ' + beforeResponse.status);
+            if (before.enabled !== false || (before.execute || []).length !== 0) {
+              throw new Error('Function is not locked; refusing deployment.');
+            }
+            const response = await fetch(endpoint + '/functions/' + encodeURIComponent(id), {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({ name: before.name, scopes: ['rows.read', 'rows.write'] })
+            });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!response.ok) throw new Error('Scope update failed. HTTP ' + response.status + ' ' +
+              JSON.stringify({ code: data.code, type: data.type, message: data.message }));
+            if (data.enabled !== false || (data.execute || []).length !== 0 ||
+                !(data.scopes || []).includes('rows.read') ||
+                !(data.scopes || []).includes('rows.write') ||
+                (data.scopes || []).length !== 2) {
+              throw new Error('Least-privilege or locked-state verification failed.');
+            }
+            console.log('FUNCTION_ENABLED=false');
+            console.log('EXECUTE_PERMISSIONS=0');
+            console.log('ROWS_READ_SCOPE=true');
+            console.log('ROWS_WRITE_SCOPE=true');
+          }
+          main().catch(error => {
+            console.error('SCOPE_CONFIGURATION_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
+
       - name: Package function source
         run: |
           cd appwrite/functions/nova-owner-bootstrap
