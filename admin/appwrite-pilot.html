@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171716"><meta name="robots" content="noindex,nofollow">
+<title>پنل آزمایشی امن | NOVA CABINET</title>
+<style>
+:root{color-scheme:dark;--bg:#171716;--panel:#24231f;--gold:#c6a66b;--text:#eee9df;--muted:#aaa394;--line:#ffffff20}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0,#51412a55,transparent 45%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.8}
+main{width:min(1100px,94%);margin:4vh auto}.card{background:#22221f;border:1px solid var(--line);padding:22px;border-radius:12px;margin:14px 0}
+h1,h2{margin-top:0}.tag{color:var(--gold);font-size:12px}p,.muted{color:var(--muted)}
+input,button{font:inherit;padding:11px;border-radius:6px}input{background:#151514;color:var(--text);border:1px solid var(--line);width:100%;margin:8px 0}button{border:1px solid var(--gold);background:var(--gold);color:#171716;font-weight:bold;cursor:pointer}button:disabled{opacity:.5}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.hidden{display:none!important}.status{padding:12px;background:#151514;border-radius:6px;color:var(--muted);margin:12px 0;overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.item{border:1px solid var(--line);border-radius:8px;padding:14px;overflow-wrap:anywhere}.item strong{color:var(--gold)}.table{overflow:auto}table{border-collapse:collapse;width:100%;min-width:650px}td,th{padding:10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}th{color:var(--gold)}
+@media(max-width:600px){.card{padding:15px}}
+</style></head><body><main>
+<div class="row"><div><div class="tag">NOVA CABINET / READ-ONLY PILOT</div><h1>پنل مدیریت امن</h1></div><button id="logout" class="hidden">خروج</button></div>
+<section id="login" class="card"><h2>ورود مالک</h2><p>کد یک‌بارمصرف فقط به ایمیل مالک ارسال می‌شود. این پنل در مرحله آزمایشی فقط‌خواندنی است.</p>
+<label for="email">ایمیل مالک</label><input id="email" type="email" value="Vahiiidk74@gmail.com" readonly>
+<button id="send">ارسال کد ورود</button><div id="otpBox" class="hidden"><label for="otp">کد ۶ رقمی ایمیل</label><input id="otp" inputmode="numeric" maxlength="6"><button id="verify">تأیید و ورود</button></div>
+<div id="loginStatus" class="status">برای شروع، کد ورود را ارسال کن.</div></section>
+<section id="dashboard" class="hidden">
+<div class="card"><div class="row"><h2>وضعیت اتصال</h2><button id="refresh">به‌روزرسانی</button></div><div id="health" class="status">در حال بررسی...</div></div>
+<div class="card"><h2>سفارش‌ها</h2><div id="orders" class="status">در انتظار دریافت...</div></div>
+<div class="card"><h2>درخواست‌های طراحی هوشمند</h2><div id="ai" class="grid"><div class="status">در انتظار دریافت...</div></div></div>
+<div class="card"><h2>تعرفه‌های طراحی</h2><div id="pricing" class="grid"><div class="status">در انتظار دریافت...</div></div></div>
+</section>
+<script type="module">
+import { Client, Account, Functions } from 'https://cdn.jsdelivr.net/npm/appwrite@29.0.0/+esm';
+const ENDPOINT='https://fra.cloud.appwrite.io/v1', PROJECT='6afcbe4e002df50df86f', FUNCTION='nova-admin-api', OWNER='vahiiidk74@gmail.com';
+const client=new Client().setEndpoint(ENDPOINT).setProject(PROJECT), account=new Account(client), functions=new Functions(client);
+const $=id=>document.getElementById(id);let pendingUserId='';
+function say(id,msg){$(id).textContent=msg}
+async function api(action){
+ const jwt=await account.createJWT();client.setJWT(jwt.jwt);
+ const result=await functions.createExecution({functionId:FUNCTION,body:JSON.stringify({action}),async:false,method:'POST'});
+ let data={};try{data=JSON.parse(result.responseBody||'{}')}catch{}
+ if(result.responseStatusCode<200||result.responseStatusCode>=300||data.ok!==true)throw new Error(data.code||'API_FAILED');
+ return data;
+}
+function cell(row,fields){return fields.map(([label,key])=>'<div><strong>'+label+': </strong>'+esc(row[key]??'—')+'</div>').join('')}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function load(){
+ say('health','در حال بررسی مجوز مالک و API...');
+ const h=await api('health');
+ if(h.readOnly!==true)throw new Error('READ_ONLY_GUARD_MISSING');
+ say('health','اتصال برقرار است؛ دسترسی فقط‌خواندنی فعال است. عملیات نوشتن غیرفعال است.');
+ const [o,a,p]=await Promise.all([api('list_orders'),api('list_ai_requests'),api('list_ai_pricing')]);
+ $('orders').innerHTML=o.rows.length?'<div class="table"><table><thead><tr><th>شماره</th><th>مشتری</th><th>عنوان</th><th>وضعیت</th><th>تاریخ</th></tr></thead><tbody>'+o.rows.map(r=>'<tr><td>'+esc(r.order_number||'—')+'</td><td>'+esc(r.customer?.full_name||'—')+'</td><td>'+esc(r.title||'—')+'</td><td>'+esc(r.status||'—')+'</td><td>'+esc(r.created_at||'—')+'</td></tr>').join('')+'</tbody></table></div>':'هنوز سفارشی در Appwrite ثبت نشده است.';
+ $('ai').innerHTML=a.rows.length?a.rows.map(r=>'<div class="item">'+cell(r,[['کد پیگیری','request_number'],['نام','full_name'],['موبایل','mobile'],['سبک','style'],['وضعیت','status'],['وضعیت پرداخت','payment_status'],['فایل ورودی','original_file_name']])+'</div>').join(''):'درخواستی در Appwrite ثبت نشده است.';
+ $('pricing').innerHTML=p.rows.length?p.rows.map(r=>'<div class="item">'+cell(r,[['سبک','style_label'],['کد سبک','style_key'],['قیمت پایه (تومان)','base_price_toman']])+'</div>').join(''):'تعرفه‌ای در Appwrite ثبت نشده است.';
+}
+$('send').onclick=async()=>{const b=$('send');b.disabled=true;try{const t=await account.createEmailToken({userId:'unique()',email:OWNER});pendingUserId=t.userId;$('otpBox').classList.remove('hidden');say('loginStatus','کد ورود به ایمیل مالک ارسال شد.')}catch(e){say('loginStatus','ارسال کد ناموفق بود: '+e.message)}finally{b.disabled=false}};
+$('verify').onclick=async()=>{const b=$('verify');b.disabled=true;try{await account.createSession({userId:pendingUserId,secret:$('otp').value.trim()});const u=await account.get();if(u.email?.toLowerCase()!==OWNER||u.emailVerification!==true)throw new Error('OWNER_VERIFICATION_REQUIRED');$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logout').classList.remove('hidden');await load()}catch(e){say('loginStatus','ورود یا دریافت اطلاعات انجام نشد: '+e.message)}finally{b.disabled=false}};
+$('refresh').onclick=async()=>{try{await load()}catch(e){say('health','خطا: '+e.message)}};
+$('logout').onclick=async()=>{await account.deleteSession({sessionId:'current'}).catch(()=>{});client.setJWT('');$('dashboard').classList.add('hidden');$('logout').classList.add('hidden');$('login').classList.remove('hidden');say('loginStatus','از حساب خارج شدی.')};
+(async()=>{try{const u=await account.get();if(u.email?.toLowerCase()===OWNER&&u.emailVerification===true){$('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logout').classList.remove('hidden');await load()}}catch{}})();
+</script></main></body></html>
