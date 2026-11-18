@@ -1,0 +1,203 @@
+name: Appwrite schema completion
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  complete-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Add missing NOVA CABINET tables and columns
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const databaseId = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const headers = {
+            'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
+            'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
+            'Content-Type': 'application/json'
+          };
+
+          const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+          async function request(method, path, body) {
+            const response = await fetch(endpoint + path, {
+              method,
+              headers,
+              body: body === undefined ? undefined : JSON.stringify(body)
+            });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!response.ok) {
+              if (response.status === 409) return { conflict: true, data };
+              throw new Error(`Appwrite API ${response.status} on ${method} ${path}: ${raw.slice(0, 1000)}`);
+            }
+            return data;
+          }
+
+          async function waitFor(check, label) {
+            for (let i = 0; i < 30; i++) {
+              if (await check()) return;
+              await sleep(2000);
+            }
+            throw new Error(`Timed out waiting for ${label} to become available`);
+          }
+
+          async function listTables() {
+            const result = await request('GET', `/tablesdb/${databaseId}/tables?limit=100`);
+            return result.tables || [];
+          }
+
+          async function listColumns(tableId) {
+            const result = await request('GET', `/tablesdb/${databaseId}/tables/${encodeURIComponent(tableId)}/columns?limit=100`);
+            return result.columns || [];
+          }
+
+          const tables = [
+            {
+              id: 'order_items', name: 'Order Items',
+              columns: [
+                { key: 'order', type: 'relationship', relatedTableId: 'orders', relationType: 'manyToOne', twoWay: false, onDelete: 'cascade' },
+                { key: 'item_name', type: 'varchar', size: 200, required: true },
+                { key: 'specification', type: 'text' },
+                { key: 'quantity', type: 'float', required: false, default: 1 },
+                { key: 'unit', type: 'varchar', size: 30 },
+                { key: 'unit_price', type: 'float' },
+                { key: 'line_total', type: 'float' },
+                { key: 'created_at', type: 'datetime' }
+              ]
+            },
+            {
+              id: 'workshop_requests', name: 'Workshop Requests',
+              columns: [
+                { key: 'order', type: 'relationship', relatedTableId: 'orders', relationType: 'oneToOne', twoWay: false, onDelete: 'cascade' },
+                { key: 'services', type: 'text' },
+                { key: 'sheet_count', type: 'integer' },
+                { key: 'part_count', type: 'integer' },
+                { key: 'dimensions', type: 'text' },
+                { key: 'drawing_file_key', type: 'text' },
+                { key: 'cutting_list_file_key', type: 'text' },
+                { key: 'pricing_mode', type: 'varchar', size: 20, required: false, default: 'quote' },
+                { key: 'created_at', type: 'datetime' }
+              ]
+            },
+            {
+              id: 'order_status_history', name: 'Order Status History',
+              columns: [
+                { key: 'order', type: 'relationship', relatedTableId: 'orders', relationType: 'manyToOne', twoWay: false, onDelete: 'cascade' },
+                { key: 'old_status', type: 'varchar', size: 40 },
+                { key: 'new_status', type: 'varchar', size: 40, required: true },
+                { key: 'note', type: 'text' },
+                { key: 'changed_by', type: 'relationship', relatedTableId: 'app_users', relationType: 'manyToOne', twoWay: false, onDelete: 'setNull' },
+                { key: 'changed_at', type: 'datetime' }
+              ]
+            },
+            {
+              id: 'order_files', name: 'Order Files',
+              columns: [
+                { key: 'order', type: 'relationship', relatedTableId: 'orders', relationType: 'manyToOne', twoWay: false, onDelete: 'cascade' },
+                { key: 'uploaded_by', type: 'relationship', relatedTableId: 'app_users', relationType: 'manyToOne', twoWay: false, onDelete: 'setNull' },
+                { key: 'file_key', type: 'text', required: true },
+                { key: 'original_name', type: 'varchar', size: 255, required: true },
+                { key: 'mime_type', type: 'varchar', size: 120 },
+                { key: 'file_size_bytes', type: 'bigint' },
+                { key: 'created_at', type: 'datetime' }
+              ]
+            },
+            {
+              id: 'audit_log', name: 'Audit Log',
+              columns: [
+                { key: 'actor', type: 'relationship', relatedTableId: 'app_users', relationType: 'manyToOne', twoWay: false, onDelete: 'setNull' },
+                { key: 'action', type: 'varchar', size: 100, required: true },
+                { key: 'entity_type', type: 'varchar', size: 80, required: true },
+                { key: 'entity_id', type: 'varchar', size: 64 },
+                { key: 'details', type: 'text' },
+                { key: 'ip_address', type: 'varchar', size: 45 },
+                { key: 'created_at', type: 'datetime' }
+              ]
+            }
+          ];
+
+          async function main() {
+            if (!process.env.APPWRITE_API_KEY) throw new Error('Missing GitHub Actions secret APPWRITE_API_KEY');
+
+            let existingTables = await listTables();
+            for (const spec of tables) {
+              let table = existingTables.find(t => t.$id === spec.id);
+              if (!table) {
+                const created = await request('POST', `/tablesdb/${databaseId}/tables`, {
+                  tableId: spec.id, name: spec.name, permissions: [], rowSecurity: true, enabled: true, columns: [], indexes: []
+                });
+                if (created.conflict) {
+                  console.log(`Table already exists: ${spec.id}`);
+                } else {
+                  console.log(`Created table: ${spec.id}`);
+                }
+                await waitFor(async () => (await listTables()).some(t => t.$id === spec.id), `table ${spec.id}`);
+              } else {
+                console.log(`Table exists: ${spec.id}`);
+              }
+
+              let columns = await listColumns(spec.id);
+              for (const col of spec.columns) {
+                if (columns.some(c => c.key === col.key)) {
+                  console.log(`Column exists: ${spec.id}.${col.key}`);
+                  continue;
+                }
+                let route = col.type;
+                const body = { ...col };
+                delete body.type;
+                if (col.type === 'relationship') {
+                  route = 'relationship';
+                  body.type = col.relationType;
+                  body.relatedTableId = col.relatedTableId;
+                  body.twoWay = col.twoWay;
+                  body.key = col.key;
+                  body.onDelete = col.onDelete;
+                  delete body.relationType;
+                  delete body.relatedTableId;
+                  delete body.twoWay;
+                }
+                const result = await request('POST', `/tablesdb/${databaseId}/tables/${encodeURIComponent(spec.id)}/columns/${route}`, body);
+                if (result.conflict) {
+                  console.log(`Column already exists: ${spec.id}.${col.key}`);
+                } else {
+                  console.log(`Requested column: ${spec.id}.${col.key}`);
+                }
+                await waitFor(async () => {
+                  const current = await listColumns(spec.id);
+                  return current.some(c => c.key === col.key && c.status === 'available');
+                }, `column ${spec.id}.${col.key}`);
+                columns = await listColumns(spec.id);
+              }
+            }
+
+            const orderColumns = await listColumns('orders');
+            if (!orderColumns.some(c => c.key === 'assigned_to')) {
+              await request('POST', `/tablesdb/${databaseId}/tables/orders/columns/relationship`, {
+                key: 'assigned_to', relatedTableId: 'app_users', type: 'manyToOne', twoWay: false, onDelete: 'setNull'
+              });
+              await waitFor(async () => (await listColumns('orders')).some(c => c.key === 'assigned_to' && c.status === 'available'), 'orders.assigned_to');
+              console.log('Added relationship: orders.assigned_to');
+            } else {
+              console.log('Column exists: orders.assigned_to');
+            }
+
+            console.log('Schema completion finished. No rows were created, changed, or deleted.');
+          }
+
+          main().catch(error => {
+            console.error(error.message);
+            process.exit(1);
+          });
+          NODE
