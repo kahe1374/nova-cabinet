@@ -17,7 +17,7 @@ jobs:
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
           FUNCTION_ID: nova-owner-bootstrap
-          DEPLOYMENT_ID: 6afde3ea786be85fafc6
+          DEPLOYMENT_ID: 6afde8267a17339d4a8f
         run: |
           node <<'NODE'
           const endpoint = process.env.APPWRITE_ENDPOINT;
