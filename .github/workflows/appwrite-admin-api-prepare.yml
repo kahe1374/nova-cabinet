@@ -60,7 +60,8 @@ jobs:
             } else if (!response.ok) {
               throw new Error('Function lookup failed HTTP ' + response.status);
             }
-            const safeExecute = (current.execute || []).length === 0;
+            const execute = current.execute || [];
+            const safeExecute = execute.length === 1 && execute[0] === 'user:6afdf252002cc39270ab';
             const scopes = current.scopes || [];
             const isReadOnly = scopes.length === 1 && scopes.includes('rows.read');
             const isTargetScope = scopes.length === 2 && ['rows.read', 'rows.write'].every(scope => scopes.includes(scope));
@@ -123,7 +124,8 @@ jobs:
             const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key };
             const check = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
             const fn = await check.json().catch(() => ({}));
-            if (!check.ok || fn.enabled !== false || (fn.execute || []).length !== 0 ||
+            if (!check.ok || fn.enabled !== false || (fn.execute || []).length !== 1 ||
+                fn.execute[0] !== 'user:6afdf252002cc39270ab' ||
                 (fn.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (fn.scopes || []).includes(scope))) {
               throw new Error('Function safety state changed; deployment aborted.');
             }
@@ -149,7 +151,8 @@ jobs:
             if (!['ready','active'].includes(state.status)) throw new Error('Appwrite build did not finish in time.');
             const finalResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
             const finalFn = await finalResponse.json().catch(() => ({}));
-            if (!finalResponse.ok || finalFn.enabled !== false || (finalFn.execute || []).length !== 0 ||
+            if (!finalResponse.ok || finalFn.enabled !== false || (finalFn.execute || []).length !== 1 ||
+                finalFn.execute[0] !== 'user:6afdf252002cc39270ab' ||
                 (finalFn.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (finalFn.scopes || []).includes(scope))) {
               throw new Error('Final locked-state verification failed.');
             }
