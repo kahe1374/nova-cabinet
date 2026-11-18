@@ -41,7 +41,8 @@ jobs:
           async function main() {
             const current = await request('/functions/'+encodeURIComponent(id));
             if (current.execute?.length !== 1 || current.execute[0] !== owner) throw new Error('Unexpected execute permissions; refusing activation.');
-            if (current.enabled !== false) throw new Error('Function is not disabled before pilot activation.');
+            if (current.enabled === true && ((current.scopes||[]).length !== 1 || current.scopes[0] !== 'rows.read')) throw new Error('Enabled function has unexpected scopes; refusing deployment.');
+            if (current.enabled !== true && current.enabled !== false) throw new Error('Function state is not safely verifiable.');
             if (!(current.scopes||[]).includes('rows.read')) throw new Error('Function lacks rows.read scope.');
             const tar = require('node:child_process').execFileSync('tar',['-czf','-','-C','appwrite/functions/nova-admin-api','.']);
             const form = new FormData();
