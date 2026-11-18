@@ -1,0 +1,48 @@
+name: Appwrite owner provisioning permissions check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-row-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check owner profile row-read access without changing data
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const headers = {
+            'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
+            'X-Appwrite-Key': process.env.APPWRITE_API_KEY
+          };
+          async function main() {
+            if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY');
+            const path = '/tablesdb/' + db + '/tables/app_users/rows?limit=1';
+            const response = await fetch(endpoint + path, { headers });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            console.log('APP_USERS_ROW_READ_HTTP=' + response.status);
+            if (!response.ok) {
+              console.log('APPWRITE_ERROR=' + JSON.stringify({
+                code: data.code, type: data.type, message: data.message
+              }));
+              process.exit(1);
+            }
+            console.log('ROW_READ_SCOPE_CONFIRMED=true');
+            console.log('ROW_COUNT_RETURNED=' + ((data.rows || []).length));
+            console.log('No row values or personal data were logged.');
+          }
+          main().catch(e => { console.error('CHECK_FAILED=' + e.message); process.exit(1); });
+          NODE
