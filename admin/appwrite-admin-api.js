@@ -3,6 +3,7 @@ import { Client, Account, Functions } from 'https://cdn.jsdelivr.net/npm/appwrit
 const ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
 const PROJECT_ID = '6afcbe4e002df50df86f';
 const FUNCTION_ID = 'nova-admin-api';
+const OWNER_EMAIL = 'vahiiidk74@gmail.com';
 
 export function createNovaAdminApi() {
   const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
@@ -11,13 +12,13 @@ export function createNovaAdminApi() {
   let ready = false;
 
   async function authenticate() {
+    // Appwrite SDK forwards the authenticated session to function executions.
+    // Do not create a separate JWT: the pilot verified that this extra request
+    // is unnecessary and can fail browser CORS checks.
     const user = await account.get();
-    if (!user.email || user.email.toLowerCase() !== 'vahiiidk74@gmail.com' || user.emailVerification !== true) {
+    if (!user.email || user.email.toLowerCase() !== OWNER_EMAIL || user.emailVerification !== true) {
       throw new Error('OWNER_VERIFICATION_REQUIRED');
     }
-    const token = await account.createJWT();
-    if (!token || !token.jwt) throw new Error('OWNER_JWT_UNAVAILABLE');
-    client.setJWT(token.jwt);
     ready = true;
     return { id: user.$id, email: user.email };
   }
@@ -43,10 +44,7 @@ export function createNovaAdminApi() {
     return payload;
   }
 
-  function clear() {
-    ready = false;
-    client.setJWT('');
-  }
+  function clear() { ready = false; }
 
   return Object.freeze({ authenticate, call, clear });
 }
