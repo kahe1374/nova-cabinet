@@ -12,7 +12,7 @@ function load(fetchImpl, extraEnv = {}) {
   return module.exports;
 }
 function response() {
-  return { status: 200, body: null, json(body, status = 200) { this.body = body; this.status = status; return this; } };
+  return { status: 200, body: null, headers: {}, json(body, status = 200, headers = {}) { this.body = body; this.status = status; this.headers = headers; return this; } };
 }
 
 test('rejects non-POST requests', async () => {
@@ -126,4 +126,31 @@ test('assignment action uses strict row identifier validation', () => {
 });
 test('read-only health does not advertise write capabilities', () => {
   assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing'\]/);
+});
+
+
+test('answers the approved GitHub Pages CORS preflight without authentication', async () => {
+  const handler = load(async () => { throw new Error('preflight must not contact Appwrite'); });
+  const res = response();
+  await handler({ req: { method: 'OPTIONS', headers: { origin: 'https://kahe1374.github.io' } }, res, log() {}, error() {} });
+  assert.equal(res.status, 204);
+  assert.equal(res.headers['Access-Control-Allow-Origin'], 'https://kahe1374.github.io');
+  assert.equal(res.headers['Access-Control-Allow-Methods'], 'POST, OPTIONS');
+  assert.match(res.headers['Access-Control-Allow-Headers'], /X-Appwrite-User-JWT/i);
+});
+
+test('rejects unapproved CORS origins', async () => {
+  const handler = load(async () => { throw new Error('disallowed origin must not contact Appwrite'); });
+  const res = response();
+  await handler({ req: { method: 'OPTIONS', headers: { origin: 'https://evil.example' } }, res, log() {}, error() {} });
+  assert.equal(res.status, 403);
+  assert.equal(res.body.code, 'ORIGIN_NOT_ALLOWED');
+});
+
+test('includes CORS headers on allowed-origin authentication errors', async () => {
+  const handler = load(async () => { throw new Error('missing JWT must not contact Appwrite'); });
+  const res = response();
+  await handler({ req: { method: 'POST', headers: { origin: 'https://kahe1374.github.io' }, body: {} }, res, log() {}, error() {} });
+  assert.equal(res.status, 401);
+  assert.equal(res.headers['Access-Control-Allow-Origin'], 'https://kahe1374.github.io');
 });
