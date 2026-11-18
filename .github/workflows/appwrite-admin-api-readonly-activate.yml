@@ -25,7 +25,6 @@ jobs:
           OWNER_ID: user:6afdf252002cc39270ab
         run: |
           node <<'NODE'
-          const fs = require('node:fs');
           const endpoint = process.env.APPWRITE_ENDPOINT;
           const project = process.env.APPWRITE_PROJECT_ID;
           const key = process.env.APPWRITE_API_KEY;
@@ -44,7 +43,6 @@ jobs:
             if (current.execute?.length !== 1 || current.execute[0] !== owner) throw new Error('Unexpected execute permissions; refusing activation.');
             if (current.enabled !== false) throw new Error('Function is not disabled before pilot activation.');
             if (!(current.scopes||[]).includes('rows.read')) throw new Error('Function lacks rows.read scope.');
-            const source = fs.readFileSync('appwrite/functions/nova-admin-api/index.js');
             const tar = require('node:child_process').execFileSync('tar',['-czf','-','-C','appwrite/functions/nova-admin-api','.']);
             const form = new FormData();
             form.append('code',new Blob([tar],{type:'application/gzip'}),'nova-admin-api.tar.gz');
@@ -73,7 +71,11 @@ jobs:
             await request('/functions/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify(payload)});
             const final=await request('/functions/'+encodeURIComponent(id));
             if(final.enabled!==true || final.execute?.length!==1 || final.execute[0]!==owner ||
-              final.scopes?.length!==1 || final.scopes[0]!=='rows.read' || final.activeDeploymentId!==deployment.$id) {
+              final.scopes?.length!==1 || final.scopes[0]!=='rows.read' || final.deploymentId!==deployment.$id) {
+              console.log('VERIFY_ENABLED='+final.enabled);
+              console.log('VERIFY_EXECUTE_COUNT='+(final.execute||[]).length);
+              console.log('VERIFY_SCOPES='+(final.scopes||[]).join(','));
+              console.log('VERIFY_DEPLOYMENT_MATCH='+(final.deploymentId===deployment.$id));
               throw new Error('Final read-only activation verification failed.');
             }
             console.log('READ_ONLY_PILOT_ENABLED=true');
