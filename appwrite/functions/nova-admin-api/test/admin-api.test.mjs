@@ -7,7 +7,7 @@ const source = fs.readFileSync(new URL('../appwrite/functions/nova-admin-api/ind
 function load(fetchImpl) {
   const module = { exports: {} };
   vm.runInNewContext(source.replace('export default async', 'module.exports = async'), {
-    module, fetch: fetchImpl, process: { env: {} }, URLSearchParams, URL, Map, Set, Date, JSON, String, Number
+    module, fetch: fetchImpl, process: { env: { APPWRITE_FUNCTION_API_KEY: 'test-key' } }, URLSearchParams, URL, Map, Set, Date, JSON, String, Number
   });
   return module.exports;
 }
@@ -35,8 +35,8 @@ test('rejects invalid Appwrite sessions', async () => {
   const handler = load(async () => ({ ok: false, status: 401 }));
   const res = response();
   await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'invalid' }, body: {} }, res, log() {}, error() {} });
-  assert.equal(res.status, 503); // Function API key is required before session lookup.
-  assert.equal(res.body.code, 'FUNCTION_KEY_UNAVAILABLE');
+  assert.equal(res.status, 401);
+  assert.equal(res.body.code, 'INVALID_SESSION');
 });
 
 test('keeps audit-write failures explicitly marked as partial writes', () => {
