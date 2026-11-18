@@ -1,0 +1,131 @@
+name: Prepare Nova admin API (locked deployment)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-admin-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate admin API source
+        run: node --check appwrite/functions/nova-admin-api/index.js
+
+      - name: Create or verify a disabled, owner-only Appwrite Function
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-admin-api
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key, 'Content-Type': 'application/json' };
+          async function main() {
+            let response = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
+            let current = await response.json().catch(() => ({}));
+            if (response.status === 404) {
+              response = await fetch(endpoint + '/functions', {
+                method: 'POST', headers,
+                body: JSON.stringify({
+                  functionId: id,
+                  name: 'NOVA Admin API (read-only pilot)',
+                  runtime: 'node-22.0',
+                  execute: [],
+                  events: [],
+                  schedule: '',
+                  timeout: 30,
+                  enabled: false,
+                  logging: true,
+                  entrypoint: 'index.js',
+                  commands: '',
+                  scopes: ['rows.read']
+                })
+              });
+              current = await response.json().catch(() => ({}));
+              if (!response.ok) throw new Error('Function creation failed HTTP ' + response.status + ' ' + JSON.stringify({code:current.code,type:current.type,message:current.message}));
+            } else if (!response.ok) {
+              throw new Error('Function lookup failed HTTP ' + response.status);
+            }
+            const safeExecute = (current.execute || []).length === 0;
+            if (current.enabled !== false || !safeExecute || (current.scopes || []).length !== 1 || !(current.scopes || []).includes('rows.read')) {
+              throw new Error('Existing function is not disabled with empty execute access and rows.read-only scope. Refusing to modify it.');
+            }
+            console.log('FUNCTION_ID=' + id);
+            console.log('FUNCTION_DISABLED=true');
+            console.log('EXECUTE_ACCESS_EMPTY=true');
+            console.log('FUNCTION_SCOPE_ROWS_READ_ONLY=true');
+          }
+          main().catch(e => { console.error('PREPARATION_FAILED:', e.message); process.exit(1); });
+          NODE
+
+      - name: Package source
+        run: |
+          cd appwrite/functions/nova-admin-api
+          tar -czf "$RUNNER_TEMP/nova-admin-api.tar.gz" .
+
+      - name: Upload an inactive deployment
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-admin-api
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          async function main() {
+            const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key };
+            const check = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
+            const fn = await check.json().catch(() => ({}));
+            if (!check.ok || fn.enabled !== false || (fn.execute || []).length !== 0 ||
+                (fn.scopes || []).length !== 1 || !(fn.scopes || []).includes('rows.read')) {
+              throw new Error('Function safety state changed; deployment aborted.');
+            }
+            const form = new FormData();
+            form.append('code', new Blob([fs.readFileSync(process.env.RUNNER_TEMP + '/nova-admin-api.tar.gz')], { type: 'application/gzip' }), 'nova-admin-api.tar.gz');
+            form.append('activate', 'false');
+            form.append('entrypoint', 'index.js');
+            form.append('commands', '');
+            const upload = await fetch(endpoint + '/functions/' + encodeURIComponent(id) + '/deployments', { method: 'POST', headers, body: form });
+            const data = await upload.json().catch(() => ({}));
+            if (!upload.ok || !data.$id) throw new Error('Deployment upload failed HTTP ' + upload.status + ' ' + JSON.stringify({code:data.code,type:data.type,message:data.message}));
+            console.log('DEPLOYMENT_ID=' + data.$id);
+            let state = data;
+            for (let n=1;n<=18;n++) {
+              const r = await fetch(endpoint + '/functions/' + encodeURIComponent(id) + '/deployments/' + encodeURIComponent(data.$id), { headers });
+              state = await r.json().catch(() => ({}));
+              if (!r.ok) throw new Error('Cannot inspect deployment status.');
+              console.log('BUILD_STATUS=' + state.status);
+              if (['ready','active','failed'].includes(state.status)) break;
+              await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+            if (state.status === 'failed') throw new Error('Appwrite build failed.');
+            if (!['ready','active'].includes(state.status)) throw new Error('Appwrite build did not finish in time.');
+            const finalResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
+            const finalFn = await finalResponse.json().catch(() => ({}));
+            if (!finalResponse.ok || finalFn.enabled !== false || (finalFn.execute || []).length !== 0 ||
+                (finalFn.scopes || []).length !== 1 || !(finalFn.scopes || []).includes('rows.read')) {
+              throw new Error('Final locked-state verification failed.');
+            }
+            console.log('DEPLOYMENT_BUILD_COMPLETE=true');
+            console.log('FUNCTION_REMAINS_DISABLED=true');
+            console.log('FUNCTION_EXECUTE_ACCESS_EMPTY=true');
+            console.log('NO_PRODUCTION_ADMIN_SWITCH=true');
+          }
+          main().catch(e => { console.error('DEPLOYMENT_FAILED:', e.message); process.exit(1); });
+          NODE
