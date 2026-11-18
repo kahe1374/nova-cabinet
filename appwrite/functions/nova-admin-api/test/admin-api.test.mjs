@@ -157,7 +157,7 @@ test('includes CORS headers on allowed-origin authentication errors', async () =
 
 
 test('requires the execution-scoped ephemeral key header', async () => {
-  const handler = load(async () => { throw new Error('must not contact Appwrite without ephemeral key'); });
+  const handler = load(async () => { throw new Error('must not contact Appwrite without ephemeral key'); }, { APPWRITE_FUNCTION_API_KEY: '' });
   const res = response();
   await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: {} }, res, log() {}, error() {} });
   assert.equal(res.status, 503);
@@ -271,4 +271,20 @@ test('public order idempotency returns the existing order and removes the duplic
   assert.equal(res.body.code, 'ORDER_ALREADY_RECEIVED');
   assert.equal(res.body.duplicate, true);
   assert.equal(calls.at(-1).method, 'GET');
+});
+
+test('public intake applies a per-runtime rate limit before any database writes', async () => {
+  let writes = 0;
+  const handler = load(async () => { writes++; return appwriteResponse({ $id: 'unexpected' }); }, { NOVA_PUBLIC_ORDER_INTAKE_ENABLED: 'true' });
+  for (let i = 0; i < 6; i++) {
+    const res = response();
+    const body = { ...publicOrder, idempotency_key: '12345678-1234-4234-8234-' + String(i).padStart(12, '0') };
+    await handler({ req: { method: 'POST', headers: { ...publicHeaders, 'x-forwarded-for': '203.0.113.10' }, body }, res, log() {}, error() {} });
+    if (i < 5) assert.equal(res.status, 502);
+    else {
+      assert.equal(res.status, 429);
+      assert.equal(res.body.code, 'PUBLIC_RATE_LIMITED');
+    }
+  }
+  assert.equal(writes, 5);
 });
