@@ -45,3 +45,83 @@ test('keeps audit-write failures explicitly marked as partial writes', () => {
   assert.match(source, /PRICING_SAVED_AUDIT_FAILED/);
   assert.match(source, /price_acceptance_token_hash, \.\.\.safeRow/);
 });
+
+
+function appwriteResponse(data, ok = true, status = 200) {
+  return {
+    ok, status,
+    async json() { return data; },
+    async text() { return JSON.stringify(data); }
+  };
+}
+function ownerFetch(extra = async () => appwriteResponse({ rows: [], total: 0 })) {
+  let call = 0;
+  return async (url) => {
+    call++;
+    if (String(url).endsWith('/account')) {
+      return appwriteResponse({ $id: 'owner-id', email: 'Vahiiidk74@gmail.com', emailVerification: true });
+    }
+    if (String(url).includes('/tables/app_users/rows/owner-id')) {
+      return appwriteResponse({ $id: 'owner-id', role: 'owner_admin', is_active: true, email: 'Vahiiidk74@gmail.com' });
+    }
+    return extra(url, call);
+  };
+}
+
+test('rejects an account that is not the verified owner', async () => {
+  const handler = load(async (url) => appwriteResponse({
+    $id: 'other-id', email: 'other@example.com', emailVerification: true
+  }));
+  const res = response();
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: {} }, res, log() {}, error() {} });
+  assert.equal(res.status, 403);
+  assert.equal(res.body.code, 'OWNER_VERIFICATION_REQUIRED');
+});
+
+test('rejects an inactive or incorrectly assigned owner row', async () => {
+  const handler = load(async (url) => {
+    if (String(url).endsWith('/account')) return appwriteResponse({
+      $id: 'owner-id', email: 'Vahiiidk74@gmail.com', emailVerification: true
+    });
+    return appwriteResponse({ $id: 'owner-id', role: 'owner_admin', is_active: false, email: 'Vahiiidk74@gmail.com' });
+  });
+  const res = response();
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: {} }, res, log() {}, error() {} });
+  assert.equal(res.status, 403);
+  assert.equal(res.body.code, 'OWNER_ACCESS_DENIED');
+});
+
+test('rejects malformed and oversized request bodies after owner verification', async () => {
+  for (const [body, expected] of [['{bad json', 'INVALID_JSON'], ['x'.repeat(16385), 'REQUEST_TOO_LARGE'], [[], 'INVALID_REQUEST_BODY']]) {
+    const handler = load(ownerFetch());
+    const res = response();
+    await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body }, res, log() {}, error() {} });
+    assert.equal(res.body.code, expected);
+  }
+});
+
+test('rejects unknown actions and invalid pricing without writing data', async () => {
+  let writes = 0;
+  const fetchImpl = ownerFetch(async (url, call) => {
+    if (String(url).includes('/rows') && !String(url).includes('/app_users/')) writes++;
+    return appwriteResponse({ rows: [], total: 0 });
+  });
+  for (const body of [{ action: 'not_a_real_action' }, { action: 'upsert_ai_pricing', style_key: 'modern', style_label: 'Modern', base_price_toman: 1 }]) {
+    const handler = load(fetchImpl);
+    const res = response();
+    await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body }, res, log() {}, error() {} });
+    assert.equal(res.status, 400);
+  }
+  assert.equal(writes, 0);
+});
+
+test('loads AI requests without exposing price acceptance token hashes', async () => {
+  const handler = load(ownerFetch(async () => appwriteResponse({
+    rows: [{ $id: 'request-1', request_number: 'AI-1', price_acceptance_token_hash: 'must-not-leak' }],
+    total: 1
+  })));
+  const res = response();
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: { action: 'list_ai_requests' } }, res, log() {}, error() {} });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.rows[0].price_acceptance_token_hash, undefined);
+});
