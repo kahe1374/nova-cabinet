@@ -200,10 +200,16 @@ hr{border:0;border-top:1px solid var(--line);margin:22px 0}.warning{color:#e6c58
     try {
       await account.updateEmailVerification({ userId, secret });
       history.replaceState({}, document.title, window.location.pathname);
-      const user = await refreshAccount();
-      say(user.emailVerification === true ? 'ایمیل با موفقیت تأیید شد. شناسه حساب را نگه دار؛ مرحله بعد، اعطای مجوز محدود به همین حساب است.' : 'لینک پردازش شد؛ وضعیت حساب را دوباره بررسی کن.');
+      try {
+        const user = await refreshAccount();
+        say(user.emailVerification === true ? 'ایمیل با موفقیت تأیید شد. اکنون می‌توانی مرحله ثبت مالک را انجام دهی.' : 'لینک پردازش شد؛ وضعیت حساب را دوباره بررسی کن.');
+      } catch (_) {
+        authPanel.classList.remove('hidden');
+        accountPanel.classList.add('hidden');
+        say('ایمیل با موفقیت تأیید شد. حالا با همان ایمیل و رمز عبور وارد شو تا راه‌اندازی ادامه پیدا کند.');
+      }
     } catch (error) {
-      say('تأیید ایمیل انجام نشد. ممکن است لینک منقضی شده یا نشست ورود بسته شده باشد؛ دوباره وارد شو و ایمیل تازه درخواست کن.', 'error');
+      say('تأیید ایمیل انجام نشد. ممکن است لینک منقضی شده باشد؛ وارد حساب شو و ایمیل تازه درخواست کن.', 'error');
     }
     return true;
   }
