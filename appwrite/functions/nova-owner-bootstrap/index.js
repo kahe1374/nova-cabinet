@@ -155,8 +155,9 @@ export default async ({ req, res, log, error }) => {
       }
     );
 
+    let lockAcquired = lockResult.response.ok;
     if (lockResult.response.status === 409) {
-      // Allow safe retries by the same verified account, but never another account.
+      // A matching lock belongs to this verified account and permits a safe retry.
       const existingLock = await request(
         '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows/' + encodeURIComponent(lockId),
         'X-Appwrite-Key',
@@ -169,6 +170,7 @@ export default async ({ req, res, log, error }) => {
           existingLock.data.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
         return json(res, { ok: false, code: 'BOOTSTRAP_LOCKED' }, 409);
       }
+      lockAcquired = true;
       const rowsAfterLockConflict = await listAllAppUsers(functionKey);
       const priorOwner = rowsAfterLockConflict.find((row) => row.role === 'owner_admin');
       if (priorOwner) {
@@ -178,7 +180,7 @@ export default async ({ req, res, log, error }) => {
         return json(res, { ok: false, code: 'OWNER_ALREADY_EXISTS' }, 409);
       }
     }
-    if (!lockResult.response.ok) {
+    if (!lockAcquired) {
       error('Could not acquire the one-time owner bootstrap lock. HTTP ' + lockResult.response.status);
       return json(res, { ok: false, code: 'BOOTSTRAP_LOCK_UNAVAILABLE' }, 503);
     }
