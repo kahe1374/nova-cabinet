@@ -51,11 +51,11 @@ jobs:
               console.log('APPWRITE_ERROR_TYPE=' + (row.type || 'unknown'));
               throw new Error('Could not verify owner row.');
             }
-            const data = row.data || {};
             const exists = row.$id === id;
-            const role = data.role === 'owner_admin';
-            const active = data.is_active === true;
-            const email = typeof data.email === 'string' && data.email.toLowerCase() === process.env.OWNER_EMAIL.toLowerCase();
+            // Appwrite TablesDB returns row columns at the top level.
+            const role = row.role === 'owner_admin';
+            const active = row.is_active === true;
+            const email = typeof row.email === 'string' && row.email.toLowerCase() === process.env.OWNER_EMAIL.toLowerCase();
             console.log('OWNER_ROW_EXISTS=' + exists);
             console.log('OWNER_ROLE_CORRECT=' + role);
             console.log('OWNER_ACTIVE=' + active);
