@@ -93,7 +93,7 @@ export default async ({ req, res, log, error }) => {
       return reply(res, {
         ok: true,
         code: 'OWNER_AUTHENTICATED',
-        capabilities: ['health', 'list_orders'],
+        capabilities: ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing'],
         readOnly: true
       });
     }
@@ -114,6 +114,36 @@ export default async ({ req, res, log, error }) => {
         rows: result,
         total: orders.total,
         truncated: orders.total > result.length
+      });
+    }
+
+
+    if (action === 'list_ai_requests') {
+      const result = await listRows('ai_design_requests', key, 500);
+      const rows = result.rows
+        .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+        .map((row) => {
+          const { price_acceptance_token_hash, ...safeRow } = row;
+          return safeRow;
+        });
+      return reply(res, {
+        ok: true,
+        code: 'AI_REQUESTS_LOADED',
+        rows,
+        total: result.total,
+        truncated: result.total > rows.length
+      });
+    }
+
+    if (action === 'list_ai_pricing') {
+      const result = await listRows('ai_design_pricing', key, 200);
+      const rows = result.rows.sort((a, b) => String(a.style_key || '').localeCompare(String(b.style_key || '')));
+      return reply(res, {
+        ok: true,
+        code: 'AI_PRICING_LOADED',
+        rows,
+        total: result.total,
+        truncated: result.total > rows.length
       });
     }
 
