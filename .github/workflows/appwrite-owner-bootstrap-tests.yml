@@ -1,0 +1,25 @@
+name: Test owner bootstrap security (mock only)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'appwrite/functions/nova-owner-bootstrap/**'
+      - '.github/workflows/appwrite-owner-bootstrap-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  mock-security-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated mock tests
+        run: node --test appwrite/functions/nova-owner-bootstrap/test.mjs
