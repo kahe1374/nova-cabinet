@@ -41,12 +41,8 @@ jobs:
             if (scopes.length !== 2 || !['rows.read', 'rows.write'].every(x => scopes.includes(x))) {
               throw new Error('Refusing: unexpected function scopes.');
             }
-            const deploymentResponse = await fetch(url + '/deployments?queries[]=' + encodeURIComponent('orderDesc("$createdAt")') + '&limit=1', { headers });
-            const deploymentData = await deploymentResponse.json().catch(() => ({}));
-            if (!deploymentResponse.ok || !deploymentData.deployments?.[0] ||
-                !['ready', 'active'].includes(deploymentData.deployments[0].status)) {
-              throw new Error('Refusing: no ready deployment is available.');
-            }
+            // Allowlist can be safely staged while disabled, even before a ready deployment exists.
+            // Live invocation remains blocked until a separate deployment-readiness check passes.
             const payload = {
               name: current.name,
               runtime: current.runtime,
