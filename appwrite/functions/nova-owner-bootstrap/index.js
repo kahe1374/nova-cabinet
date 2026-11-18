@@ -5,6 +5,8 @@ const TABLE_ID = 'app_users';
 const OWNER_EMAIL = 'Vahiiidk74@gmail.com';
 const OWNER_NAME = 'Vahidkahe';
 const OWNER_MOBILE = '09223685532';
+const PAGE_SIZE = 100;
+const MAX_ROWS_TO_SCAN = 10000;
 
 function json(res, payload, status = 200) {
   return res.json(payload, status);
@@ -35,6 +37,61 @@ async function request(path, authHeader, authValue, options = {}) {
     throw new Error('Appwrite returned an unreadable response.');
   }
   return { response, data };
+}
+
+// Read every app_users page so a pre-existing owner row cannot be overlooked
+// because of a default page limit or an unindexed role query.
+async function listAllAppUsers(functionKey) {
+  const allRows = [];
+  let offset = 0;
+  let expectedTotal = null;
+
+  while (true) {
+    const params = new URLSearchParams({
+      limit: String(PAGE_SIZE),
+      offset: String(offset)
+    });
+    const result = await request(
+      '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows?' + params.toString(),
+      'X-Appwrite-Key',
+      functionKey
+    );
+
+    if (!result.response.ok || !Array.isArray(result.data.rows) ||
+        !Number.isInteger(result.data.total)) {
+      throw new Error('Could not safely enumerate app_users rows.');
+    }
+
+    if (expectedTotal === null) {
+      expectedTotal = result.data.total;
+      if (expectedTotal > MAX_ROWS_TO_SCAN) {
+        throw new Error('app_users exceeds the safe bootstrap scan limit.');
+      }
+    } else if (result.data.total !== expectedTotal) {
+      throw new Error('app_users changed during the bootstrap safety scan.');
+    }
+
+    allRows.push(...result.data.rows);
+    if (allRows.length >= expectedTotal) break;
+    if (result.data.rows.length === 0 || allRows.length > MAX_ROWS_TO_SCAN) {
+      throw new Error('app_users pagination was incomplete.');
+    }
+    offset += result.data.rows.length;
+  }
+
+  if (allRows.length !== expectedTotal) {
+    throw new Error('app_users scan did not return every row.');
+  }
+  return allRows;
+}
+
+function isValidOwnerRow(row, accountId) {
+  return row &&
+    row.$id === accountId &&
+    row.role === 'owner_admin' &&
+    typeof row.email === 'string' &&
+    row.email.toLowerCase() === OWNER_EMAIL.toLowerCase() &&
+    row.is_active === true;
 }
 
 export default async ({ req, res, log, error }) => {
@@ -73,27 +130,20 @@ export default async ({ req, res, log, error }) => {
       return json(res, { ok: false, code: 'INVALID_ACCOUNT_ID' }, 400);
     }
 
-    // Server-side ephemeral key is restricted by this function's rows.read/rows.write scopes.
-    const rowId = encodeURIComponent(account.$id);
-    const rowPath =
-      '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows/' + rowId;
+    // Fail closed if the full owner table cannot be inspected.
+    const rows = await listAllAppUsers(functionKey);
+    const existingOwner = rows.find((row) => row.role === 'owner_admin');
 
-    const existing = await request(rowPath, 'X-Appwrite-Key', functionKey);
-    if (existing.response.ok) {
-      const row = existing.data;
-      if (
-        row.role === 'owner_admin' &&
-        row.email &&
-        row.email.toLowerCase() === OWNER_EMAIL.toLowerCase() &&
-        row.is_active === true
-      ) {
+    if (existingOwner) {
+      if (isValidOwnerRow(existingOwner, account.$id)) {
         return json(res, { ok: true, code: 'OWNER_ALREADY_BOOTSTRAPPED' }, 200);
       }
-      return json(res, { ok: false, code: 'ACCOUNT_ROW_CONFLICT' }, 409);
+      return json(res, { ok: false, code: 'OWNER_ALREADY_EXISTS' }, 409);
     }
-    if (existing.response.status !== 404) {
-      error('Owner bootstrap could not safely inspect account row. HTTP ' + existing.response.status);
-      return json(res, { ok: false, code: 'ROW_CHECK_FAILED' }, 503);
+
+    const existingAccountRow = rows.find((row) => row.$id === account.$id);
+    if (existingAccountRow) {
+      return json(res, { ok: false, code: 'ACCOUNT_ROW_CONFLICT' }, 409);
     }
 
     const userRole = 'user:' + account.$id;
@@ -128,16 +178,15 @@ export default async ({ req, res, log, error }) => {
       return json(res, { ok: true, code: 'OWNER_BOOTSTRAPPED' }, 201);
     }
 
-    // If two valid requests race, verify the deterministic row created by the winner.
+    // The deterministic row ID prevents duplicate rows for concurrent requests
+    // from the one permitted Appwrite account.
     if (created.response.status === 409) {
-      const retryCheck = await request(rowPath, 'X-Appwrite-Key', functionKey);
-      if (
-        retryCheck.response.ok &&
-        retryCheck.data.role === 'owner_admin' &&
-        retryCheck.data.email &&
-        retryCheck.data.email.toLowerCase() === OWNER_EMAIL.toLowerCase() &&
-        retryCheck.data.is_active === true
-      ) {
+      const retryCheck = await request(
+        '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows/' + encodeURIComponent(account.$id),
+        'X-Appwrite-Key',
+        functionKey
+      );
+      if (retryCheck.response.ok && isValidOwnerRow(retryCheck.data, account.$id)) {
         return json(res, { ok: true, code: 'OWNER_ALREADY_BOOTSTRAPPED' }, 200);
       }
     }
