@@ -129,6 +129,45 @@ export default async ({ req, res, log, error }) => {
       return json(res, { ok: false, code: 'INVALID_ACCOUNT_ID' }, 400);
     }
 
+    // Acquire a deterministic database lock before scanning or creating an owner.
+    // A unique row ID makes concurrent bootstrap attempts mutually exclusive.
+    const lockId = 'nova-owner-bootstrap-lock';
+    const lockResult = await request(
+      '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows',
+      'X-Appwrite-Key',
+      functionKey,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rowId: lockId,
+          data: {
+            full_name: 'NOVA SYSTEM LOCK',
+            mobile: '00000000000',
+            role: 'owner_bootstrap_lock',
+            is_active: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          permissions: []
+        })
+      }
+    );
+
+    if (lockResult.response.status === 409) {
+      // A prior attempt may have completed successfully before this retry.
+      const rowsAfterLockConflict = await listAllAppUsers(functionKey);
+      const priorOwner = rowsAfterLockConflict.find((row) => row.role === 'owner_admin');
+      if (priorOwner && isValidOwnerRow(priorOwner, account.$id)) {
+        return json(res, { ok: true, code: 'OWNER_ALREADY_BOOTSTRAPPED' }, 200);
+      }
+      return json(res, { ok: false, code: 'BOOTSTRAP_LOCKED' }, 409);
+    }
+    if (!lockResult.response.ok) {
+      error('Could not acquire the one-time owner bootstrap lock. HTTP ' + lockResult.response.status);
+      return json(res, { ok: false, code: 'BOOTSTRAP_LOCK_UNAVAILABLE' }, 503);
+    }
+
     // Fail closed if the full owner table cannot be inspected.
     const rows = await listAllAppUsers(functionKey);
     const existingOwner = rows.find((row) => row.role === 'owner_admin');
