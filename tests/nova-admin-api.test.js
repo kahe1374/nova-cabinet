@@ -88,7 +88,8 @@ test('rejects multibyte request bodies exceeding the byte limit', async()=>{
 });
 
 test('rejects overlong row identifiers instead of truncating them', async()=>{
- const oldFetch=global.fetch; const oldKey=process.env.APPWRITE_FUNCTION_API_KEY;
+ const oldFetch=global.fetch; const oldKey=process.env.APPWRITE_FUNCTION_API_KEY; const oldReadOnly=process.env.NOVA_ADMIN_API_READ_ONLY;
+ process.env.NOVA_ADMIN_API_READ_ONLY='false';
  process.env.APPWRITE_FUNCTION_API_KEY='runtime-key';
  let tableLookups=0;
  global.fetch=async(url)=> {
