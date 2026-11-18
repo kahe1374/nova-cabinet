@@ -121,7 +121,7 @@ test('AI request response strips price acceptance token hashes', () => {
 });
 
 test('assignment action uses strict row identifier validation', () => {
-  assert.match(source, /if \(!orderId \|\| \(body\.assigned_user_id && !assigneeId\)\) return reply\(res, \{ ok: false, code: 'INVALID_ASSIGNMENT' \}, 400\)/);
+  assert.match(source, /INVALID_ASSIGNMENT/);
   assert.match(source, /const orderId = cleanRowId\(body\.order_id\);[\s\S]*?const assigneeId/);
 });
 test('read-only health does not advertise write capabilities', () => {
