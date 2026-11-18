@@ -32,10 +32,21 @@ const client=new Client().setEndpoint(ENDPOINT).setProject(PROJECT), account=new
 const $=id=>document.getElementById(id);let pendingUserId='';
 function say(id,msg){$(id).textContent=msg}
 async function api(action){
- const jwt=await account.createJWT();client.setJWT(jwt.jwt);
- const result=await functions.createExecution({functionId:FUNCTION,body:JSON.stringify({action}),async:false,method:'POST'});
+ let jwt;
+ try { jwt=await account.createJWT(); }
+ catch(e) { throw new Error('JWT_CREATE_FAILED: '+(e?.message||String(e))); }
+ if(!jwt?.jwt) throw new Error('JWT_CREATE_FAILED: EMPTY_JWT');
+ client.setJWT(jwt.jwt);
+ let result;
+ try {
+  result=await functions.createExecution({functionId:FUNCTION,body:JSON.stringify({action}),async:false,method:'POST'});
+ } catch(e) {
+  throw new Error('FUNCTION_EXECUTION_FETCH_FAILED: '+(e?.message||String(e)));
+ }
  let data={};try{data=JSON.parse(result.responseBody||'{}')}catch{}
- if(result.responseStatusCode<200||result.responseStatusCode>=300||data.ok!==true)throw new Error(data.code||'API_FAILED');
+ const status=Number(result.responseStatusCode||0);
+ if(status<200||status>=300)throw new Error('FUNCTION_HTTP_'+status+': '+(data.code||data.message||'NO_RESPONSE_BODY'));
+ if(data.ok!==true)throw new Error('FUNCTION_REJECTED: '+(data.code||'API_FAILED'));
  return data;
 }
 function cell(row,fields){return fields.map(([label,key])=>'<div><strong>'+label+': </strong>'+esc(row[key]??'—')+'</div>').join('')}
