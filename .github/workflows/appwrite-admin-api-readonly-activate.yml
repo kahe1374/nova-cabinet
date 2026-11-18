@@ -1,4 +1,4 @@
-name: Activate NOVA admin API read-only pilot
+name: Activate NOVA admin API with public order intake and read-only admin controls
 
 on:
   workflow_dispatch:
@@ -20,7 +20,7 @@ jobs:
         run: |
           node --check appwrite/functions/nova-admin-api/index.js
           node --test appwrite/functions/nova-admin-api/test/admin-api.test.mjs
-      - name: Deploy and enable owner-only read-only API
+      - name: Deploy API and enable consented public order intake
         env:
           APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
@@ -67,25 +67,49 @@ jobs:
               await new Promise(resolve=>setTimeout(resolve,5000));
             }
             if(!['ready','active'].includes(state.status)) throw new Error('Deployment did not become ready.');
+            const variableEndpoint='/functions/'+encodeURIComponent(id)+'/variables';
+            const desiredVariables=[
+              {key:'NOVA_PUBLIC_ORDER_INTAKE_ENABLED',value:'true',secret:false},
+              {key:'NOVA_ADMIN_API_READ_ONLY',value:'true',secret:false}
+            ];
+            const existingVariables=await request(variableEndpoint);
+            for (const desired of desiredVariables) {
+              const existing=(existingVariables.variables||[]).find(v=>v.key===desired.key);
+              if (existing) {
+                await request(variableEndpoint+'/'+encodeURIComponent(existing.$id),{
+                  method:'PUT',body:JSON.stringify(desired)
+                });
+              } else {
+                await request(variableEndpoint,{method:'POST',body:JSON.stringify(desired)});
+              }
+            }
             const latest=await request('/functions/'+encodeURIComponent(id));
             const payload={
-              name:latest.name,runtime:latest.runtime,execute:[owner],events:latest.events||[],schedule:latest.schedule||'',
+              name:latest.name,runtime:latest.runtime,execute:['any'],events:latest.events||[],schedule:latest.schedule||'',
               timeout:latest.timeout||30,enabled:true,logging:latest.logging!==false,entrypoint:'index.js',
-              commands:latest.commands||'',scopes:['rows.read'],deploymentId:deployment.$id
+              commands:latest.commands||'',scopes:['rows.read','rows.write'],deploymentId:deployment.$id
             };
             await request('/functions/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify(payload)});
             const final=await request('/functions/'+encodeURIComponent(id));
-            if(final.enabled!==true || final.execute?.length!==1 || final.execute[0]!==owner ||
-              final.scopes?.length!==1 || final.scopes[0]!=='rows.read' || final.deploymentId!==deployment.$id) {
+            const finalVars=await request(variableEndpoint);
+            const varMap=new Map((finalVars.variables||[]).map(v=>[v.key,v.value]));
+            if(final.enabled!==true || final.execute?.length!==1 || final.execute[0]!=='any' ||
+              final.scopes?.length!==2 || !final.scopes.includes('rows.read') || !final.scopes.includes('rows.write') ||
+              final.deploymentId!==deployment.$id ||
+              varMap.get('NOVA_PUBLIC_ORDER_INTAKE_ENABLED')!=='true' ||
+              varMap.get('NOVA_ADMIN_API_READ_ONLY')!=='true') {
               console.log('VERIFY_ENABLED='+final.enabled);
-              console.log('VERIFY_EXECUTE_COUNT='+(final.execute||[]).length);
+              console.log('VERIFY_EXECUTE='+(final.execute||[]).join(','));
               console.log('VERIFY_SCOPES='+(final.scopes||[]).join(','));
               console.log('VERIFY_DEPLOYMENT_MATCH='+(final.deploymentId===deployment.$id));
-              throw new Error('Final read-only activation verification failed.');
+              console.log('VERIFY_PUBLIC_INTAKE='+varMap.get('NOVA_PUBLIC_ORDER_INTAKE_ENABLED'));
+              console.log('VERIFY_ADMIN_READ_ONLY='+varMap.get('NOVA_ADMIN_API_READ_ONLY'));
+              throw new Error('Final public-intake/read-only-admin verification failed.');
             }
-            console.log('READ_ONLY_PILOT_ENABLED=true');
-            console.log('OWNER_ONLY_EXECUTE=true');
-            console.log('FUNCTION_SCOPES=rows.read');
+            console.log('PUBLIC_ORDER_INTAKE_ENABLED=true');
+            console.log('PUBLIC_EXECUTE_ANY=true');
+            console.log('ADMIN_API_READ_ONLY=true');
+            console.log('FUNCTION_SCOPES=rows.read,rows.write');
             console.log('ACTIVE_DEPLOYMENT='+deployment.$id);
           }
           main().catch(e=>{console.error('ACTIVATION_FAILED:',e.message);process.exit(1)});
