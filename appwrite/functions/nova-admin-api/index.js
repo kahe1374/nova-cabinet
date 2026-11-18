@@ -85,7 +85,7 @@ export default async ({ req, res, log, error }) => {
   try {
     if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405);
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
-    const key = header(req.headers, 'x-appwrite-key');
+    const key = process.env.APPWRITE_FUNCTION_API_KEY || '';
     if (!jwt) return reply(res, { ok: false, code: 'AUTHENTICATION_REQUIRED' }, 401);
     if (!key) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503);
 
