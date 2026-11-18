@@ -163,3 +163,9 @@ test('requires the execution-scoped ephemeral key header', async () => {
   assert.equal(res.status, 503);
   assert.equal(res.body.code, 'FUNCTION_KEY_UNAVAILABLE');
 });
+
+test('assignment writes the scalar orders.assigned_user_id field used by the schema workflow', () => {
+  assert.match(source, /body\.assigned_user_id/);
+  assert.match(source, /assigned_user_id: assigneeId/);
+  assert.doesNotMatch(source, /assigned_to/);
+});
