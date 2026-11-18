@@ -1122,36 +1122,60 @@ status.append(acceptButton);f.reset();}catch(error){console.error('NOVA AI desig
 </script>\n
 <script>
 (()=> {
- const endpoint='https://sjapgxjllnlttrhjxkez.supabase.co/functions/v1/create-lead';
- const apiKey='sb_publishable_4FIDrldxMGb89wIXtbNRwQ_Q1Ohm4WE';
+ const endpoint='https://fra.cloud.appwrite.io/v1/functions/nova-admin-api/executions';
+ const projectId='6afcbe4e002df50df86f';
+ function newIdempotencyKey(){
+  if(window.crypto?.randomUUID)return window.crypto.randomUUID();
+  const bytes=new Uint8Array(16);window.crypto.getRandomValues(bytes);
+  bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+ }
  async function saveLead(payload,button,status,form){
   button.disabled=true;const original=button.textContent;button.textContent='در حال ثبت امن درخواست...';status.textContent='در حال ذخیره درخواست در سامانه نوا...';
   try{
-   const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','apikey':apiKey},body:JSON.stringify(payload)});
-   const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||'save_failed');
+   const requestBody={...payload,idempotency_key:newIdempotencyKey(),website:''};
+   const res=await fetch(endpoint,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Appwrite-Project':projectId},
+    body:JSON.stringify({body:JSON.stringify(requestBody),async:false,method:'POST'})
+   });
+   const execution=await res.json();
+   if(!res.ok)throw new Error('execution_http_'+res.status);
+   if(execution.status!=='completed')throw new Error('execution_'+(execution.status||'unknown'));
+   let data={};try{data=JSON.parse(execution.responseBody||'{}');}catch{throw new Error('invalid_execution_response');}
+   if(execution.responseStatusCode<200||execution.responseStatusCode>=300||!data.ok){
+    if(data.code==='PUBLIC_RATE_LIMITED')throw new Error('rate_limited');
+    throw new Error(data.code||'save_failed');
+   }
    status.replaceChildren();const msg=document.createElement('span');msg.textContent='درخواست با موفقیت ثبت شد. کد پیگیری: '+data.order_number+' — تیم نوا برای هماهنگی با شما تماس می‌گیرد. ';status.append(msg);
    const link=document.createElement('a');link.href='https://wa.me/989367374312?text='+encodeURIComponent('سلام، درخواست من در سایت NOVA CABINET ثبت شد. کد پیگیری: '+data.order_number);link.target='_blank';link.rel='noopener';link.textContent='پیگیری در واتساپ';link.className='btn';status.append(link);form.reset();
    return true;
-  }catch(err){console.error('NOVA lead save failed',err);status.textContent='ثبت درخواست انجام نشد. لطفاً اتصال اینترنت را بررسی و دوباره تلاش کنید یا مستقیم با واتساپ تماس بگیرید.';return false;}
-  finally{button.disabled=false;button.textContent=original;}
+  }catch(err){
+   console.error('NOVA Appwrite lead save failed',err);
+   status.textContent=err.message==='rate_limited'
+    ?'برای جلوگیری از ارسال تکراری، لطفاً ۱۰ دقیقه بعد دوباره تلاش کنید.'
+    :'ثبت درخواست انجام نشد. لطفاً اتصال اینترنت را بررسی و دوباره تلاش کنید یا مستقیم با واتساپ تماس بگیرید.';
+   return false;
+  }finally{button.disabled=false;button.textContent=original;}
  }
  const assistant=document.getElementById('novaAssistantForm'),summary=document.getElementById('novaAssistantResult');
  if(assistant&&summary){
   const refresh=()=>{const d=new FormData(assistant);summary.textContent='پیشنهاد اولیه نوا: '+d.get('service')+' با سبک '+d.get('style')+'، ابعاد '+d.get('size')+'، بودجه '+d.get('budget')+' و زمان اجرا '+d.get('time')+'. برای انتخاب نهایی، بررسی فضا و متریال لازم است.';};
   assistant.addEventListener('change',refresh);refresh();
-  assistant.addEventListener('submit',async e=>{e.preventDefault();if(!assistant.reportValidity())return;refresh();const d=new FormData(assistant),button=assistant.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'مشاوره هوشمند - '+d.get('service'),order_type:'cabinet',details:summary.textContent+'\nزمان اجرا: '+d.get('time')},button,summary,assistant);});
+  assistant.addEventListener('submit',async e=>{e.preventDefault();if(!assistant.reportValidity())return;refresh();const d=new FormData(assistant),button=assistant.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'مشاوره هوشمند - '+d.get('service'),order_type:'cabinet',details:summary.textContent+'\\nزمان اجرا: '+d.get('time')},button,summary,assistant);});
  }
  const estimate=document.getElementById('novaEstimateForm'),estimateResult=document.getElementById('novaEstimateResult');
  if(estimate&&estimateResult){
   const refresh=()=>{const d=new FormData(estimate),m=Math.max(0,Number(d.get('meters'))||0);estimateResult.textContent='متراژ واردشده: '+m.toLocaleString('fa-IR')+' متر طول — '+d.get('project')+'، سبک '+d.get('style')+'، متریال '+d.get('material')+'. مبلغ نهایی پس از بررسی ابعاد، نقشه، یراق‌آلات و استعلام روز اعلام می‌شود.';};
   estimate.addEventListener('input',refresh);estimate.addEventListener('change',refresh);refresh();
-  estimate.addEventListener('submit',async e=>{e.preventDefault();if(!estimate.reportValidity())return;refresh();const d=new FormData(estimate),button=estimate.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'استعلام قیمت - '+d.get('project'),order_type:'cabinet',details:estimateResult.textContent+'\nتوضیحات مشتری: '+d.get('details')},button,estimateResult,estimate);});
+  estimate.addEventListener('submit',async e=>{e.preventDefault();if(!estimate.reportValidity())return;refresh();const d=new FormData(estimate),button=estimate.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:'',type:'استعلام قیمت - '+d.get('project'),order_type:'cabinet',details:estimateResult.textContent+'\\nتوضیحات مشتری: '+d.get('details')},button,estimateResult,estimate);});
  }
  const visit=document.getElementById('novaVisitForm');
  if(visit){
   const date=visit.elements.date,today=new Date(),localToday=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);date.min=localToday;
   let status=document.getElementById('novaVisitStatus');if(!status){status=document.createElement('div');status.id='novaVisitStatus';status.className='status';visit.insertAdjacentElement('afterend',status);}
-  visit.addEventListener('submit',async e=>{e.preventDefault();if(!visit.reportValidity())return;const d=new FormData(visit),button=visit.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:d.get('city'),type:'درخواست بازدید و اندازه‌گیری - '+d.get('project'),order_type:'workshop_service',details:'تاریخ پیشنهادی: '+d.get('date')+'\nبازه زمانی: '+d.get('time')+'\nنشانی/توضیحات: '+d.get('address')+'\nاین زمان تا تأیید تیم نوا قطعی نیست.'},button,status,visit);});
+  visit.addEventListener('submit',async e=>{e.preventDefault();if(!visit.reportValidity())return;const d=new FormData(visit),button=visit.querySelector('button[type=submit]');await saveLead({name:d.get('name'),phone:d.get('phone'),city:d.get('city'),type:'درخواست بازدید و اندازه‌گیری - '+d.get('project'),order_type:'workshop_service',address:d.get('address'),details:'تاریخ پیشنهادی: '+d.get('date')+'\\nبازه زمانی: '+d.get('time')+'\\nاین زمان تا تأیید تیم نوا قطعی نیست.'},button,status,visit);});
  }
 })();
 </script>
