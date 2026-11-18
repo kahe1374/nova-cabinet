@@ -1,0 +1,81 @@
+name: Deploy locked owner bootstrap scaffold
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-scaffold:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Package function source
+        run: |
+          cd appwrite/functions/nova-owner-bootstrap
+          tar -czf "$RUNNER_TEMP/nova-owner-bootstrap.tar.gz" .
+
+      - name: Upload inactive deployment to Appwrite
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-owner-bootstrap
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const functionId = process.env.FUNCTION_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+
+          async function main() {
+            const headers = {
+              'X-Appwrite-Project': project,
+              'X-Appwrite-Key': key
+            };
+            const check = await fetch(endpoint + '/functions/' + encodeURIComponent(functionId), { headers });
+            const current = await check.json().catch(() => ({}));
+            if (!check.ok) throw new Error('Cannot inspect function: HTTP ' + check.status);
+            if (current.enabled !== false || (current.execute || []).length !== 0 || (current.scopes || []).length !== 0) {
+              throw new Error('Function is not locked. Deployment aborted.');
+            }
+
+            const form = new FormData();
+            const archive = fs.readFileSync(process.env.RUNNER_TEMP + '/nova-owner-bootstrap.tar.gz');
+            form.append('code', new Blob([archive], { type: 'application/gzip' }), 'nova-owner-bootstrap.tar.gz');
+            form.append('activate', 'false');
+            form.append('entrypoint', 'index.js');
+            form.append('commands', '');
+
+            const response = await fetch(endpoint + '/functions/' + encodeURIComponent(functionId) + '/deployments', {
+              method: 'POST',
+              headers,
+              body: form
+            });
+            const raw = await response.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!response.ok) {
+              throw new Error('Deployment upload failed: HTTP ' + response.status + ' ' + JSON.stringify({
+                code: data.code, type: data.type, message: data.message
+              }));
+            }
+            console.log('DEPLOYMENT_CREATED=true');
+            console.log('DEPLOYMENT_ID=' + data.$id);
+            console.log('DEPLOYMENT_STATUS=' + data.status);
+            console.log('DEPLOYMENT_ACTIVATED=false');
+            console.log('FUNCTION_ENABLED=false');
+            console.log('EXECUTE_PERMISSIONS=0');
+          }
+
+          main().catch(error => {
+            console.error('DEPLOYMENT_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
