@@ -1,4 +1,4 @@
-name: Appwrite assigned user diagnostic
+name: Appwrite responsible user relationship
 
 on:
   workflow_dispatch:
@@ -7,11 +7,11 @@ permissions:
   contents: read
 
 jobs:
-  inspect-relationship-state:
+  create-responsible-user:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Read relationship metadata without changes
+      - name: Safely create a fresh relationship key
         env:
           APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
@@ -23,36 +23,57 @@ jobs:
           const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
           const headers = {
             'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
-            'X-Appwrite-Key': process.env.APPWRITE_API_KEY
+            'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
+            'Content-Type': 'application/json'
           };
-          async function get(path) {
-            const response = await fetch(endpoint + path, { headers });
-            const raw = await response.text();
+          async function call(method, path, body) {
+            const r = await fetch(endpoint + path, {method, headers, body: body ? JSON.stringify(body) : undefined});
+            const raw = await r.text();
             let data = {};
             try { data = raw ? JSON.parse(raw) : {}; } catch {}
-            return { status: response.status, data };
+            return {status:r.status,data,raw};
           }
           async function main() {
             if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY');
-            const table = await get(`/tablesdb/${db}/tables/orders`);
-            console.log('ORDERS_TABLE_HTTP:', table.status);
-            console.log('ORDERS_TABLE_META:', JSON.stringify(table.data && {
-              $id: table.data.$id, name: table.data.name, enabled: table.data.enabled,
-              rowSecurity: table.data.rowSecurity
-            }));
-            const list = await get(`/tablesdb/${db}/tables/orders/columns?limit=100`);
-            console.log('ORDERS_COLUMNS_HTTP:', list.status);
-            const cols = list.data.columns || [];
-            console.log('ORDERS_COLUMNS:', JSON.stringify(cols.map(c => ({
-              key: c.key, type: c.type, status: c.status, relatedTableId: c.relatedTableId,
-              relationType: c.relationType, twoWay: c.twoWay, onDelete: c.onDelete
-            }))));
-            for (const key of ['assigned_to', 'assigned_user']) {
-              const direct = await get(`/tablesdb/${db}/tables/orders/columns/${encodeURIComponent(key)}`);
-              console.log(`DIRECT_GET_${key.toUpperCase()}_HTTP:`, direct.status);
-              console.log(`DIRECT_GET_${key.toUpperCase()}_BODY:`, JSON.stringify(direct.data));
+            const path = `/tablesdb/${db}/tables/orders/columns`;
+            const existing = await call('GET', path + '?limit=100');
+            if (existing.status !== 200) throw new Error('Cannot inspect orders columns: HTTP ' + existing.status);
+            const found = (existing.data.columns || []).find(c => c.key === 'responsible_user');
+            if (found) {
+              console.log('RESPONSIBLE_USER_EXISTING:', JSON.stringify({
+                key:found.key,type:found.type,status:found.status,
+                relatedTableId:found.relatedTableId,relationType:found.relationType
+              }));
+              if (found.status !== 'available') throw new Error('Existing responsible_user is not available; no changes made.');
+              console.log('COMPLETE: relationship already available.');
+              return;
             }
-            console.log('READ_ONLY_DIAGNOSTIC_COMPLETE. No schema or row changes were made.');
+            const result = await call('POST', path + '/relationship', {
+              relatedTableId:'app_users', type:'manyToOne', twoWay:false,
+              key:'responsible_user', onDelete:'setNull'
+            });
+            console.log('CREATE_HTTP_STATUS:', result.status);
+            console.log('CREATE_RESPONSE:', JSON.stringify(result.data));
+            if (result.status !== 201 && result.status !== 202) {
+              throw new Error('Relationship creation rejected; response above. No existing schema or rows were changed.');
+            }
+            for (let i=0;i<60;i++) {
+              const check=await call('GET', path + '?limit=100');
+              const col=(check.data.columns||[]).find(c=>c.key==='responsible_user');
+              if (col?.status==='available') {
+                console.log('RESPONSIBLE_USER_FINAL:',JSON.stringify({
+                  key:col.key,type:col.type,status:col.status,
+                  relatedTableId:col.relatedTableId,relationType:col.relationType
+                }));
+                console.log('COMPLETE: orders.responsible_user -> app_users is available.');
+                return;
+              }
+              if (col && ['failed','stuck'].includes(col.status)) {
+                throw new Error('Relationship entered status '+col.status);
+              }
+              await new Promise(r=>setTimeout(r,2000));
+            }
+            throw new Error('Relationship did not become available within 120 seconds.');
           }
-          main().catch(e => { console.error(e.message); process.exit(1); });
+          main().catch(e=>{console.error(e.message);process.exit(1);});
           NODE
