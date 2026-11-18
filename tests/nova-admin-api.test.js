@@ -99,3 +99,29 @@ test('rejects overlong row identifiers instead of truncating them', async()=>{
   assert.equal(res.status,400); assert.equal(res.payload.code,'INVALID_ORDER_OR_STATUS'); assert.equal(tableLookups,0);
  } finally { global.fetch=oldFetch; if(oldKey===undefined) delete process.env.APPWRITE_FUNCTION_API_KEY; else process.env.APPWRITE_FUNCTION_API_KEY=oldKey; }
 });
+
+test('health advertises read-only mode by default', async()=>{
+ const r=await invoke({account:{$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true},owner:{$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true}});
+ assert.equal(r.status,200); assert.equal(r.payload.readOnly,true);
+});
+test('write actions are blocked in default read-only mode', async()=>{
+ const oldFetch=global.fetch; const oldKey=process.env.APPWRITE_FUNCTION_API_KEY; const oldMode=process.env.NOVA_ADMIN_API_READ_ONLY;
+ process.env.APPWRITE_FUNCTION_API_KEY='runtime-key'; delete process.env.NOVA_ADMIN_API_READ_ONLY;
+ let writes=0;
+ global.fetch=async(url,opts={})=>{
+  if(url===ENDPOINT+'/account') return new Response(JSON.stringify({$id:OWNER_ID,email:OWNER_EMAIL,emailVerification:true}),{status:200});
+  if(url.includes('/tables/app_users/rows/')) return new Response(JSON.stringify({$id:OWNER_ID,email:OWNER_EMAIL,role:'owner_admin',is_active:true}),{status:200});
+  if(opts.method==='PATCH'||opts.method==='POST') writes++;
+  return new Response('{}',{status:404});
+ };
+ try {
+  const handler=(await import('../appwrite/functions/nova-admin-api/index.js?readonly-test')).default;
+  const res=makeRes();
+  await handler({req:{method:'POST',headers:{'x-appwrite-user-jwt':'jwt'},body:{action:'update_order_status',order_id:'order-1',status:'new'}},res,log(){},error(){}});
+  assert.equal(res.status,423); assert.equal(res.payload.code,'API_READ_ONLY'); assert.equal(writes,0);
+ } finally {
+  global.fetch=oldFetch;
+  if(oldKey===undefined) delete process.env.APPWRITE_FUNCTION_API_KEY; else process.env.APPWRITE_FUNCTION_API_KEY=oldKey;
+  if(oldMode===undefined) delete process.env.NOVA_ADMIN_API_READ_ONLY; else process.env.NOVA_ADMIN_API_READ_ONLY=oldMode;
+ }
+});
