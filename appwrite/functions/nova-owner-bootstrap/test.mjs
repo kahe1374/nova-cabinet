@@ -187,7 +187,7 @@ test('allows the same verified account to retry after a prior lock acquisition',
         email: account.email
       });
     }
-    if (value.endsWith('/rows?')) return response({ rows: [], total: 0 });
+    if (new URL(value).pathname.endsWith('/rows') && new URL(value).search) return response({ rows: [], total: 0 });
     if (value.endsWith('/tables/app_users/rows') && options.method === 'POST') {
       const body = JSON.parse(options.body);
       if (body.rowId === 'nova-owner-bootstrap-lock') return response({}, 409);
@@ -197,7 +197,7 @@ test('allows the same verified account to retry after a prior lock acquisition',
   });
   try {
     const result = await h.call();
-    assert.equal(result.status, 201, JSON.stringify(h.errors));
+    assert.equal(result.status, 201, JSON.stringify({ errors: h.errors, calls }));
     assert.equal(result.payload.code, 'OWNER_BOOTSTRAPPED');
     assert.ok(calls.some(call => call.url.endsWith('/rows/nova-owner-bootstrap-lock')));
   } finally { h.restore(); }
