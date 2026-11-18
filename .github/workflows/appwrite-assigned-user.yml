@@ -1,4 +1,4 @@
-name: Appwrite assigned user relationship
+name: Appwrite assigned user diagnostic
 
 on:
   workflow_dispatch:
@@ -7,11 +7,11 @@ permissions:
   contents: read
 
 jobs:
-  create-assigned-user-relationship:
+  inspect-relationship-state:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Create orders.assigned_user safely
+      - name: Read relationship metadata without changes
         env:
           APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
           APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
@@ -20,89 +20,39 @@ jobs:
         run: |
           node <<'NODE'
           const endpoint = process.env.APPWRITE_ENDPOINT;
-          const databaseId = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
           const headers = {
             'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
-            'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
-            'Content-Type': 'application/json'
+            'X-Appwrite-Key': process.env.APPWRITE_API_KEY
           };
-          const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-          async function request(method, path, body) {
-            const response = await fetch(endpoint + path, {
-              method, headers,
-              body: body === undefined ? undefined : JSON.stringify(body)
-            });
+          async function get(path) {
+            const response = await fetch(endpoint + path, { headers });
             const raw = await response.text();
             let data = {};
             try { data = raw ? JSON.parse(raw) : {}; } catch {}
-            if (!response.ok) {
-              const error = new Error(`Appwrite API ${response.status}: ${raw.slice(0, 800)}`);
-              error.status = response.status;
-              error.data = data;
-              throw error;
-            }
-            return data;
+            return { status: response.status, data };
           }
-
-          async function inspect() {
-            try {
-              return await request('GET', `/tablesdb/${databaseId}/tables/orders/columns/assigned_user`);
-            } catch (error) {
-              if (error.status === 404) return null;
-              throw error;
-            }
-          }
-
           async function main() {
-            if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY secret');
-            const before = await inspect();
-            if (before) {
-              console.log('ASSIGNED_USER_ALREADY_EXISTS:', JSON.stringify({
-                key: before.key, type: before.type, status: before.status,
-                relatedTableId: before.relatedTableId, relationType: before.relationType
-              }));
-              if (before.status !== 'available') throw new Error('Existing assigned_user relation is not available; no changes made.');
-              console.log('COMPLETE: existing relation is available; no changes needed.');
-              return;
-            }
-
-            try {
-              const created = await request('POST',
-                `/tablesdb/${databaseId}/tables/orders/columns/relationship`, {
-                  relatedTableId: 'app_users',
-                  type: 'manyToOne',
-                  twoWay: false,
-                  key: 'assigned_user',
-                  onDelete: 'setNull'
-                });
-              console.log('CREATE_REQUEST_ACCEPTED:', JSON.stringify({
-                key: created.key, type: created.type, status: created.status
-              }));
-            } catch (error) {
-              if (error.status !== 409) throw error;
-              console.log('CREATE_CONFLICT: inspecting existing key; no retry or deletion will be attempted.');
-            }
-
-            let finalState = null;
-            for (let i = 0; i < 60; i++) {
-              finalState = await inspect();
-              if (finalState?.status === 'available') break;
-              if (finalState?.status === 'failed' || finalState?.status === 'stuck') {
-                throw new Error(`assigned_user entered ${finalState.status}: ${finalState.error || 'No additional detail'}`);
-              }
-              await sleep(2000);
-            }
-            console.log('ASSIGNED_USER_FINAL_STATE:', JSON.stringify(finalState && {
-              key: finalState.key, type: finalState.type, status: finalState.status,
-              relatedTableId: finalState.relatedTableId, relationType: finalState.relationType
+            if (!process.env.APPWRITE_API_KEY) throw new Error('Missing APPWRITE_API_KEY');
+            const table = await get(`/tablesdb/${db}/tables/orders`);
+            console.log('ORDERS_TABLE_HTTP:', table.status);
+            console.log('ORDERS_TABLE_META:', JSON.stringify(table.data && {
+              $id: table.data.$id, name: table.data.name, enabled: table.data.enabled,
+              rowSecurity: table.data.rowSecurity
             }));
-            if (!finalState || finalState.status !== 'available') {
-              throw new Error('assigned_user did not become available within 120 seconds.');
+            const list = await get(`/tablesdb/${db}/tables/orders/columns?limit=100`);
+            console.log('ORDERS_COLUMNS_HTTP:', list.status);
+            const cols = list.data.columns || [];
+            console.log('ORDERS_COLUMNS:', JSON.stringify(cols.map(c => ({
+              key: c.key, type: c.type, status: c.status, relatedTableId: c.relatedTableId,
+              relationType: c.relationType, twoWay: c.twoWay, onDelete: c.onDelete
+            }))));
+            for (const key of ['assigned_to', 'assigned_user']) {
+              const direct = await get(`/tablesdb/${db}/tables/orders/columns/${encodeURIComponent(key)}`);
+              console.log(`DIRECT_GET_${key.toUpperCase()}_HTTP:`, direct.status);
+              console.log(`DIRECT_GET_${key.toUpperCase()}_BODY:`, JSON.stringify(direct.data));
             }
-            console.log('COMPLETE: orders.assigned_user -> app_users is available.');
-            console.log('No tables, existing columns, or rows were deleted or modified.');
+            console.log('READ_ONLY_DIAGNOSTIC_COMPLETE. No schema or row changes were made.');
           }
-
-          main().catch(error => { console.error(error.message); process.exit(1); });
+          main().catch(e => { console.error(e.message); process.exit(1); });
           NODE
