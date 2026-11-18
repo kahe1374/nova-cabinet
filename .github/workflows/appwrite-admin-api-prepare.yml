@@ -65,14 +65,28 @@ jobs:
               throw new Error('Existing function is not in an approved disabled state. Refusing to modify it.');
             }
             if (isReadOnly) {
+              const updatePayload = {
+                name: current.name,
+                runtime: current.runtime,
+                execute: current.execute || [],
+                events: current.events || [],
+                schedule: current.schedule || '',
+                timeout: current.timeout,
+                enabled: false,
+                logging: current.logging !== false,
+                entrypoint: current.entrypoint || 'index.js',
+                commands: current.commands || '',
+                scopes: ['rows.read', 'rows.write']
+              };
               const upgraded = await fetch(endpoint + '/functions/' + encodeURIComponent(id), {
-                method: 'PATCH', headers,
-                body: JSON.stringify({ scopes: ['rows.read', 'rows.write'] })
+                method: 'PUT', headers,
+                body: JSON.stringify(updatePayload)
               });
               const updated = await upgraded.json().catch(() => ({}));
               if (!upgraded.ok || updated.enabled !== false || (updated.execute || []).length !== 0 ||
                   (updated.scopes || []).length !== 2 || !['rows.read', 'rows.write'].every(scope => (updated.scopes || []).includes(scope))) {
-                throw new Error('Could not safely grant the admin function its required row scopes.');
+                throw new Error('Function scope update failed HTTP ' + upgraded.status + ' ' +
+                  JSON.stringify({ code: updated.code, type: updated.type, message: updated.message }));
               }
             }
             console.log('FUNCTION_ID=' + id);
