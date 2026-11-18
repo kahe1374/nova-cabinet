@@ -275,16 +275,26 @@ test('public order idempotency returns the existing order and removes the duplic
 
 test('public intake applies a per-runtime rate limit before any database writes', async () => {
   let writes = 0;
-  const handler = load(async () => { writes++; return appwriteResponse({ $id: 'unexpected' }); }, { NOVA_PUBLIC_ORDER_INTAKE_ENABLED: 'true' });
+  const handler = load(async (url, options = {}) => {
+    if (options.method === 'POST') {
+      writes++;
+      const path = String(url);
+      if (path.includes('/tables/customers/rows')) return appwriteResponse({ $id: 'customer-row-id' });
+      if (path.includes('/tables/orders/rows')) return appwriteResponse({ $id: '12345678-1234-4234-8234-123456789abc' });
+      if (path.includes('/tables/order_status_history/rows')) return appwriteResponse({ $id: 'history-row-id' });
+      if (path.includes('/tables/audit_log/rows')) return appwriteResponse({ $id: 'audit-row-id' });
+    }
+    throw new Error('unexpected Appwrite call ' + String(url));
+  }, { NOVA_PUBLIC_ORDER_INTAKE_ENABLED: 'true' });
   for (let i = 0; i < 6; i++) {
     const res = response();
     const body = { ...publicOrder, idempotency_key: '12345678-1234-4234-8234-' + String(i).padStart(12, '0') };
     await handler({ req: { method: 'POST', headers: { ...publicHeaders, 'x-forwarded-for': '203.0.113.10' }, body }, res, log() {}, error() {} });
-    if (i < 5) assert.equal(res.status, 502);
+    if (i < 5) assert.equal(res.status, 201);
     else {
       assert.equal(res.status, 429);
       assert.equal(res.body.code, 'PUBLIC_RATE_LIMITED');
     }
   }
-  assert.equal(writes, 5);
+  assert.equal(writes, 20);
 });
