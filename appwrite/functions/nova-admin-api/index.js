@@ -13,7 +13,17 @@ function header(headers, name) {
   const key = Object.keys(headers || {}).find((item) => item.toLowerCase() === name.toLowerCase());
   return key ? headers[key] : '';
 }
-function reply(res, payload, status = 200) { return res.json(payload, status); }
+const ALLOWED_ORIGINS = new Set(['https://kahe1374.github.io']);
+function corsHeaders(origin) {
+  return {
+    ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
+    'Vary': 'Origin',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Appwrite-User-JWT',
+    'Access-Control-Max-Age': '86400'
+  };
+}
+function reply(res, payload, status = 200, headers = {}) { return res.json(payload, status, headers); }
 
 async function api(path, key, options = {}) {
   const response = await fetch(ENDPOINT + path, {
@@ -88,41 +98,41 @@ async function writeAudit(key, actorId, action, entityType, entityId, details) {
 
 export default async ({ req, res, log, error }) => {
   try {
-    if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405);
+    if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405, responseHeaders);
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
     const key = process.env.APPWRITE_FUNCTION_API_KEY || '';
-    if (!jwt) return reply(res, { ok: false, code: 'AUTHENTICATION_REQUIRED' }, 401);
-    if (!key) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503);
+    if (!jwt) return reply(res, { ok: false, code: 'AUTHENTICATION_REQUIRED' }, 401, responseHeaders);
+    if (!key) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
 
     const accountResult = await fetch(ENDPOINT + '/account', {
       headers: { 'X-Appwrite-Project': PROJECT_ID, 'X-Appwrite-JWT': jwt }
     });
-    if (!accountResult.ok) return reply(res, { ok: false, code: 'INVALID_SESSION' }, 401);
+    if (!accountResult.ok) return reply(res, { ok: false, code: 'INVALID_SESSION' }, 401, responseHeaders);
     const account = await accountResult.json();
     if (!account.$id || String(account.email || '').toLowerCase() !== OWNER_EMAIL.toLowerCase() || account.emailVerification !== true) {
-      return reply(res, { ok: false, code: 'OWNER_VERIFICATION_REQUIRED' }, 403);
+      return reply(res, { ok: false, code: 'OWNER_VERIFICATION_REQUIRED' }, 403, responseHeaders);
     }
     const owner = await getRow('app_users', account.$id, key);
     if (!owner.response.ok || owner.data.$id !== account.$id || owner.data.role !== 'owner_admin' ||
         owner.data.is_active !== true || String(owner.data.email || '').toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
-      return reply(res, { ok: false, code: 'OWNER_ACCESS_DENIED' }, 403);
+      return reply(res, { ok: false, code: 'OWNER_ACCESS_DENIED' }, 403, responseHeaders);
     }
 
     let body = {};
     try {
       const rawBody = typeof req.body === 'string' ? (req.body || '{}') : JSON.stringify(req.body || {});
-      if (new TextEncoder().encode(rawBody).byteLength > 16384) return reply(res, { ok: false, code: 'REQUEST_TOO_LARGE' }, 413);
+      if (new TextEncoder().encode(rawBody).byteLength > 16384) return reply(res, { ok: false, code: 'REQUEST_TOO_LARGE' }, 413, responseHeaders);
       body = typeof req.body === 'string' ? JSON.parse(rawBody) : (req.body || {});
       if (!body || typeof body !== 'object' || Array.isArray(body)) {
-        return reply(res, { ok: false, code: 'INVALID_REQUEST_BODY' }, 400);
+        return reply(res, { ok: false, code: 'INVALID_REQUEST_BODY' }, 400, responseHeaders);
       }
     } catch {
-      return reply(res, { ok: false, code: 'INVALID_JSON' }, 400);
+      return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
     }
     const action = body.action || 'health';
     const readOnly = String(process.env.NOVA_ADMIN_API_READ_ONLY || 'true').toLowerCase() !== 'false';
     const writeActions = new Set(['update_order_status', 'assign_order', 'upsert_ai_pricing']);
-    if (writeActions.has(action) && readOnly) return reply(res, { ok: false, code: 'API_READ_ONLY', readOnly: true }, 423);
+    if (writeActions.has(action) && readOnly) return reply(res, { ok: false, code: 'API_READ_ONLY', readOnly: true }, 423, responseHeaders);
 
     if (action === 'health') return reply(res, {
       ok: true, code: 'OWNER_AUTHENTICATED',
@@ -141,69 +151,69 @@ export default async ({ req, res, log, error }) => {
         const customerId = typeof customerRef === 'string' ? customerRef : customerRef && customerRef.$id;
         return { ...order, customer: customerById.get(customerId) || (typeof customerRef === 'object' ? customerRef : null) };
       });
-      return reply(res, { ok: true, code: 'ORDERS_LOADED', rows, total: orders.total, truncated: orders.total > rows.length });
+      return reply(res, { ok: true, code: 'ORDERS_LOADED', rows, total: orders.total, truncated: orders.total > rows.length }, responseHeaders);
     }
 
     if (action === 'list_ai_requests') {
       const result = await listRows('ai_design_requests', key, 500);
       const rows = result.rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
         .map(({ price_acceptance_token_hash, ...safeRow }) => safeRow);
-      return reply(res, { ok: true, code: 'AI_REQUESTS_LOADED', rows, total: result.total, truncated: result.total > rows.length });
+      return reply(res, { ok: true, code: 'AI_REQUESTS_LOADED', rows, total: result.total, truncated: result.total > rows.length }, responseHeaders);
     }
 
     if (action === 'list_ai_pricing') {
       const result = await listRows('ai_design_pricing', key, 200);
       const rows = result.rows.sort((a, b) => String(a.style_key || '').localeCompare(String(b.style_key || '')));
-      return reply(res, { ok: true, code: 'AI_PRICING_LOADED', rows, total: result.total, truncated: result.total > rows.length });
+      return reply(res, { ok: true, code: 'AI_PRICING_LOADED', rows, total: result.total, truncated: result.total > rows.length }, responseHeaders);
     }
 
     if (action === 'update_order_status') {
       const orderId = cleanRowId(body.order_id);
       const newStatus = cleanString(body.status, 40);
       const note = cleanString(body.note, 2000);
-      if (!orderId || !ORDER_STATUSES.has(newStatus)) return reply(res, { ok: false, code: 'INVALID_ORDER_OR_STATUS' }, 400);
+      if (!orderId || !ORDER_STATUSES.has(newStatus)) return reply(res, { ok: false, code: 'INVALID_ORDER_OR_STATUS' }, 400, responseHeaders);
       const current = await getRow('orders', orderId, key);
-      if (!current.response.ok || current.data.$id !== orderId) return reply(res, { ok: false, code: 'ORDER_NOT_FOUND' }, 404);
+      if (!current.response.ok || current.data.$id !== orderId) return reply(res, { ok: false, code: 'ORDER_NOT_FOUND' }, 404, responseHeaders);
       const oldStatus = current.data.status;
-      if (oldStatus === newStatus) return reply(res, { ok: true, code: 'STATUS_UNCHANGED', row: current.data });
+      if (oldStatus === newStatus) return reply(res, { ok: true, code: 'STATUS_UNCHANGED', row: current.data }, responseHeaders);
       const updated = await updateRow('orders', orderId, { status: newStatus, updated_at: new Date().toISOString() }, key);
-      if (!updated.response.ok) return reply(res, { ok: false, code: 'ORDER_UPDATE_FAILED' }, 502);
+      if (!updated.response.ok) return reply(res, { ok: false, code: 'ORDER_UPDATE_FAILED' }, 502, responseHeaders);
       const history = await createRow('order_status_history', {
         order: orderId, old_status: oldStatus || null, new_status: newStatus,
         note: note || null, changed_by: account.$id, changed_at: new Date().toISOString()
       }, key);
-      if (!history.response.ok) return reply(res, { ok: false, code: 'STATUS_UPDATED_HISTORY_FAILED', partial: true, row: updated.data }, 502);
+      if (!history.response.ok) return reply(res, { ok: false, code: 'STATUS_UPDATED_HISTORY_FAILED', partial: true, row: updated.data }, 502, responseHeaders);
       try {
         await writeAudit(key, account.$id, 'order.status.updated', 'order', orderId, { old_status: oldStatus || null, new_status: newStatus });
       } catch {
-        return reply(res, { ok: false, code: 'STATUS_AND_HISTORY_SAVED_AUDIT_FAILED', partial: true, row: updated.data, history_id: history.data.$id }, 502);
+        return reply(res, { ok: false, code: 'STATUS_AND_HISTORY_SAVED_AUDIT_FAILED', partial: true, row: updated.data, history_id: history.data.$id }, 502, responseHeaders);
       }
-      return reply(res, { ok: true, code: 'ORDER_STATUS_UPDATED', row: updated.data, history_id: history.data.$id });
+      return reply(res, { ok: true, code: 'ORDER_STATUS_UPDATED', row: updated.data, history_id: history.data.$id }, responseHeaders);
     }
 
     if (action === 'assign_order') {
       const orderId = cleanRowId(body.order_id);
       const assigneeId = body.assigned_user_id === null || body.assigned_user_id === '' ? null : cleanRowId(body.assigned_user_id);
-      if (!orderId || (body.assigned_user_id && !assigneeId)) return reply(res, { ok: false, code: 'INVALID_ASSIGNMENT' }, 400);
+      if (!orderId || (body.assigned_user_id && !assigneeId)) return reply(res, { ok: false, code: 'INVALID_ASSIGNMENT' }, 400, responseHeaders);
       const current = await getRow('orders', orderId, key);
-      if (!current.response.ok || current.data.$id !== orderId) return reply(res, { ok: false, code: 'ORDER_NOT_FOUND' }, 404);
+      if (!current.response.ok || current.data.$id !== orderId) return reply(res, { ok: false, code: 'ORDER_NOT_FOUND' }, 404, responseHeaders);
       if (assigneeId) {
         const assignee = await getRow('app_users', assigneeId, key);
         if (!assignee.response.ok || assignee.data.$id !== assigneeId || assignee.data.is_active !== true ||
             !['owner_admin', 'factory_manager'].includes(assignee.data.role)) {
-          return reply(res, { ok: false, code: 'ASSIGNEE_NOT_ALLOWED' }, 400);
+          return reply(res, { ok: false, code: 'ASSIGNEE_NOT_ALLOWED' }, 400, responseHeaders);
         }
       }
       const previous = current.data.assigned_user_id || null;
-      if (previous === assigneeId) return reply(res, { ok: true, code: 'ASSIGNMENT_UNCHANGED', row: current.data });
+      if (previous === assigneeId) return reply(res, { ok: true, code: 'ASSIGNMENT_UNCHANGED', row: current.data }, responseHeaders);
       const updated = await updateRow('orders', orderId, { assigned_user_id: assigneeId, updated_at: new Date().toISOString() }, key);
-      if (!updated.response.ok) return reply(res, { ok: false, code: 'ORDER_ASSIGNMENT_FAILED' }, 502);
+      if (!updated.response.ok) return reply(res, { ok: false, code: 'ORDER_ASSIGNMENT_FAILED' }, 502, responseHeaders);
       try {
         await writeAudit(key, account.$id, 'order.assigned', 'order', orderId, { previous_assigned_user_id: previous, assigned_user_id: assigneeId });
       } catch {
-        return reply(res, { ok: false, code: 'ASSIGNMENT_SAVED_AUDIT_FAILED', partial: true, row: updated.data }, 502);
+        return reply(res, { ok: false, code: 'ASSIGNMENT_SAVED_AUDIT_FAILED', partial: true, row: updated.data }, 502, responseHeaders);
       }
-      return reply(res, { ok: true, code: 'ORDER_ASSIGNED', row: updated.data });
+      return reply(res, { ok: true, code: 'ORDER_ASSIGNED', row: updated.data }, responseHeaders);
     }
 
     if (action === 'upsert_ai_pricing') {
@@ -211,7 +221,7 @@ export default async ({ req, res, log, error }) => {
       const styleLabel = cleanString(body.style_label, 160);
       const price = Number(body.base_price_toman);
       if (!/^[a-zA-Z0-9_-]{1,80}$/.test(styleKey) || !styleLabel || !Number.isSafeInteger(price) || price < 700000 || price > 3000000) {
-        return reply(res, { ok: false, code: 'INVALID_PRICING' }, 400);
+        return reply(res, { ok: false, code: 'INVALID_PRICING' }, 400, responseHeaders);
       }
       const existing = await listRows('ai_design_pricing', key, 500);
       const match = existing.rows.find((row) => row.style_key === styleKey);
@@ -220,19 +230,19 @@ export default async ({ req, res, log, error }) => {
       const saved = match
         ? await updateRow('ai_design_pricing', match.$id, data, key)
         : await createRow('ai_design_pricing', data, key);
-      if (!saved.response.ok) return reply(res, { ok: false, code: 'PRICING_SAVE_FAILED' }, 502);
+      if (!saved.response.ok) return reply(res, { ok: false, code: 'PRICING_SAVE_FAILED' }, 502, responseHeaders);
       try {
         await writeAudit(key, account.$id, match ? 'ai.pricing.updated' : 'ai.pricing.created',
           'ai_design_pricing', saved.data.$id, { style_key: styleKey, base_price_toman: price });
       } catch {
-        return reply(res, { ok: false, code: 'PRICING_SAVED_AUDIT_FAILED', partial: true, row: saved.data }, 502);
+        return reply(res, { ok: false, code: 'PRICING_SAVED_AUDIT_FAILED', partial: true, row: saved.data }, 502, responseHeaders);
       }
-      return reply(res, { ok: true, code: match ? 'PRICING_UPDATED' : 'PRICING_CREATED', row: saved.data });
+      return reply(res, { ok: true, code: match ? 'PRICING_UPDATED' : 'PRICING_CREATED', row: saved.data }, responseHeaders);
     }
 
-    return reply(res, { ok: false, code: 'ACTION_NOT_SUPPORTED' }, 400);
+    return reply(res, { ok: false, code: 'ACTION_NOT_SUPPORTED' }, 400, responseHeaders);
   } catch (err) {
     error('NOVA admin API failed: ' + (err && err.message ? err.message : 'unknown'));
-    return reply(res, { ok: false, code: 'ADMIN_API_ERROR' }, 500);
+    return reply(res, { ok: false, code: 'ADMIN_API_ERROR' }, 500, responseHeaders);
   }
 };
