@@ -34,7 +34,7 @@ test('rejects missing owner session before contacting Appwrite', async () => {
 test('rejects invalid Appwrite sessions', async () => {
   const handler = load(async () => ({ ok: false, status: 401 }));
   const res = response();
-  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'invalid' }, body: {} }, res, log() {}, error() {} });
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'invalid', 'x-appwrite-key': 'ephemeral-test-key' }, body: {} }, res, log() {}, error() {} });
   assert.equal(res.status, 401);
   assert.equal(res.body.code, 'INVALID_SESSION');
 });
@@ -73,7 +73,7 @@ test('rejects an account that is not the verified owner', async () => {
     $id: 'other-id', email: 'other@example.com', emailVerification: true
   }));
   const res = response();
-  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: {} }, res, log() {}, error() {} });
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt', 'x-appwrite-key': 'ephemeral-test-key' }, body: {} }, res, log() {}, error() {} });
   assert.equal(res.status, 403);
   assert.equal(res.body.code, 'OWNER_VERIFICATION_REQUIRED');
 });
@@ -86,7 +86,7 @@ test('rejects an inactive or incorrectly assigned owner row', async () => {
     return appwriteResponse({ $id: 'owner-id', role: 'owner_admin', is_active: false, email: 'Vahiiidk74@gmail.com' });
   });
   const res = response();
-  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: {} }, res, log() {}, error() {} });
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt', 'x-appwrite-key': 'ephemeral-test-key' }, body: {} }, res, log() {}, error() {} });
   assert.equal(res.status, 403);
   assert.equal(res.body.code, 'OWNER_ACCESS_DENIED');
 });
@@ -95,7 +95,7 @@ test('rejects malformed and oversized request bodies after owner verification', 
   for (const [body, expected] of [['{bad json', 'INVALID_JSON'], ['x'.repeat(16385), 'REQUEST_TOO_LARGE'], [[], 'INVALID_REQUEST_BODY']]) {
     const handler = load(ownerFetch());
     const res = response();
-    await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body }, res, log() {}, error() {} });
+    await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt', 'x-appwrite-key': 'ephemeral-test-key' }, body }, res, log() {}, error() {} });
     assert.equal(res.body.code, expected);
   }
 });
@@ -109,7 +109,7 @@ test('rejects unknown actions and invalid pricing without writing data', async (
   for (const body of [{ action: 'not_a_real_action' }, { action: 'upsert_ai_pricing', style_key: 'modern', style_label: 'Modern', base_price_toman: 1 }]) {
     const handler = load(fetchImpl, { NOVA_ADMIN_API_READ_ONLY: 'false' });
     const res = response();
-    await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body }, res, log() {}, error() {} });
+    await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt', 'x-appwrite-key': 'ephemeral-test-key' }, body }, res, log() {}, error() {} });
     assert.equal(res.status, 400);
   }
   assert.equal(writes, 0);
@@ -153,4 +153,13 @@ test('includes CORS headers on allowed-origin authentication errors', async () =
   await handler({ req: { method: 'POST', headers: { origin: 'https://kahe1374.github.io' }, body: {} }, res, log() {}, error() {} });
   assert.equal(res.status, 401);
   assert.equal(res.headers['Access-Control-Allow-Origin'], 'https://kahe1374.github.io');
+});
+
+
+test('requires the execution-scoped ephemeral key header', async () => {
+  const handler = load(async () => { throw new Error('must not contact Appwrite without ephemeral key'); });
+  const res = response();
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: {} }, res, log() {}, error() {} });
+  assert.equal(res.status, 503);
+  assert.equal(res.body.code, 'FUNCTION_KEY_UNAVAILABLE');
 });
