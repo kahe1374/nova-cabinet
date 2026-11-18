@@ -94,8 +94,10 @@ jobs:
             const check = await fetch(endpoint + '/functions/' + encodeURIComponent(functionId), { headers });
             const current = await check.json().catch(() => ({}));
             if (!check.ok) throw new Error('Cannot inspect function: HTTP ' + check.status);
-            if (current.enabled !== false || (current.execute || []).length !== 0 || (current.scopes || []).length !== 0) {
-              throw new Error('Function is not locked. Deployment aborted.');
+            const scopes = current.scopes || [];
+            if (current.enabled !== false || (current.execute || []).length !== 0 ||
+                !scopes.includes('rows.read') || !scopes.includes('rows.write') || scopes.length !== 2) {
+              throw new Error('Function is not in the expected locked, least-privilege state. Deployment aborted.');
             }
 
             const form = new FormData();
