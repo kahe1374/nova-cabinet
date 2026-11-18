@@ -183,13 +183,39 @@ jobs:
               }
             }
 
-            const orderColumns = await listColumns('orders');
-            console.log('ORDERS_COLUMNS_DIAGNOSTIC:', JSON.stringify(orderColumns.map(c => ({
-              key: c.key, type: c.type, status: c.status, error: c.error,
-              relatedTable: c.relatedTable, relationType: c.relationType, twoWay: c.twoWay
-            }))));
-            const operationsResult = await request('GET', `/tablesdb/${databaseId}/operations?limit=100`);
-            console.log('APPWRITE_OPERATIONS_DIAGNOSTIC:', JSON.stringify(operationsResult));
+            let orderColumns = await listColumns('orders');
+            let assigned = orderColumns.find(c => c.key === 'assigned_to');
+            if (!assigned) {
+              const created = await request('POST', `/tablesdb/${databaseId}/tables/orders/columns/relationship`, {
+                relatedTableId: 'app_users',
+                type: 'manyToOne',
+                twoWay: false,
+                key: 'assigned_to',
+                twoWayKey: '',
+                onDelete: 'setNull'
+              });
+              console.log('ASSIGNED_TO_CREATE_RESPONSE:', JSON.stringify(created));
+            }
+
+            for (let attempt = 0; attempt < 30; attempt++) {
+              try {
+                assigned = await request('GET', `/tablesdb/${databaseId}/tables/orders/columns/assigned_to`);
+                if (assigned && assigned.key === 'assigned_to' && assigned.status === 'available') break;
+                if (assigned && (assigned.status === 'failed' || assigned.status === 'stuck')) {
+                  throw new Error(`orders.assigned_to ${assigned.status}: ${assigned.error || 'No Appwrite error detail'}`);
+                }
+              } catch (error) {
+                if (!String(error.message).includes('404')) throw error;
+                assigned = null;
+              }
+              await sleep(2000);
+            }
+
+            console.log('ASSIGNED_TO_FINAL_STATE:', JSON.stringify(assigned));
+            if (!assigned || assigned.status !== 'available') {
+              throw new Error('Appwrite did not expose orders.assigned_to as an available relationship column. See ASSIGNED_TO_CREATE_RESPONSE and ASSIGNED_TO_FINAL_STATE above.');
+            }
+            console.log('Relationship available: orders.assigned_to');
 
             console.log('Schema completion finished. No rows were created, changed, or deleted.');
           }
