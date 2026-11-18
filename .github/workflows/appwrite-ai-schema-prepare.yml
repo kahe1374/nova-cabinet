@@ -2,6 +2,9 @@ name: Prepare Appwrite AI design schema (private, additive)
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-schema-prepare.yml'
 
 permissions:
   contents: read
