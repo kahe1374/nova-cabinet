@@ -1,0 +1,85 @@
+name: Activate NOVA admin API read-only pilot
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  activate-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run security regression tests
+        run: |
+          node --check appwrite/functions/nova-admin-api/index.js
+          node --test appwrite/functions/nova-admin-api/test/admin-api.test.mjs
+      - name: Deploy and enable owner-only read-only API
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-admin-api
+          OWNER_ID: user:6afdf252002cc39270ab
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          const owner = process.env.OWNER_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = { 'X-Appwrite-Project': project, 'X-Appwrite-Key': key, 'Content-Type': 'application/json' };
+          async function request(url, options={}) {
+            const r = await fetch(endpoint + url, { ...options, headers: { ...headers, ...(options.headers||{}) } });
+            const data = await r.json().catch(()=>({}));
+            if (!r.ok) throw new Error('Appwrite HTTP '+r.status+' '+JSON.stringify({code:data.code,type:data.type,message:data.message}));
+            return data;
+          }
+          async function main() {
+            const current = await request('/functions/'+encodeURIComponent(id));
+            if (current.execute?.length !== 1 || current.execute[0] !== owner) throw new Error('Unexpected execute permissions; refusing activation.');
+            if (current.enabled !== false) throw new Error('Function is not disabled before pilot activation.');
+            if (!(current.scopes||[]).includes('rows.read')) throw new Error('Function lacks rows.read scope.');
+            const source = fs.readFileSync('appwrite/functions/nova-admin-api/index.js');
+            const tar = require('node:child_process').execFileSync('tar',['-czf','-','-C','appwrite/functions/nova-admin-api','.']);
+            const form = new FormData();
+            form.append('code',new Blob([tar],{type:'application/gzip'}),'nova-admin-api.tar.gz');
+            form.append('activate','true');
+            form.append('entrypoint','index.js');
+            form.append('commands','');
+            const upload = await fetch(endpoint+'/functions/'+encodeURIComponent(id)+'/deployments',{
+              method:'POST',headers:{'X-Appwrite-Project':project,'X-Appwrite-Key':key},body:form
+            });
+            const deployment = await upload.json().catch(()=>({}));
+            if(!upload.ok || !deployment.$id) throw new Error('Deployment failed HTTP '+upload.status+' '+JSON.stringify({code:deployment.code,message:deployment.message}));
+            let state=deployment;
+            for(let i=0;i<24;i++){
+              state=await request('/functions/'+encodeURIComponent(id)+'/deployments/'+encodeURIComponent(deployment.$id));
+              console.log('BUILD_STATUS='+state.status);
+              if(['ready','active','failed'].includes(state.status)) break;
+              await new Promise(resolve=>setTimeout(resolve,5000));
+            }
+            if(!['ready','active'].includes(state.status)) throw new Error('Deployment did not become ready.');
+            const latest=await request('/functions/'+encodeURIComponent(id));
+            const payload={
+              name:latest.name,runtime:latest.runtime,execute:[owner],events:latest.events||[],schedule:latest.schedule||'',
+              timeout:latest.timeout||30,enabled:true,logging:latest.logging!==false,entrypoint:'index.js',
+              commands:latest.commands||'',scopes:['rows.read'],deploymentId:deployment.$id
+            };
+            await request('/functions/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify(payload)});
+            const final=await request('/functions/'+encodeURIComponent(id));
+            if(final.enabled!==true || final.execute?.length!==1 || final.execute[0]!==owner ||
+              final.scopes?.length!==1 || final.scopes[0]!=='rows.read' || final.activeDeploymentId!==deployment.$id) {
+              throw new Error('Final read-only activation verification failed.');
+            }
+            console.log('READ_ONLY_PILOT_ENABLED=true');
+            console.log('OWNER_ONLY_EXECUTE=true');
+            console.log('FUNCTION_SCOPES=rows.read');
+            console.log('ACTIVE_DEPLOYMENT='+deployment.$id);
+          }
+          main().catch(e=>{console.error('ACTIVATION_FAILED:',e.message);process.exit(1)});
+          NODE
