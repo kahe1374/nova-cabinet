@@ -1,0 +1,78 @@
+name: Configure least-privilege owner bootstrap scopes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  configure-scopes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Set only the required row scopes while keeping function locked
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          FUNCTION_ID: nova-owner-bootstrap
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = process.env.FUNCTION_ID;
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+
+          const headers = {
+            'X-Appwrite-Project': project,
+            'X-Appwrite-Key': key,
+            'Content-Type': 'application/json'
+          };
+
+          async function main() {
+            const beforeResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
+            const before = await beforeResponse.json().catch(() => ({}));
+            if (!beforeResponse.ok) throw new Error('Cannot inspect function. HTTP ' + beforeResponse.status);
+            if (before.enabled !== false || (before.execute || []).length !== 0) {
+              throw new Error('Function is not locked; refusing to change scopes.');
+            }
+
+            const updateResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(id), {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({
+                name: before.name,
+                scopes: ['rows.read', 'rows.write']
+              })
+            });
+            const raw = await updateResponse.text();
+            let updated = {};
+            try { updated = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!updateResponse.ok) {
+              throw new Error('Scope update failed. HTTP ' + updateResponse.status + ' ' +
+                JSON.stringify({ code: updated.code, type: updated.type, message: updated.message }));
+            }
+
+            if (updated.enabled !== false || (updated.execute || []).length !== 0) {
+              throw new Error('Post-update lock verification failed. Stop and inspect function settings.');
+            }
+            const scopes = updated.scopes || [];
+            if (!scopes.includes('rows.read') || !scopes.includes('rows.write') || scopes.length !== 2) {
+              throw new Error('Unexpected function scopes returned by Appwrite.');
+            }
+
+            console.log('FUNCTION_ENABLED=false');
+            console.log('EXECUTE_PERMISSIONS=0');
+            console.log('ROWS_READ_SCOPE=true');
+            console.log('ROWS_WRITE_SCOPE=true');
+            console.log('LEAST_PRIVILEGE_SCOPE_COUNT=' + scopes.length);
+            console.log('NO_FUNCTION_EXECUTION_OR_OWNER_CREATION=true');
+          }
+
+          main().catch(error => {
+            console.error('SCOPE_CONFIGURATION_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
