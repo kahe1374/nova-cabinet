@@ -41,7 +41,7 @@ jobs:
                 entrypoint:'index.js',commands:'',scopes:['rows.write']
               })});
               fn=await r.json().catch(()=>({}));
-              if(!r.ok) throw new Error('Function creation failed HTTP '+r.status);
+              if(!r.ok) throw new Error('Function creation failed HTTP '+r.status+' '+JSON.stringify({code:fn.code,type:fn.type,message:fn.message}));
             } else if(!r.ok) throw new Error('Function inspection failed HTTP '+r.status);
             if(fn.enabled!==false||(fn.execute||[]).length!==0||(fn.scopes||[]).length!==1||fn.scopes[0]!=='rows.write')
               throw new Error('Function must remain disabled, non-executable and rows.write-only. Refusing changes.');
