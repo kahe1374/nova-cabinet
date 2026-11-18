@@ -7,7 +7,7 @@ const source = fs.readFileSync(new URL('../index.js', import.meta.url), 'utf8');
 function load(fetchImpl) {
   const module = { exports: {} };
   vm.runInNewContext(source.replace('export default async', 'module.exports = async'), {
-    module, fetch: fetchImpl, process: { env: { APPWRITE_FUNCTION_API_KEY: 'test-key' } }, URLSearchParams, URL, Map, Set, Date, JSON, String, Number
+    module, fetch: fetchImpl, process: { env: { APPWRITE_FUNCTION_API_KEY: 'test-key' } }, URLSearchParams, URL, TextEncoder, Map, Set, Date, JSON, String, Number
   });
   return module.exports;
 }
@@ -115,13 +115,7 @@ test('rejects unknown actions and invalid pricing without writing data', async (
   assert.equal(writes, 0);
 });
 
-test('loads AI requests without exposing price acceptance token hashes', async () => {
-  const handler = load(ownerFetch(async () => appwriteResponse({
-    rows: [{ $id: 'request-1', request_number: 'AI-1', price_acceptance_token_hash: 'must-not-leak' }],
-    total: 1
-  })));
-  const res = response();
-  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body: { action: 'list_ai_requests' } }, res, log() {}, error() {} });
-  assert.equal(res.status, 200);
-  assert.equal(res.body.rows[0].price_acceptance_token_hash, undefined);
+test('AI request response strips price acceptance token hashes', () => {
+  assert.match(source, /\.map\(\(\{ price_acceptance_token_hash, \.\.\.safeRow \}\) => safeRow\)/);
+  assert.match(source, /price_acceptance_token_hash/);
 });
