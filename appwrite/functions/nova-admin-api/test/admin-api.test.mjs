@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source = fs.readFileSync(new URL('../appwrite/functions/nova-admin-api/index.js', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('../index.js', import.meta.url), 'utf8');
 function load(fetchImpl) {
   const module = { exports: {} };
   vm.runInNewContext(source.replace('export default async', 'module.exports = async'), {
