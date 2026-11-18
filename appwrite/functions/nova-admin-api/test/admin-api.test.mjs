@@ -4,10 +4,10 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../index.js', import.meta.url), 'utf8');
-function load(fetchImpl) {
+function load(fetchImpl, extraEnv = {}) {
   const module = { exports: {} };
   vm.runInNewContext(source.replace('export default async', 'module.exports = async'), {
-    module, fetch: fetchImpl, process: { env: { APPWRITE_FUNCTION_API_KEY: 'test-key' } }, URLSearchParams, URL, TextEncoder, Map, Set, Date, JSON, String, Number
+    module, fetch: fetchImpl, process: { env: { APPWRITE_FUNCTION_API_KEY: 'test-key', ...extraEnv } }, URLSearchParams, URL, TextEncoder, Map, Set, Date, JSON, String, Number
   });
   return module.exports;
 }
@@ -107,7 +107,7 @@ test('rejects unknown actions and invalid pricing without writing data', async (
     return appwriteResponse({ rows: [], total: 0 });
   });
   for (const body of [{ action: 'not_a_real_action' }, { action: 'upsert_ai_pricing', style_key: 'modern', style_label: 'Modern', base_price_toman: 1 }]) {
-    const handler = load(fetchImpl);
+    const handler = load(fetchImpl, { NOVA_ADMIN_API_READ_ONLY: 'false' });
     const res = response();
     await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt' }, body }, res, log() {}, error() {} });
     assert.equal(res.status, 400);
