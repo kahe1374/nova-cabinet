@@ -6,6 +6,8 @@ on:
     paths:
       - 'appwrite/functions/nova-admin-api/**'
       - 'tests/nova-admin-api.test.js'
+      - 'tests/appwrite-admin-client.test.mjs'
+      - 'admin/appwrite-admin-api.js'
       - '.github/workflows/nova-admin-api-tests.yml'
 
 permissions:
@@ -25,4 +27,4 @@ jobs:
       - name: Syntax check
         run: node --check appwrite/functions/nova-admin-api/index.js
       - name: Run mocked security tests
-        run: node --test tests/nova-admin-api.test.js appwrite/functions/nova-admin-api/test/admin-api.test.mjs
+        run: node --test tests/nova-admin-api.test.js appwrite/functions/nova-admin-api/test/admin-api.test.mjs tests/appwrite-admin-client.test.mjs
