@@ -49,7 +49,7 @@ jobs:
             ]);
             const keys = (columns.columns || []).map(c => ({
               key: c.key, type: c.type, required: c.required === true,
-              size: c.size ?? null, status: c.status
+              size: c.size ?? null, status: c.status,\n              relatedTable: c.relatedTable ?? null, relationType: c.relationType ?? null,\n              twoWay: c.twoWay ?? null, twoWayKey: c.twoWayKey ?? null
             }));
             const privateTable = Array.isArray(table.$permissions) && table.$permissions.length === 0;
             const secure = table.enabled === true && table.rowSecurity === true && privateTable;
@@ -69,10 +69,10 @@ jobs:
             if (insecure.length) throw new Error('Table privacy/enabled invariant failed: ' + insecure.map(x => x.tableId).join(','));
             const orders = results.find(x => x.tableId === 'orders');
             const assigned = orders.keys.find(c => c.key === 'assigned_user_id');
-            const legacy = orders.keys.find(c => c.key === 'assigned_to');
+            const legacy = orders.keys.find(c => c.key === 'assigned_to');\n            const customerRelation = orders.keys.find(c => c.key === 'customer');\n            const requiredOrderKeys = ['order_number', 'title', 'order_type', 'status', 'currency', 'paid_amount'];\n            const missingOrderKeys = requiredOrderKeys.filter(key => !orders.keys.some(c => c.key === key));\n            console.log('ORDERS_CUSTOMER_RELATION=' + JSON.stringify(customerRelation || null));\n            console.log('ORDERS_REQUIRED_FIELDS=' + JSON.stringify(requiredOrderKeys.map(key => orders.keys.find(c => c.key === key) || null)));
             console.log('ORDERS_ASSIGNED_USER_ID=' + JSON.stringify(assigned || null));
             console.log('ORDERS_LEGACY_ASSIGNED_TO=' + JSON.stringify(legacy || null));
-            if (!assigned || assigned.type !== 'varchar' || assigned.status !== 'available' || assigned.required || assigned.size < 36) {
+            if (missingOrderKeys.length) throw new Error('Missing required order columns: ' + missingOrderKeys.join(','));\n            if (!customerRelation || customerRelation.type !== 'relationship') throw new Error('orders.customer relationship column is missing.');\n            if (!assigned || assigned.type !== 'varchar' || assigned.status !== 'available' || assigned.required || assigned.size < 36) {
               throw new Error('orders.assigned_user_id must be an optional available varchar with size >= 36.');
             }
             console.log('SCHEMA_DIAGNOSTIC_PASSED=true');
