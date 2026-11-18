@@ -6,7 +6,7 @@ function reply(res,p,s=200,h={}){return res.json(p,s,h);}
 async function api(path,key,options={}){const r=await fetch(ENDPOINT+path,{...options,headers:{'X-Appwrite-Project':PROJECT_ID,'X-Appwrite-Key':key,...(options.headers||{})}});const raw=await r.text();let data={};try{data=raw?JSON.parse(raw):{};}catch{throw new Error('APPWRITE_INVALID_RESPONSE');}return {response:r,data};}
 async function createRow(table,data,key){return api('/tablesdb/'+DATABASE_ID+'/tables/'+encodeURIComponent(table)+'/rows',key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rowId:'unique()',data,permissions:[]})});}
 async function deleteRow(table,id,key){return api('/tablesdb/'+DATABASE_ID+'/tables/'+encodeURIComponent(table)+'/rows/'+encodeURIComponent(id),key,{method:'DELETE'});}
-function normalizeMobile(value){const m=String(value??'').replace(/[\\s-]/g,'');if(!/^(09\\d{9}|\\+989\\d{9}|00989\\d{9})$/.test(m))return '';return m.startsWith('09')?'+98'+m.slice(1):m.startsWith('0098')?'+'+m.slice(2):m;}
+function normalizeMobile(value){const m=String(value??'').replace(/[\s-]/g,'');if(!/^(09\d{9}|\+989\d{9}|00989\d{9})$/.test(m))return '';return m.startsWith('09')?'+98'+m.slice(1):m.startsWith('0098')?'+'+m.slice(2):m;}
 export default async ({req,res,log,error})=>{
  const origin=header(req.headers,'origin'),headers=cors(origin);
  try{
@@ -27,7 +27,7 @@ export default async ({req,res,log,error})=>{
   const customer=await createRow('customers',{full_name:name,mobile,city:city||null,notes:'درخواست ثبت‌شده از سایت NOVA CABINET',created_at:now,updated_at:now},key);
   if(!customer.response.ok||!customer.data.$id){log('NOVA intake customer creation failed: HTTP '+customer.response.status);return reply(res,{ok:false,code:'CUSTOMER_SAVE_FAILED'},502,headers);}
   const orderNumber='NV-'+crypto.randomUUID().replaceAll('-','').slice(0,12).toUpperCase();
-  const order=await createRow('orders',{order_number:orderNumber,customer:customer.data.$id,order_type:orderType,title,description:[city?'شهر: '+city:'',details].filter(Boolean).join('\\n')||null,status:'new',currency:'IRR',paid_amount:0,created_at:now,updated_at:now},key);
+  const order=await createRow('orders',{order_number:orderNumber,customer:customer.data.$id,order_type:orderType,title,description:[city?'شهر: '+city:'',details].filter(Boolean).join('\n')||null,status:'new',currency:'IRR',paid_amount:0,created_at:now,updated_at:now},key);
   if(!order.response.ok||!order.data.$id){
    log('NOVA intake order creation failed: HTTP '+order.response.status);
    const cleanup=await deleteRow('customers',customer.data.$id,key);
