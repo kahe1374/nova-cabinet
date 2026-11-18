@@ -40,7 +40,7 @@ jobs:
                 body: JSON.stringify({
                   functionId: id,
                   name: 'NOVA Admin API (read-only pilot)',
-                  runtime: 'node-22.0',
+                  runtime: 'node-22',
                   execute: [],
                   events: [],
                   schedule: '',
