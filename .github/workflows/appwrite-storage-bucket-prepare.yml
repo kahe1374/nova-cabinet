@@ -1,0 +1,91 @@
+name: Prepare private Appwrite storage bucket
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-storage-bucket-prepare.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-private-bucket:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create or verify private NOVA AI storage bucket
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const key = process.env.APPWRITE_API_KEY;
+          const id = 'nova-ai-designs';
+          const extensions = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'mp4', 'mov', 'webm'];
+          if (!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers = {
+            'X-Appwrite-Project': project,
+            'X-Appwrite-Key': key,
+            'Content-Type': 'application/json'
+          };
+          async function main() {
+            let response = await fetch(endpoint + '/storage/buckets/' + encodeURIComponent(id), { headers });
+            let bucket = await response.json().catch(() => ({}));
+            if (response.status === 404) {
+              response = await fetch(endpoint + '/storage/buckets', {
+                method: 'POST', headers,
+                body: JSON.stringify({
+                  bucketId: id,
+                  name: 'NOVA AI Designs',
+                  permissions: [],
+                  fileSecurity: true,
+                  enabled: true,
+                  maximumFileSize: 31457280,
+                  allowedFileExtensions: extensions,
+                  compression: 'none',
+                  encryption: true,
+                  antivirus: true,
+                  transformations: false,
+                  stripMetadata: true,
+                  description: 'Private customer uploads and generated NOVA CABINET AI design files.'
+                })
+              });
+              bucket = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error('Bucket creation failed HTTP ' + response.status + ' ' +
+                  JSON.stringify({code:bucket.code,type:bucket.type,message:bucket.message}));
+              }
+            } else if (!response.ok) {
+              throw new Error('Bucket lookup failed HTTP ' + response.status + ' ' +
+                JSON.stringify({code:bucket.code,type:bucket.type,message:bucket.message}));
+            }
+            const actual = bucket.allowedFileExtensions || [];
+            const valid = bucket.$id === id &&
+              bucket.enabled === true &&
+              bucket.fileSecurity === true &&
+              (bucket.$permissions || []).length === 0 &&
+              bucket.maximumFileSize === 31457280 &&
+              extensions.every(x => actual.includes(x)) &&
+              bucket.encryption === true &&
+              bucket.antivirus === true &&
+              bucket.stripMetadata === true;
+            if (!valid) throw new Error('Existing bucket settings do not match the private migration policy; no changes made.');
+            console.log('BUCKET_ID=' + bucket.$id);
+            console.log('BUCKET_ENABLED=true');
+            console.log('FILE_SECURITY=true');
+            console.log('BUCKET_PERMISSIONS_EMPTY=true');
+            console.log('MAXIMUM_FILE_SIZE_BYTES=' + bucket.maximumFileSize);
+            console.log('ENCRYPTION=true');
+            console.log('ANTIVIRUS=true');
+            console.log('METADATA_STRIPPING=true');
+            console.log('PRIVATE_BUCKET_READY=true');
+          }
+          main().catch(error => {
+            console.error('BUCKET_PREPARATION_FAILED:', error.message);
+            process.exit(1);
+          });
+          NODE
