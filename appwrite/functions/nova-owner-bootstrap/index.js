@@ -48,8 +48,8 @@ async function listAllAppUsers(functionKey) {
 
   while (true) {
     const params = new URLSearchParams();
-    params.append('queries[]', JSON.stringify({ method: 'limit', values: [PAGE_SIZE] }));
-    params.append('queries[]', JSON.stringify({ method: 'offset', values: [offset] }));
+    params.append('queries[]', 'limit(' + PAGE_SIZE + ')');
+    params.append('queries[]', 'offset(' + offset + ')');
     const result = await request(
       '/tablesdb/' + DATABASE_ID + '/tables/' + TABLE_ID + '/rows?' + params.toString(),
       'X-Appwrite-Key',
