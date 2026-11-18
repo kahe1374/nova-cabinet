@@ -194,7 +194,6 @@ export default async ({ req, res, log, error }) => {
     if (req.method === 'OPTIONS') return reply(res, {}, 204, responseHeaders);
     if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405, responseHeaders);
     const earlyKey = header(req.headers, 'x-appwrite-key');
-    if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
     let earlyBody = {};
     try {
       const raw = typeof req.body === 'string' ? (req.body || '{}') : JSON.stringify(req.body || {});
@@ -205,11 +204,12 @@ export default async ({ req, res, log, error }) => {
       return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
     }
     if (earlyBody.action === 'public_create_order') {
+      if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
       if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
       return handlePublicOrder(earlyBody, earlyKey, res, responseHeaders, error);
     }
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
-    const key = header(req.headers, 'x-appwrite-key');
+    const key = earlyKey;
     if (!jwt) return reply(res, { ok: false, code: 'AUTHENTICATION_REQUIRED' }, 401, responseHeaders);
     if (!key) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
 
