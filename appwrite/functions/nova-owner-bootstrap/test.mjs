@@ -172,3 +172,74 @@ test('fails closed when app_users cannot be fully enumerated', async () => {
     assert.equal(result.payload.code, 'INTERNAL_ERROR');
   } finally { h.restore(); }
 });
+
+test('allows the same verified account to retry after a prior lock acquisition', async () => {
+  const calls = [];
+  const h = harness(async (url, options = {}) => {
+    const value = String(url);
+    calls.push({ url: value, method: options.method || 'GET' });
+    if (value.endsWith('/account')) return response(account);
+    if (value.endsWith('/rows/nova-owner-bootstrap-lock')) {
+      return response({
+        $id: 'nova-owner-bootstrap-lock',
+        role: 'owner_bootstrap_lock',
+        full_name: account.$id,
+        email: account.email
+      });
+    }
+    if (value.endsWith('/rows?')) return response({ rows: [], total: 0 });
+    if (value.endsWith('/tables/app_users/rows') && options.method === 'POST') {
+      const body = JSON.parse(options.body);
+      if (body.rowId === 'nova-owner-bootstrap-lock') return response({}, 409);
+      return response({ $id: body.rowId, ...body.data }, 201);
+    }
+    return response({}, 404);
+  });
+  try {
+    const result = await h.call();
+    assert.equal(result.status, 201);
+    assert.equal(result.payload.code, 'OWNER_BOOTSTRAPPED');
+    assert.ok(calls.some(call => call.url.endsWith('/rows/nova-owner-bootstrap-lock')));
+  } finally { h.restore(); }
+});
+
+test('concurrent requests for the same verified account produce only one owner row', async () => {
+  const rows = new Map();
+  const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const h = harness(async (url, options = {}) => {
+    const value = String(url);
+    const method = options.method || 'GET';
+    if (value.endsWith('/account')) {
+      await pause(2);
+      return response(account);
+    }
+    if (value.includes('/rows?')) {
+      await pause(2);
+      return response({ rows: [...rows.values()], total: rows.size });
+    }
+    const rowMatch = value.match(/\/rows\/([^/?]+)$/);
+    if (method === 'GET' && rowMatch) {
+      const found = rows.get(decodeURIComponent(rowMatch[1]));
+      return found ? response(found) : response({ message: 'not found' }, 404);
+    }
+    if (method === 'POST' && value.endsWith('/tables/app_users/rows')) {
+      await pause(5);
+      const body = JSON.parse(options.body);
+      if (rows.has(body.rowId)) return response({ message: 'duplicate' }, 409);
+      const row = { $id: body.rowId, ...body.data };
+      rows.set(body.rowId, row);
+      return response(row, 201);
+    }
+    return response({}, 404);
+  });
+  try {
+    const results = await Promise.all([h.call(), h.call()]);
+    assert.equal(rows.get('nova-owner-bootstrap-lock')?.role, 'owner_bootstrap_lock');
+    assert.equal(rows.get(account.$id)?.role, 'owner_admin');
+    assert.equal([...rows.values()].filter(row => row.role === 'owner_admin').length, 1);
+    assert.ok(results.every(result =>
+      result.status === 201 || (result.status === 200 && result.payload.code === 'OWNER_ALREADY_BOOTSTRAPPED')
+    ));
+  } finally { h.restore(); }
+});
+
