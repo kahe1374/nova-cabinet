@@ -36,8 +36,10 @@ jobs:
             const beforeResponse = await fetch(endpoint + '/functions/' + encodeURIComponent(id), { headers });
             const before = await beforeResponse.json().catch(() => ({}));
             if (!beforeResponse.ok) throw new Error('Cannot inspect function. HTTP ' + beforeResponse.status);
-            if (before.enabled !== false || (before.execute || []).length !== 0) {
-              throw new Error('Function is not locked; refusing deployment.');
+            const beforeExecute = before.execute || [];
+            const executeIsSafe = beforeExecute.length === 0 || (beforeExecute.length === 1 && beforeExecute[0] === 'users');
+            if (before.enabled !== false || !executeIsSafe) {
+              throw new Error('Function is not disabled or has unsafe execute access; refusing deployment.');
             }
             const response = await fetch(endpoint + '/functions/' + encodeURIComponent(id), {
               method: 'PUT',
@@ -49,7 +51,9 @@ jobs:
             try { data = raw ? JSON.parse(raw) : {}; } catch {}
             if (!response.ok) throw new Error('Scope update failed. HTTP ' + response.status + ' ' +
               JSON.stringify({ code: data.code, type: data.type, message: data.message }));
-            if (data.enabled !== false || (data.execute || []).length !== 0 ||
+            const configuredExecute = data.execute || [];
+            const configuredExecuteIsSafe = configuredExecute.length === 0 || (configuredExecute.length === 1 && configuredExecute[0] === 'users');
+            if (data.enabled !== false || !configuredExecuteIsSafe ||
                 !(data.scopes || []).includes('rows.read') ||
                 !(data.scopes || []).includes('rows.write') ||
                 (data.scopes || []).length !== 2) {
@@ -98,7 +102,9 @@ jobs:
             const current = await check.json().catch(() => ({}));
             if (!check.ok) throw new Error('Cannot inspect function: HTTP ' + check.status);
             const scopes = current.scopes || [];
-            if (current.enabled !== false || (current.execute || []).length !== 0 ||
+            const currentExecute = current.execute || [];
+            const currentExecuteIsSafe = currentExecute.length === 0 || (currentExecute.length === 1 && currentExecute[0] === 'users');
+            if (current.enabled !== false || !currentExecuteIsSafe ||
                 !scopes.includes('rows.read') || !scopes.includes('rows.write') || scopes.length !== 2) {
               throw new Error('Function is not in the expected locked, least-privilege state. Deployment aborted.');
             }
@@ -159,8 +165,10 @@ jobs:
             if (!['ready', 'active'].includes(deployment.status)) {
               throw new Error('Deployment did not become ready within 3 minutes.');
             }
+            const finalExecute = finalFunction.execute || [];
+            const finalExecuteIsSafe = finalExecute.length === 0 || (finalExecute.length === 1 && finalExecute[0] === 'users');
             if (finalFunction.enabled !== false ||
-                (finalFunction.execute || []).length !== 0 ||
+                !finalExecuteIsSafe ||
                 (finalFunction.scopes || []).length !== 2 ||
                 !(finalFunction.scopes || []).includes('rows.read') ||
                 !(finalFunction.scopes || []).includes('rows.write')) {
