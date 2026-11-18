@@ -126,8 +126,10 @@ export default async ({ req, res, log, error }) => {
 
     if (action === 'health') return reply(res, {
       ok: true, code: 'OWNER_AUTHENTICATED',
-      capabilities: ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing',
-        'update_order_status', 'assign_order', 'upsert_ai_pricing'],
+      capabilities: readOnly
+        ? ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing']
+        : ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing',
+          'update_order_status', 'assign_order', 'upsert_ai_pricing'],
       readOnly
     });
 
@@ -180,7 +182,7 @@ export default async ({ req, res, log, error }) => {
     }
 
     if (action === 'assign_order') {
-      const orderId = cleanString(body.order_id, 36);
+      const orderId = cleanRowId(body.order_id);
       const assigneeId = body.assigned_user_id === null || body.assigned_user_id === '' ? null : cleanRowId(body.assigned_user_id);
       if (!orderId || (body.assigned_user_id && !assigneeId)) return reply(res, { ok: false, code: 'INVALID_ASSIGNMENT' }, 400);
       const current = await getRow('orders', orderId, key);
