@@ -1,0 +1,55 @@
+name: NOVA AI Appwrite final end-to-end check
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-intake-final-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Verify request, private file upload, confirmation and price acceptance
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const E=process.env.APPWRITE_ENDPOINT,P=process.env.APPWRITE_PROJECT_ID,D=encodeURIComponent(process.env.APPWRITE_DATABASE_ID),K=process.env.APPWRITE_API_KEY,B='nova-ai-designs';
+          if(!K)throw Error('APPWRITE_API_KEY missing');
+          const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p3sAAAAASUVORK5CYII=','base64');
+          async function get(path,h={'X-Appwrite-Project':P,'X-Appwrite-Key':K}){const r=await fetch(E+path,{headers:h});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error('GET failed '+r.status+' '+path);return d;}
+          async function run(action,payload,jwt){const r=await fetch(E+'/functions/nova-admin-api/executions',{method:'POST',headers:{'X-Appwrite-Project':P,'Content-Type':'application/json'},body:JSON.stringify({body:JSON.stringify({action,...payload,session_jwt:jwt}),async:false,method:'POST',headers:{origin:'https://kahe1374.github.io'}})});const e=await r.json().catch(()=>({}));let d={};try{d=JSON.parse(e.responseBody||'{}')}catch{}if(!r.ok||e.status!=='completed'||e.responseStatusCode<200||e.responseStatusCode>=300)throw Error(action+' returned '+e.responseStatusCode+' '+JSON.stringify(d));return d;}
+          async function main(){
+            const s=await fetch(E+'/account/sessions/anonymous',{method:'POST',headers:{'X-Appwrite-Project':P,'Content-Type':'application/json'},body:'{}'});
+            const session=await s.json().catch(()=>({})),cookie=(s.headers.get('set-cookie')||'').split(';')[0];
+            if(!s.ok||!cookie)throw Error('anonymous session unavailable '+s.status);
+            const j=await fetch(E+'/account/jwt',{method:'POST',headers:{'X-Appwrite-Project':P,'Content-Type':'application/json','Cookie':cookie},body:'{}'});
+            const jd=await j.json().catch(()=>({}));if(!j.ok||!jd.jwt)throw Error('JWT unavailable');
+            const user=await get('/account',{'X-Appwrite-Project':P,'X-Appwrite-JWT':jd.jwt});
+            const q=await run('public_create_ai_design_request',{name:'NOVA AI TEST FINAL',phone:'09127047616',city:'NOVA-TEST',design_mode:'preserve',style:'مدرن و مینیمال',complexity_level:'simple',door_material:'TEST',countertop_material:'TEST',material_codes:'TEST',instructions:'AUTOMATED TEST ONLY - not a customer order.',file_name:'NOVA-TEST.png',mime_type:'image/png',file_size:png.length},jd.jwt);
+            if(q.quoted_price_toman!==700000)throw Error('quote mismatch');
+            const form=new FormData();form.append('fileId',q.request_id);form.append('file',new Blob([png],{type:'image/png'}),'NOVA-TEST.png');
+            for(const p of ['read("user:'+user.$id+'")','update("user:'+user.$id+'")','delete("user:'+user.$id+'")'])form.append('permissions[]',p);
+            const up=await fetch(E+'/storage/buckets/'+B+'/files',{method:'POST',headers:{'X-Appwrite-Project':P,'X-Appwrite-JWT':jd.jwt},body:form});
+            const file=await up.json().catch(()=>({}));if(!up.ok||file.$id!==q.request_id)throw Error('upload failed '+up.status);
+            const conf=await run('public_confirm_ai_design_upload',{request_id:q.request_id},jd.jwt);
+            const accepted=await run('public_accept_ai_design_price',{request_id:q.request_id,accepted_amount_toman:q.quoted_price_toman,price_acceptance_token:q.price_acceptance_token},jd.jwt);
+            const row=await get('/tablesdb/'+D+'/tables/ai_design_requests/rows/'+q.request_id);
+            if(!row.upload_completed_at||!row.price_accepted_at||row.payment_status!=='pending'||row.status!=='awaiting_payment')throw Error('final row state mismatch');
+            console.log('AI_REQUEST='+q.request_number);
+            console.log('PRIVATE_UPLOAD=true');
+            console.log('UPLOAD_CONFIRMATION='+conf.code);
+            console.log('PRICE_ACCEPTANCE='+accepted.code);
+            console.log('PAYMENT_PENDING=true');
+            console.log('SYNTHETIC_ROW_LEFT_FOR_OWNER_REVIEW=true');
+          }
+          main().catch(e=>{console.error('AI_FINAL_CHECK_FAILED:',e.message);process.exit(1)});
+          NODE
