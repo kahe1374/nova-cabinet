@@ -79,7 +79,7 @@ jobs:
               const updated=await update.json().catch(()=>({}));
               if(!update.ok) throw new Error('Could not set authenticated-user create-only permission. HTTP '+update.status+' '+JSON.stringify({code:updated.code,type:updated.type,message:updated.message}));
               if(updated.fileSecurity!==true||!(updated.$permissions||[]).includes('create("users")')||
-                 (updated.$permissions||[]).some(p=>/^(read|update|delete)\\(/.test(p))) {
+                 (updated.$permissions||[]).some(p=>['read','update','delete'].some(op=>p.startsWith(op+'(')))) {
                 throw new Error('Bucket permissions are not restricted to authenticated-user create only.');
               }
               fileId=crypto.randomUUID();
