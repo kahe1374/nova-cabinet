@@ -37,7 +37,7 @@ select{font:inherit;background:#151514;color:var(--text);border:1px solid var(--
 import { Client, Account, Functions } from 'https://cdn.jsdelivr.net/npm/appwrite@29.0.0/+esm';
 const ENDPOINT='https://fra.cloud.appwrite.io/v1', PROJECT='6afcbe4e002df50df86f', FUNCTION='nova-admin-api', OWNER='vahiiidk74@gmail.com';
 const client=new Client().setEndpoint(ENDPOINT).setProject(PROJECT), account=new Account(client), functions=new Functions(client);
-const $=id=>document.getElementById(id);let pendingUserId='',ordersCache=[],adminCanWrite=false;
+const $=id=>document.getElementById(id);let pendingUserId='',ordersCache=[],assigneesCache=[],adminCanWrite=false,adminCanAssign=false;
 const orderLabels={new:'جدید',under_review:'در حال بررسی',awaiting_quote_approval:'در انتظار تأیید پیش‌فاکتور',awaiting_payment:'در انتظار پرداخت',approved_for_production:'تأیید تولید',in_production:'در حال تولید',quality_control:'کنترل کیفیت',ready_for_delivery:'آماده تحویل',delivered:'تحویل شده',completed:'تکمیل شده',cancelled:'لغو شده'};
 const aiLabels={awaiting_payment:'در انتظار پرداخت',queued:'در صف طراحی',processing:'در حال طراحی',preview_ready:'پیش‌نمایش آماده',revision_requested:'درخواست اصلاح',completed:'تکمیل شده',cancelled:'لغو شده'};
 const payLabels={pending:'در انتظار پرداخت',paid:'پرداخت شده',refunded:'عودت وجه'};
@@ -58,8 +58,28 @@ function renderOrders(){
  const rows=ordersCache.filter(r=>{const c=r.customer||{};const hay=[r.order_number,r.title,r.description,c.full_name,c.mobile].filter(Boolean).join(' ').toLocaleLowerCase('fa');return(!query||hay.includes(query))&&(!filter||r.status===filter)});
  $('orders').replaceChildren();$('ordersCount').textContent=rows.length+' از '+ordersCache.length;
  if(!rows.length){$('orders').append(node('div',ordersCache.length?'موردی با این جست‌وجو یا فیلتر پیدا نشد.':'هنوز سفارشی در Appwrite ثبت نشده است.','empty'));return;}
- const table=node('table'),thead=node('thead'),hr=node('tr');for(const h of ['شماره سفارش','مشتری / تماس','شرح درخواست','نوع','وضعیت','تاریخ ثبت','مدیریت وضعیت','سوابق'])hr.append(node('th',h));thead.append(hr);table.append(thead);
+ const table=node('table'),thead=node('thead'),hr=node('tr');for(const h of ['شماره سفارش','مشتری / تماس','شرح درخواست','نوع','وضعیت','تاریخ ثبت','مدیریت وضعیت','مسئول سفارش','سوابق'])hr.append(node('th',h));thead.append(hr);table.append(thead);
  const tbody=node('tbody');for(const r of rows){const tr=node('tr'),c=r.customer||{};const vals=[r.order_number||'—',[c.full_name,c.mobile].filter(Boolean).join(' · ')||'—',r.title||r.description||'—',r.order_type==='workshop_service'?'خدمات کارگاهی':'کابینت و دکوراسیون',orderLabels[r.status]||r.status||'—',r.created_at?new Date(r.created_at).toLocaleString('fa-IR'):'—'];for(const v of vals)tr.append(node('td',String(v)));
+  const assignCell=node('td');
+  const assigneeSelect=node('select');assigneeSelect.setAttribute('aria-label','مسئول سفارش');
+  assigneeSelect.append(new Option('بدون مسئول',''));
+  for(const person of assigneesCache)assigneeSelect.append(new Option(person.full_name+' · '+(person.role==='factory_manager'?'مدیر کارگاه':'مدیر'),person.$id));
+  assigneeSelect.value=r.assigned_user_id||'';
+  assigneeSelect.disabled=!adminCanAssign;
+  const assignButton=node('button','ثبت مسئول');assignButton.disabled=!adminCanAssign;
+  assignButton.title=adminCanAssign?'ثبت مسئول سفارش و ثبت رویداد مدیریتی':'ثبت تخصیص تا خروج سرور از حالت فقط‌خواندنی غیرفعال است';
+  assignButton.addEventListener('click',async()=>{
+   if(!adminCanAssign||!r.$id)return;
+   const selected=assigneeSelect.value||null;
+   const current=r.assigned_user_id||null;
+   if(selected===current)return;
+   const selectedName=assigneesCache.find(person=>person.$id===selected)?.full_name||'بدون مسئول';
+   if(!confirm('مسئول سفارش '+(r.order_number||'')+' به «'+selectedName+'» تغییر کند؟'))return;
+   assignButton.disabled=true;
+   try{await api('assign_order',{order_id:r.$id,assigned_user_id:selected});say('ordersStatus','مسئول سفارش ثبت شد؛ در حال تازه‌سازی...');await load();}
+   catch(e){say('ordersStatus','تخصیص سفارش انجام نشد: '+e.message);assignButton.disabled=false;}
+  });
+  assignCell.append(assigneeSelect,assignButton);tr.append(assignCell);
   const historyCell=node('td');
   const historyButton=node('button','مشاهده سوابق');historyButton.type='button';
   historyButton.addEventListener('click',()=>showOrderHistory(r));
@@ -117,11 +137,12 @@ async function load(){
  try{
   const h=await api('health');if(typeof h.readOnly!=='boolean')throw new Error('وضعیت مجوز نوشتن از سمت سرور مشخص نیست.');
   adminCanWrite=h.readOnly===false&&Array.isArray(h.capabilities)&&h.capabilities.includes('update_order_status');
+  adminCanAssign=h.readOnly===false&&Array.isArray(h.capabilities)&&h.capabilities.includes('assign_order');
   say('health',adminCanWrite?'اتصال برقرار است؛ دسترسی مالک تأیید شد و امکان مدیریت وضعیت سفارش فعال است.':'اتصال برقرار است؛ دسترسی مالک تأیید شد و حالت فقط‌خواندنی فعال است. کنترل‌های تغییر وضعیت تا فعال‌سازی امن سمت سرور غیرفعال‌اند.');
   say('ordersStatus','در حال دریافت سفارش‌ها...');say('aiStatus','در حال دریافت درخواست‌ها...');say('pricingStatus','در حال دریافت تعرفه‌ها...');
-  const [o,a,p]=await Promise.all([api('list_orders'),api('list_ai_requests'),api('list_ai_pricing')]);
-  ordersCache=o.rows||[];renderOrders();renderAI(a.rows||[]);renderPricing(p.rows||[]);
-  say('ordersStatus','دریافت سفارش‌ها کامل شد.');say('aiStatus','دریافت درخواست‌های طراحی کامل شد.');say('pricingStatus','دریافت تعرفه‌ها کامل شد.');
+  const [o,a,p,people]=await Promise.all([api('list_orders'),api('list_ai_requests'),api('list_ai_pricing'),api('list_order_assignees')]);
+  ordersCache=o.rows||[];assigneesCache=people.rows||[];renderOrders();renderAI(a.rows||[]);renderPricing(p.rows||[]);
+  say('ordersStatus','دریافت سفارش‌ها کامل شد. '+assigneesCache.length+' مسئول فعال برای تخصیص شناسایی شد.'+(adminCanAssign?' امکان تخصیص فعال است.':' تخصیص تا فعال‌سازی امن مجوز نوشتن فقط‌خواندنی است.'));say('aiStatus','دریافت درخواست‌های طراحی کامل شد.');say('pricingStatus','دریافت تعرفه‌ها کامل شد.');
  }catch(e){say('health','خطا: '+e.message);throw e;}finally{$('refresh').disabled=false;}
 }
 function showDashboard(){ $('login').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logout').classList.remove('hidden');}
