@@ -71,6 +71,9 @@ jobs:
               console.log('AI_TABLE_MISSING_COLUMNS_'+tableId+'='+JSON.stringify(missing));
               if (missing.length) allReady=false;
             }
+            const pricingRows=await get('/tablesdb/'+db+'/tables/ai_design_pricing/rows?queries[]='+encodeURIComponent(JSON.stringify({method:'limit',values:[100]})));
+            if(pricingRows.status!==200 || !Array.isArray(pricingRows.data.rows)) throw new Error('Cannot inspect AI pricing rows');
+            console.log('AI_PRICING_STYLES='+JSON.stringify(pricingRows.data.rows.map(r=>({style_key:r.style_key,base_price_toman:r.base_price_toman}))));
             const bucket=await get('/storage/buckets/nova-ai-designs');
             if (bucket.missing) {
               console.log('AI_STORAGE_BUCKET_MISSING=true');
