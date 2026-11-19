@@ -46,7 +46,7 @@ jobs:
             const current = await request('/functions/'+encodeURIComponent(id));
             const currentScopes=current.scopes||[];
             const ownerReadOnly=current.execute?.length===1 && current.execute[0]===owner && currentScopes.length===1 && currentScopes[0]==='rows.read';
-            const publicIntake=current.execute?.length===1 && current.execute[0]==='any' && currentScopes.includes('rows.read') && currentScopes.includes('rows.write') && currentScopes.every(s=>['rows.read','rows.write','files.read','files.write'].includes(s));
+            const publicIntake=current.execute?.length===1 && current.execute[0]==='any' && currentScopes.includes('rows.read') && currentScopes.includes('rows.write') && currentScopes.every(s=>['rows.read','rows.write','files.read','files.write','tokens.write'].includes(s));
             if (!ownerReadOnly && !publicIntake) throw new Error('Unexpected function permissions; refusing deployment.');
             if (current.enabled !== true && current.enabled !== false) throw new Error('Function state is not safely verifiable.');
             if (!currentScopes.includes('rows.read')) throw new Error('Function lacks rows.read scope.');
@@ -92,14 +92,14 @@ jobs:
             const payload={
               name:latest.name,runtime:latest.runtime,execute:['any'],events:latest.events||[],schedule:latest.schedule||'',
               timeout:latest.timeout||30,enabled:true,logging:latest.logging!==false,entrypoint:'index.js',
-              commands:latest.commands||'',scopes:['rows.read','rows.write','files.read','files.write'],deploymentId:deployment.$id
+              commands:latest.commands||'',scopes:['rows.read','rows.write','files.read','files.write','tokens.write'],deploymentId:deployment.$id
             };
             await request('/functions/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify(payload)});
             const final=await request('/functions/'+encodeURIComponent(id));
             const finalVars=await request(variableEndpoint);
             const varMap=new Map((finalVars.variables||[]).map(v=>[v.key,v.value]));
             if(final.enabled!==true || final.execute?.length!==1 || final.execute[0]!=='any' ||
-              final.scopes?.length!==4 || !['rows.read','rows.write','files.read','files.write'].every(s=>final.scopes.includes(s)) ||
+              final.scopes?.length!==5 || !['rows.read','rows.write','files.read','files.write'].every(s=>final.scopes.includes(s)) ||
               final.deploymentId!==deployment.$id ||
               varMap.get('NOVA_PUBLIC_ORDER_INTAKE_ENABLED')!=='true' ||
               varMap.get('NOVA_PUBLIC_AI_INTAKE_ENABLED')!=='true' ||
@@ -114,7 +114,7 @@ jobs:
             }
             console.log('PUBLIC_ORDER_INTAKE_ENABLED=true');
             console.log('PUBLIC_AI_INTAKE_ENABLED=true');
-            console.log('FUNCTION_FILE_SCOPES=files.read,files.write');
+            console.log('FUNCTION_FILE_SCOPES=files.read,files.write,tokens.write');
             console.log('PUBLIC_EXECUTE_ANY=true');
             console.log('ADMIN_API_READ_ONLY=true');
             console.log('FUNCTION_SCOPES=rows.read,rows.write');
