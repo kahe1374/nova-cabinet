@@ -662,7 +662,7 @@ export default async ({ req, res, log, error }) => {
     if (action === 'health') return reply(res, {
       ok: true, code: 'OWNER_AUTHENTICATED',
       capabilities: readOnly
-        ? ['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing']
+        ? ['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing']
         : ['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing',
           'update_order_status', 'assign_order', 'upsert_ai_pricing'],
       readOnly
@@ -677,6 +677,15 @@ export default async ({ req, res, log, error }) => {
         return { ...order, customer: customerById.get(customerId) || (typeof customerRef === 'object' ? customerRef : null) };
       });
       return reply(res, { ok: true, code: 'ORDERS_LOADED', rows, total: orders.total, truncated: orders.total > rows.length }, 200, responseHeaders);
+    }
+
+    if (action === 'list_order_assignees') {
+      const result = await listRows('app_users', key, 500);
+      const rows = result.rows
+        .filter((row) => row.is_active === true && ['owner_admin', 'factory_manager'].includes(row.role))
+        .map((row) => ({ $id: row.$id, full_name: cleanString(row.full_name, 160), role: row.role }))
+        .filter((row) => row.full_name);
+      return reply(res, { ok: true, code: 'ORDER_ASSIGNEES_LOADED', rows, total: rows.length }, 200, responseHeaders);
     }
 
     if (action === 'list_order_status_history') {
