@@ -204,6 +204,224 @@ async function handlePublicOrder(body, key, req, res, responseHeaders, error) {
   return reply(res, { ok: true, code: 'ORDER_CREATED', order_number: orderNumber }, 201, responseHeaders);
 }
 
+
+async function verifyPublicAiAccount(jwt) {
+  if (!jwt) return null;
+  const response = await fetch(ENDPOINT + '/account', {
+    headers: { 'X-Appwrite-Project': PROJECT_ID, 'X-Appwrite-JWT': jwt }
+  });
+  if (!response.ok) return null;
+  const account = await response.json();
+  return account && account.$id ? account : null;
+}
+function ownsPrivateFile(file, userId) {
+  const permissions = Array.isArray(file && file.$permissions) ? file.$permissions : [];
+  const owner = 'user:' + userId;
+  return permissions.some((permission) =>
+    typeof permission === 'string' &&
+    (permission.includes('("' + owner + '")') || permission.includes('(' + owner + ')'))
+  );
+}
+function normalizeAiMobile(value) {
+  const mobile = String(value ?? '').replace(/[\\s-]/g, '');
+  if (!/^(09\\d{9}|\\+989\\d{9}|00989\\d{9})$/.test(mobile)) return '';
+  return mobile.startsWith('09') ? '+98' + mobile.slice(1) :
+    mobile.startsWith('0098') ? '+' + mobile.slice(2) : mobile;
+}
+async function handlePublicAiCreate(body, key, req, res, responseHeaders, error) {
+  if (String(process.env.NOVA_PUBLIC_AI_INTAKE_ENABLED || 'false').toLowerCase() !== 'true') {
+    return reply(res, { ok: false, code: 'PUBLIC_AI_INTAKE_DISABLED' }, 423, responseHeaders);
+  }
+  const jwt = header(req.headers, 'x-appwrite-user-jwt');
+  const account = await verifyPublicAiAccount(jwt);
+  if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
+  const name = cleanString(body.name, 160);
+  const mobile = normalizeAiMobile(body.phone);
+  const city = cleanString(body.city, 100);
+  const mode = cleanString(body.design_mode, 20);
+  const style = cleanString(body.style, 100);
+  const complexity = cleanString(body.complexity_level || 'simple', 20);
+  const styleKeys = {
+    'مدرن و مینیمال': 'modern',
+    'نئوکلاسیک': 'neoclassical',
+    'لوکس': 'luxury',
+    'کلاسیک': 'classic',
+    'پیشنهاد طراح': 'designer_recommendation'
+  };
+  const styleKey = styleKeys[style];
+  const doorMaterial = cleanString(body.door_material, 160);
+  const countertopMaterial = cleanString(body.countertop_material, 160);
+  const materialCodes = cleanString(body.material_codes, 1000);
+  const instructions = cleanString(body.instructions, 3000);
+  const fileName = cleanString(body.file_name, 255);
+  const mimeType = cleanString(body.mime_type, 120).toLowerCase();
+  const fileSize = Number(body.file_size);
+  const allowedMime = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'video/mp4', 'video/quicktime', 'video/webm']);
+  if (typeof body.website === 'string' && body.website.trim()) {
+    return reply(res, { ok: true, code: 'REQUEST_ACCEPTED' }, 200, responseHeaders);
+  }
+  if (name.length < 2 || !mobile || !['preserve', 'free'].includes(mode) || !styleKey ||
+      !['simple', 'medium', 'complex'].includes(complexity) || !fileName ||
+      !allowedMime.has(mimeType) || !Number.isSafeInteger(fileSize) || fileSize < 1 || fileSize > 30 * 1024 * 1024) {
+    return reply(res, { ok: false, code: 'INVALID_AI_FORM_OR_FILE' }, 400, responseHeaders);
+  }
+  if (!consumePublicRateLimit(req, mobile)) {
+    return reply(res, { ok: false, code: 'PUBLIC_RATE_LIMITED', retry_after_seconds: 600 }, 429, responseHeaders);
+  }
+  const pricing = await listRows('ai_design_pricing', key, 200);
+  const selected = pricing.rows.find((row) => row.style_key === styleKey);
+  if (!selected || !Number.isSafeInteger(Number(selected.base_price_toman))) {
+    return reply(res, { ok: false, code: 'AI_PRICING_UNAVAILABLE' }, 503, responseHeaders);
+  }
+  const multiplier = complexity === 'medium' ? 1.2 : complexity === 'complex' ? 1.4 : 1;
+  const quotedPrice = Math.min(3000000, Math.max(700000, Math.round(Number(selected.base_price_toman) * multiplier)));
+  const id = crypto.randomUUID();
+  const requestNumber = 'NA-' + id.replaceAll('-', '').slice(0, 10).toUpperCase();
+  const acceptanceToken = crypto.randomUUID() + crypto.randomUUID();
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(acceptanceToken));
+  const tokenHash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  const now = new Date().toISOString();
+  const saved = await createRow('ai_design_requests', {
+    request_number: requestNumber,
+    full_name: name,
+    mobile,
+    city: city || null,
+    design_mode: mode,
+    style,
+    complexity_level: complexity,
+    quoted_price_toman: quotedPrice,
+    door_material: doorMaterial || null,
+    countertop_material: countertopMaterial || null,
+    material_codes: materialCodes || null,
+    instructions: instructions || null,
+    structure_locked: mode === 'preserve',
+    price_acceptance_token_hash: tokenHash,
+    file_key: id,
+    original_file_name: fileName,
+    mime_type: mimeType,
+    file_size_bytes: fileSize,
+    payment_status: 'pending',
+    status: 'awaiting_payment',
+    created_at: now,
+    updated_at: now
+  }, key, id);
+  if (!saved.response.ok || saved.data.$id !== id) {
+    error('NOVA AI request save failed: HTTP ' + saved.response.status);
+    return reply(res, { ok: false, code: 'AI_REQUEST_SAVE_FAILED' }, 502, responseHeaders);
+  }
+  const audit = await createRow('audit_log', {
+    actor: null,
+    action: 'ai.request.created.public',
+    entity_type: 'ai_design_request',
+    entity_id: id,
+    details: JSON.stringify({ request_number: requestNumber, design_mode: mode, style_key: styleKey, uploader_user_id: account.$id }),
+    created_at: now
+  }, key);
+  if (!audit.response.ok) {
+    const rollback = await api('/tablesdb/' + DATABASE_ID + '/tables/ai_design_requests/rows/' + encodeURIComponent(id), key, { method: 'DELETE' });
+    if (!rollback.response.ok) return reply(res, { ok: false, code: 'AI_REQUEST_AUDIT_FAILED_PARTIAL', partial: true }, 502, responseHeaders);
+    return reply(res, { ok: false, code: 'AI_REQUEST_AUDIT_FAILED' }, 502, responseHeaders);
+  }
+  return reply(res, {
+    ok: true,
+    code: 'AI_REQUEST_CREATED',
+    request_id: id,
+    request_number: requestNumber,
+    quoted_price_toman: quotedPrice,
+    complexity_level: complexity,
+    price_acceptance_token: acceptanceToken
+  }, 201, responseHeaders);
+}
+async function handlePublicAiConfirmUpload(body, key, req, res, responseHeaders) {
+  const account = await verifyPublicAiAccount(header(req.headers, 'x-appwrite-user-jwt'));
+  if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
+  const requestId = cleanRowId(body.request_id);
+  if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+    return reply(res, { ok: false, code: 'INVALID_REQUEST_ID' }, 400, responseHeaders);
+  }
+  const current = await getRow('ai_design_requests', requestId, key);
+  if (!current.response.ok || current.data.$id !== requestId) {
+    return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+  }
+  const file = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(requestId), key);
+  if (!file.response.ok || file.data.$id !== requestId) {
+    return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_FOUND' }, 409, responseHeaders);
+  }
+  if (!ownsPrivateFile(file.data, account.$id)) {
+    return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_OWNED' }, 403, responseHeaders);
+  }
+  if (file.data.mimeType !== current.data.mime_type ||
+      Number(file.data.sizeOriginal) !== Number(current.data.file_size_bytes)) {
+    return reply(res, { ok: false, code: 'AI_UPLOAD_METADATA_MISMATCH' }, 409, responseHeaders);
+  }
+  const now = new Date().toISOString();
+  if (current.data.upload_completed_at) {
+    return reply(res, { ok: true, code: 'AI_UPLOAD_ALREADY_CONFIRMED' }, 200, responseHeaders);
+  }
+  const updated = await updateRow('ai_design_requests', requestId, {
+    upload_completed_at: now,
+    updated_at: now
+  }, key);
+  if (!updated.response.ok) return reply(res, { ok: false, code: 'AI_UPLOAD_CONFIRM_FAILED' }, 502, responseHeaders);
+  return reply(res, { ok: true, code: 'AI_UPLOAD_CONFIRMED' }, 200, responseHeaders);
+}
+async function handlePublicAiAcceptPrice(body, key, req, res, responseHeaders) {
+  const account = await verifyPublicAiAccount(header(req.headers, 'x-appwrite-user-jwt'));
+  if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
+  const requestId = cleanRowId(body.request_id);
+  const token = cleanString(body.price_acceptance_token, 80);
+  const amount = Number(body.accepted_amount_toman);
+  if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId) ||
+      !/^[0-9a-f-]{72}$/i.test(token) || !Number.isSafeInteger(amount) || amount < 700000 || amount > 3000000) {
+    return reply(res, { ok: false, code: 'INVALID_AI_PRICE_CONFIRMATION' }, 400, responseHeaders);
+  }
+  const current = await getRow('ai_design_requests', requestId, key);
+  if (!current.response.ok || current.data.$id !== requestId) {
+    return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+  }
+  const file = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(requestId), key);
+  if (!file.response.ok || !ownsPrivateFile(file.data, account.$id)) {
+    return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_OWNED' }, 403, responseHeaders);
+  }
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  const tokenHash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  if (!current.data.price_acceptance_token_hash || current.data.price_acceptance_token_hash !== tokenHash) {
+    return reply(res, { ok: false, code: 'INVALID_PRICE_CONFIRMATION_TOKEN' }, 403, responseHeaders);
+  }
+  if (Number(current.data.quoted_price_toman) !== amount) {
+    return reply(res, { ok: false, code: 'AI_PRICE_MISMATCH' }, 409, responseHeaders);
+  }
+  if (!current.data.upload_completed_at) return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_COMPLETED' }, 409, responseHeaders);
+  if (current.data.payment_status !== 'pending' || current.data.status !== 'awaiting_payment') {
+    return reply(res, { ok: false, code: 'AI_REQUEST_NOT_AWAITING_PAYMENT' }, 409, responseHeaders);
+  }
+  if (current.data.price_accepted_at) {
+    if (Number(current.data.price_accepted_amount_toman) === amount) {
+      return reply(res, { ok: true, code: 'AI_PRICE_ALREADY_ACCEPTED', already_accepted: true, accepted_amount_toman: amount }, 200, responseHeaders);
+    }
+    return reply(res, { ok: false, code: 'AI_PRICE_ALREADY_ACCEPTED_DIFFERENTLY' }, 409, responseHeaders);
+  }
+  const acceptedAt = new Date().toISOString();
+  const updated = await updateRow('ai_design_requests', requestId, {
+    price_accepted_at: acceptedAt,
+    price_accepted_amount_toman: amount,
+    updated_at: acceptedAt
+  }, key);
+  if (!updated.response.ok) return reply(res, { ok: false, code: 'AI_PRICE_ACCEPTANCE_FAILED' }, 502, responseHeaders);
+  const audit = await createRow('audit_log', {
+    actor: null,
+    action: 'ai.price.accepted.public',
+    entity_type: 'ai_design_request',
+    entity_id: requestId,
+    details: JSON.stringify({ accepted_amount_toman: amount, uploader_user_id: account.$id }),
+    created_at: acceptedAt
+  }, key);
+  if (!audit.response.ok) {
+    return reply(res, { ok: false, code: 'AI_PRICE_ACCEPTED_AUDIT_FAILED', partial: true, accepted_amount_toman: amount }, 502, responseHeaders);
+  }
+  return reply(res, { ok: true, code: 'AI_PRICE_ACCEPTED', accepted_amount_toman: amount, accepted_at: acceptedAt, payment_status: 'pending' }, 200, responseHeaders);
+}
+
 export default async ({ req, res, log, error }) => {
   const origin = header(req.headers, 'origin');
   const responseHeaders = corsHeaders(origin);
@@ -222,6 +440,13 @@ export default async ({ req, res, log, error }) => {
       if (!earlyBody || typeof earlyBody !== 'object' || Array.isArray(earlyBody)) return reply(res, { ok: false, code: 'INVALID_REQUEST_BODY' }, 400, responseHeaders);
     } catch {
       return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
+    }
+    if (['public_create_ai_design_request','public_confirm_ai_design_upload','public_accept_ai_design_price'].includes(earlyBody.action)) {
+      if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
+      if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
+      if (earlyBody.action === 'public_create_ai_design_request') return handlePublicAiCreate(earlyBody, earlyKey, req, res, responseHeaders, error);
+      if (earlyBody.action === 'public_confirm_ai_design_upload') return handlePublicAiConfirmUpload(earlyBody, earlyKey, req, res, responseHeaders);
+      return handlePublicAiAcceptPrice(earlyBody, earlyKey, req, res, responseHeaders);
     }
     if (earlyBody.action === 'public_create_order') {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
