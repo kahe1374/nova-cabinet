@@ -1,0 +1,136 @@
+name: Prepare private Appwrite AI uploads for anonymous sessions
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-upload-auth-prepare.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-private-user-uploads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Enable authenticated-user create only and verify per-file privacy
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint=process.env.APPWRITE_ENDPOINT;
+          const project=process.env.APPWRITE_PROJECT_ID;
+          const key=process.env.APPWRITE_API_KEY;
+          const bucket='nova-ai-designs';
+          if(!key) throw new Error('Missing APPWRITE_API_KEY');
+          const serverHeaders={'X-Appwrite-Project':project,'X-Appwrite-Key':key,'Content-Type':'application/json'};
+          async function main(){
+            const anon=await fetch(endpoint+'/account/sessions/anonymous',{
+              method:'POST',
+              headers:{'X-Appwrite-Project':project,'Content-Type':'application/json'},
+              body:'{}'
+            });
+            const session=await anon.json().catch(()=>({}));
+            const setCookie=anon.headers.get('set-cookie')||'';
+            const cookie=setCookie.split(';')[0];
+            if(!anon.ok||!session.$id||!cookie) {
+              throw new Error('Anonymous Appwrite sessions are unavailable; bucket was not modified. HTTP '+anon.status+' '+JSON.stringify({code:session.code,type:session.type,message:session.message}));
+            }
+            let accountId='';
+            let fileId='';
+            try {
+              const jwtRes=await fetch(endpoint+'/account/jwt',{
+                method:'POST',
+                headers:{'X-Appwrite-Project':project,'Content-Type':'application/json','Cookie':cookie},
+                body:'{}'
+              });
+              const jwtBody=await jwtRes.json().catch(()=>({}));
+              if(!jwtRes.ok||!jwtBody.jwt) throw new Error('Could not create temporary anonymous JWT.');
+              const jwt=jwtBody.jwt;
+              const whoRes=await fetch(endpoint+'/account',{headers:{'X-Appwrite-Project':project,'X-Appwrite-JWT':jwt}});
+              const who=await whoRes.json().catch(()=>({}));
+              if(!whoRes.ok||!who.$id) throw new Error('Anonymous account identity could not be verified.');
+              accountId=who.$id;
+              const bucketRes=await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket),{headers:serverHeaders});
+              const current=await bucketRes.json().catch(()=>({}));
+              if(!bucketRes.ok||current.$id!==bucket||current.fileSecurity!==true||current.enabled!==true) {
+                throw new Error('Existing private bucket could not be verified.');
+              }
+              const update=await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket),{
+                method:'PUT',headers:serverHeaders,
+                body:JSON.stringify({
+                  name:current.name,
+                  permissions:['create("users")'],
+                  fileSecurity:true,
+                  enabled:true,
+                  maximumFileSize:current.maximumFileSize,
+                  allowedFileExtensions:current.allowedFileExtensions,
+                  compression:current.compression,
+                  encryption:current.encryption,
+                  antivirus:current.antivirus,
+                  transformations:current.transformations,
+                  stripMetadata:current.stripMetadata,
+                  policies:current.policies||[]
+                })
+              });
+              const updated=await update.json().catch(()=>({}));
+              if(!update.ok) throw new Error('Could not set authenticated-user create-only permission. HTTP '+update.status+' '+JSON.stringify({code:updated.code,type:updated.type,message:updated.message}));
+              if(updated.fileSecurity!==true||!(updated.$permissions||[]).includes('create("users")')||
+                 (updated.$permissions||[]).some(p=>/^(read|update|delete)\\(/.test(p))) {
+                throw new Error('Bucket permissions are not restricted to authenticated-user create only.');
+              }
+              fileId=crypto.randomUUID();
+              const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p3sAAAAASUVORK5CYII=','base64');
+              const form=new FormData();
+              form.append('fileId',fileId);
+              form.append('file',new Blob([png],{type:'image/png'}),'nova-ai-private-upload-test.png');
+              for(const permission of ['read("user:'+accountId+'")','update("user:'+accountId+'")','delete("user:'+accountId+'")']) form.append('permissions[]',permission);
+              const upload=await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket)+'/files',{
+                method:'POST',headers:{'X-Appwrite-Project':project,'X-Appwrite-JWT':jwt},body:form
+              });
+              const uploaded=await upload.json().catch(()=>({}));
+              if(!upload.ok||uploaded.$id!==fileId) throw new Error('Private file upload test failed. HTTP '+upload.status+' '+JSON.stringify({code:uploaded.code,type:uploaded.type,message:uploaded.message}));
+              const privateCheck=await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket)+'/files/'+encodeURIComponent(fileId),{
+                headers:{'X-Appwrite-Project':project,'X-Appwrite-JWT':jwt}
+              });
+              const privateFile=await privateCheck.json().catch(()=>({}));
+              if(!privateCheck.ok||!(privateFile.$permissions||[]).some(p=>p.includes('user:'+accountId))) {
+                throw new Error('Uploaded file did not retain owner-only permissions.');
+              }
+              const publicCheck=await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket)+'/files/'+encodeURIComponent(fileId),{
+                headers:{'X-Appwrite-Project':project}
+              });
+              if(publicCheck.ok) throw new Error('Uploaded file is readable without its owner session.');
+              const del=await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket)+'/files/'+encodeURIComponent(fileId),{
+                method:'DELETE',headers:{'X-Appwrite-Project':project,'X-Appwrite-JWT':jwt}
+              });
+              if(!del.ok) throw new Error('Temporary uploaded file cleanup failed.');
+              fileId='';
+              console.log('ANONYMOUS_AUTHENTICATION_AVAILABLE=true');
+              console.log('BUCKET_CREATE_PERMISSION=create(users)');
+              console.log('BUCKET_READ_PERMISSION=none');
+              console.log('FILE_SECURITY=true');
+              console.log('UPLOAD_OWNER_PERMISSION_VERIFIED=true');
+              console.log('ANONYMOUS_FILE_READ_DENIED=true');
+              console.log('TEMPORARY_TEST_FILE_CLEANED=true');
+            } finally {
+              if(fileId) {
+                await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket)+'/files/'+encodeURIComponent(fileId),{
+                  method:'DELETE',headers:{'X-Appwrite-Project':project,'X-Appwrite-Key':key}
+                }).catch(()=>{});
+              }
+              if(accountId) {
+                await fetch(endpoint+'/users/'+encodeURIComponent(accountId),{
+                  method:'DELETE',headers:serverHeaders
+                }).catch(()=>{});
+              }
+              await fetch(endpoint+'/account/sessions/current',{
+                method:'DELETE',headers:{'X-Appwrite-Project':project,'Cookie':cookie}
+              }).catch(()=>{});
+            }
+          }
+          main().catch(e=>{console.error('PRIVATE_UPLOAD_PREPARATION_FAILED:',e.message);process.exit(1);});
+          NODE
