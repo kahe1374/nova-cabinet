@@ -333,7 +333,7 @@ async function handlePublicAiCreate(body, key, req, res, responseHeaders, error)
   }, 201, responseHeaders);
 }
 async function handlePublicAiConfirmUpload(body, key, req, res, responseHeaders) {
-  const account = await verifyPublicAiAccount(header(req.headers, 'x-appwrite-user-jwt'));
+  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096));
   if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
   const requestId = cleanRowId(body.request_id);
   if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
