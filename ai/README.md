@@ -17,6 +17,10 @@ This is the first safe infrastructure scaffold for the self-hosted NOVA AI path.
 - The cancel route is deliberately disabled until Appwrite authorization is implemented.
 - Do not connect this scaffold to production or expose the gateway publicly.
 
+## Android on-device evaluation
+
+See [android/README.md](android/README.md) for the MNN Diffusion evaluation path, model licensing boundaries, and repeatable cabinet quality test. This is a documented integration plan; no Android APK or model weights have been built or downloaded yet.
+
 ## Model policy
 
 Use only a model and code whose license permits the intended commercial use. Review the exact model card, weights license, dependencies, and redistribution terms. Customer images are not training data unless the customer explicitly opts in.
