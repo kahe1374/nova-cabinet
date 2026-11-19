@@ -232,8 +232,8 @@ async function handlePublicAiCreate(body, key, req, res, responseHeaders, error)
   if (String(process.env.NOVA_PUBLIC_AI_INTAKE_ENABLED || 'false').toLowerCase() !== 'true') {
     return reply(res, { ok: false, code: 'PUBLIC_AI_INTAKE_DISABLED' }, 423, responseHeaders);
   }
-  const jwt = header(req.headers, 'x-appwrite-user-jwt');
-  const account = await verifyPublicAiAccount(jwt);
+  const jwt = cleanString(body.session_jwt, 4096);
+  const account = await verifyPublicAiAccount(jwt, error);
   if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
   const name = cleanString(body.name, 160);
   const mobile = normalizeAiMobile(body.phone);
@@ -332,7 +332,7 @@ async function handlePublicAiCreate(body, key, req, res, responseHeaders, error)
     price_acceptance_token: acceptanceToken
   }, 201, responseHeaders);
 }
-async function handlePublicAiConfirmUpload(body, key, req, res, responseHeaders) {
+async function handlePublicAiConfirmUpload(body, key, req, res, responseHeaders, error) {
   const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
   if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
   const requestId = cleanRowId(body.request_id);
@@ -365,8 +365,8 @@ async function handlePublicAiConfirmUpload(body, key, req, res, responseHeaders)
   if (!updated.response.ok) return reply(res, { ok: false, code: 'AI_UPLOAD_CONFIRM_FAILED' }, 502, responseHeaders);
   return reply(res, { ok: true, code: 'AI_UPLOAD_CONFIRMED' }, 200, responseHeaders);
 }
-async function handlePublicAiAcceptPrice(body, key, req, res, responseHeaders) {
-  const account = await verifyPublicAiAccount(header(req.headers, 'x-appwrite-user-jwt'));
+async function handlePublicAiAcceptPrice(body, key, req, res, responseHeaders, error) {
+  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
   if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
   const requestId = cleanRowId(body.request_id);
   const token = cleanString(body.price_acceptance_token, 80);
@@ -445,8 +445,8 @@ export default async ({ req, res, log, error }) => {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
       if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
       if (earlyBody.action === 'public_create_ai_design_request') return handlePublicAiCreate(earlyBody, earlyKey, req, res, responseHeaders, error);
-      if (earlyBody.action === 'public_confirm_ai_design_upload') return handlePublicAiConfirmUpload(earlyBody, earlyKey, req, res, responseHeaders);
-      return handlePublicAiAcceptPrice(earlyBody, earlyKey, req, res, responseHeaders);
+      if (earlyBody.action === 'public_confirm_ai_design_upload') return handlePublicAiConfirmUpload(earlyBody, earlyKey, req, res, responseHeaders, error);
+      return handlePublicAiAcceptPrice(earlyBody, earlyKey, req, res, responseHeaders, error);
     }
     if (earlyBody.action === 'public_create_order') {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
