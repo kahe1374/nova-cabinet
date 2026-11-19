@@ -125,7 +125,7 @@ test('assignment action uses strict row identifier validation', () => {
   assert.match(source, /const orderId = cleanRowId\(body\.order_id\);[\s\S]*?const assigneeId/);
 });
 test('read-only health does not advertise write capabilities', () => {
-  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
 });
 
 
