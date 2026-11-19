@@ -298,3 +298,30 @@ test('public intake applies a per-runtime rate limit before any database writes'
   }
   assert.equal(writes, 20);
 });
+
+test('order status history is owner-only, read-only, and scoped to the requested order', async () => {
+  const calls = [];
+  const handler = load(ownerFetch(async (url, call) => {
+    const path = String(url); calls.push(path);
+    if (path.endsWith('/tables/orders/rows/order-123')) return appwriteResponse({ $id: 'order-123' });
+    if (path.includes('/tables/order_status_history/rows?')) return appwriteResponse({ rows: [
+      { $id: 'h2', order: 'order-123', old_status: 'new', new_status: 'under_review', note: 'checked', changed_by: 'manager-1', changed_at: '2026-01-02T00:00:00.000Z' },
+      { $id: 'other', order: 'another-order', new_status: 'new' },
+      { $id: 'h1', order: { $id: 'order-123' }, old_status: null, new_status: 'new', changed_by: null, changed_at: '2026-01-01T00:00:00.000Z' }
+    ], total: 3 });
+    throw new Error('unexpected call ' + path);
+  }));
+  const res = response();
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt', 'x-appwrite-key': 'ephemeral-test-key' }, body: { action: 'list_order_status_history', order_id: 'order-123' } }, res, log() {}, error() {} });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.code, 'ORDER_HISTORY_LOADED');
+  assert.deepEqual(res.body.rows.map(row => row.$id), ['h2', 'h1']);
+  assert.equal(res.body.rows[0].note, 'checked');
+  assert.equal(calls.some(path => /DELETE|PATCH|POST/.test(path)), false);
+});
+
+test('read-only health advertises history but still no write capabilities', () => {
+  assert.match(source, /'list_order_status_history'/);
+  assert.match(source, /if \(action === 'list_order_status_history'\)/);
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
+});
