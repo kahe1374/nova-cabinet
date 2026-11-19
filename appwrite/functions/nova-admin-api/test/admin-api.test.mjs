@@ -325,3 +325,22 @@ test('read-only health advertises history but still no write capabilities', () =
   assert.match(source, /if \(action === 'list_order_status_history'\)/);
   assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
 });
+
+test('order assignees lists only active authorized managers with minimal fields', async () => {
+  const handler = load(ownerFetch(async (url) => {
+    const path = String(url);
+    if (path.includes('/tables/app_users/rows?')) return appwriteResponse({ rows: [
+      { $id: 'manager-1', full_name: 'مدیر کارگاه', role: 'factory_manager', is_active: true, mobile: 'private' },
+      { $id: 'admin-1', full_name: 'مدیر', role: 'owner_admin', is_active: true },
+      { $id: 'staff-1', full_name: 'کارمند', role: 'staff', is_active: true },
+      { $id: 'inactive-1', full_name: 'غیرفعال', role: 'factory_manager', is_active: false }
+    ], total: 4 });
+    throw new Error('unexpected call ' + path);
+  }));
+  const res = response();
+  await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt', 'x-appwrite-key': 'ephemeral-test-key' }, body: { action: 'list_order_assignees' } }, res, log() {}, error() {} });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.code, 'ORDER_ASSIGNEES_LOADED');
+  assert.equal(Array.from(res.body.rows, row => row.$id).join(','), 'manager-1,admin-1');
+  assert.equal(Object.hasOwn(res.body.rows[0], 'mobile'), false);
+});
