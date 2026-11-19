@@ -1,0 +1,81 @@
+name: NOVA Android MNN Diffusion Engine
+
+on:
+  push:
+    paths:
+      - "ai/android/**"
+      - ".github/workflows/nova-android-mnn.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nova-android-mnn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout NOVA
+        uses: actions/checkout@v4
+
+      - name: Checkout upstream MNN
+        uses: actions/checkout@v4
+        with:
+          repository: alibaba/MNN
+          ref: master
+          path: third_party/MNN
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build python3 python3-pip zip
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK and NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK and CMake
+        run: |
+          sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
+          echo "ANDROID_NDK=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_PATH"
+
+      - name: Build MNN Android arm64 with diffusion and OpenCL
+        working-directory: third_party/MNN/project/android
+        run: |
+          mkdir -p build_64
+          cd build_64
+          ../build_64.sh "-DMNN_LOW_MEMORY=ON -DMNN_BUILD_DIFFUSION=ON -DMNN_BUILD_OPENCV=ON -DMNN_IMGCODECS=ON -DMNN_OPENCL=ON -DMNN_SEP_BUILD=OFF -DMNN_SUPPORT_TRANSFORMER_FUSE=ON -DMNN_ARM82=ON -DMNN_USE_LOGCAT=ON"
+
+      - name: Verify diffusion artifacts
+        run: |
+          set -e
+          find third_party/MNN/project/android/build_64 -type f \( -name "diffusion_demo" -o -name "libMNN*.so" -o -name "libMNN*.a" \) -print
+          test -n "$(find third_party/MNN/project/android/build_64 -type f -name 'diffusion_demo' -print -quit)"
+
+      - name: Package native engine artifacts
+        run: |
+          mkdir -p dist/nova-mnn-android-arm64
+          cp -a third_party/MNN/project/android/build_64/. dist/nova-mnn-android-arm64/
+          cp third_party/MNN/LICENSE dist/nova-mnn-android-arm64/ 2>/dev/null || true
+          cp -a third_party/MNN/project/android/build_64/include dist/nova-mnn-android-arm64/ 2>/dev/null || true
+          printf 'Upstream: https://github.com/alibaba/MNN\nCommit: %s\nABI: arm64-v8a\nTarget: Android native diffusion engine (not an APK)\n' "$(git -C third_party/MNN rev-parse HEAD)" > dist/nova-mnn-android-arm64/BUILD-INFO.txt
+          cd dist
+          zip -qr nova-mnn-android-arm64.zip nova-mnn-android-arm64
+
+      - name: Upload Android native engine
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-mnn-android-arm64
+          path: dist/nova-mnn-android-arm64.zip
+          retention-days: 14
