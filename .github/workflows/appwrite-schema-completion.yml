@@ -127,7 +127,43 @@ jobs:
                 http:smoke.status,status:execution.status,responseStatusCode:execution.responseStatusCode,code:smokeBody.code
               }));
             }
+
             console.log('PUBLIC_ENDPOINT_NO_WRITE_SMOKE_PASSED=true');
+            const testId=crypto.randomUUID();
+            const testMobile='0912'+String(Math.floor(Math.random()*10000000)).padStart(7,'0');
+            const testTitle='NOVA integration test '+testId.slice(0,8);
+            const create=await fetch(endpoint+'/functions/nova-admin-api/executions',{
+              method:'POST',
+              headers:{'X-Appwrite-Project':process.env.APPWRITE_PROJECT_ID,'Content-Type':'application/json'},
+              body:JSON.stringify({
+                body:JSON.stringify({
+                  action:'public_create_order',name:'NOVA Integration Test',phone:testMobile,
+                  type:testTitle,order_type:'cabinet',city:'NOVA-TEST',
+                  details:'AUTOMATED INTEGRATION TEST ONLY. Please do not process as a customer order.',
+                  idempotency_key:testId,website:''
+                }),
+                async:false,method:'POST',headers:{origin:'https://kahe1374.github.io'}
+              })
+            });
+            const created=await create.json().catch(()=>({}));
+            let createdBody={};
+            try { createdBody=JSON.parse(created.responseBody||'{}'); } catch {}
+            if (!create.ok || created.status!=='completed' || created.responseStatusCode!==201 ||
+              createdBody.code!=='ORDER_CREATED' || !createdBody.order_number) {
+              throw new Error('Real public create test failed: '+JSON.stringify({
+                http:create.status,status:created.status,responseStatusCode:created.responseStatusCode,code:createdBody.code
+              }));
+            }
+            const order=await get('/tablesdb/'+db+'/tables/orders/rows/'+encodeURIComponent(testId));
+            if (order.$id!==testId || order.order_number!==createdBody.order_number ||
+              order.status!=='new' || order.title!==testTitle) {
+              throw new Error('Created order could not be verified in Appwrite.');
+            }
+            console.log('PUBLIC_REAL_WRITE_TEST_PASSED=true');
+            console.log('PUBLIC_REAL_WRITE_TEST_ORDER_NUMBER='+createdBody.order_number);
+            console.log('PUBLIC_REAL_WRITE_TEST_ROW_ID='+testId);
+            console.log('PUBLIC_REAL_WRITE_TEST_CUSTOMER_MOBILE='+testMobile);
+            console.log('TEST_ORDER_LEFT_MARKED_FOR_OWNER_REVIEW=true');
           }
           main().catch(error => {
             console.error('SCHEMA_DIAGNOSTIC_FAILED:', error.message);
