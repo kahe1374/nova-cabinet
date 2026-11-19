@@ -662,8 +662,8 @@ export default async ({ req, res, log, error }) => {
     if (action === 'health') return reply(res, {
       ok: true, code: 'OWNER_AUTHENTICATED',
       capabilities: readOnly
-        ? ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing']
-        : ['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing',
+        ? ['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing']
+        : ['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing',
           'update_order_status', 'assign_order', 'upsert_ai_pricing'],
       readOnly
     }, 200, responseHeaders);
@@ -677,6 +677,29 @@ export default async ({ req, res, log, error }) => {
         return { ...order, customer: customerById.get(customerId) || (typeof customerRef === 'object' ? customerRef : null) };
       });
       return reply(res, { ok: true, code: 'ORDERS_LOADED', rows, total: orders.total, truncated: orders.total > rows.length }, 200, responseHeaders);
+    }
+
+    if (action === 'list_order_status_history') {
+      const orderId = cleanRowId(body.order_id);
+      if (!orderId) return reply(res, { ok: false, code: 'INVALID_ORDER_ID' }, 400, responseHeaders);
+      const order = await getRow('orders', orderId, key);
+      if (!order.response.ok || order.data.$id !== orderId) return reply(res, { ok: false, code: 'ORDER_NOT_FOUND' }, 404, responseHeaders);
+      const result = await listRows('order_status_history', key, 1000);
+      const rows = result.rows
+        .filter((row) => {
+          const ref = row.order;
+          return (typeof ref === 'string' ? ref : ref && ref.$id) === orderId;
+        })
+        .sort((x, y) => String(y.changed_at || '').localeCompare(String(x.changed_at || '')))
+        .map((row) => ({
+          $id: row.$id,
+          old_status: row.old_status || null,
+          new_status: row.new_status || null,
+          note: row.note || null,
+          changed_by: row.changed_by || null,
+          changed_at: row.changed_at || null
+        }));
+      return reply(res, { ok: true, code: 'ORDER_HISTORY_LOADED', rows, total: rows.length }, 200, responseHeaders);
     }
 
     if (action === 'list_ai_requests') {
