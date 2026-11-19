@@ -1,0 +1,32 @@
+name: Inspect NOVA AI function execution diagnostics
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-execution-debug.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read Appwrite execution diagnostics without request data or secrets
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+          EXECUTION_ID: 6afe7846b7ca4b6ee7b2
+        run: |
+          node <<'NODE'
+          const endpoint=process.env.APPWRITE_ENDPOINT,project=process.env.APPWRITE_PROJECT_ID,key=process.env.APPWRITE_API_KEY,id=process.env.EXECUTION_ID;
+          const r=await fetch(endpoint+'/functions/nova-admin-api/executions/'+encodeURIComponent(id),{headers:{'X-Appwrite-Project':project,'X-Appwrite-Key':key}});
+          const d=await r.json().catch(()=>({}));
+          if(!r.ok)throw new Error('Execution detail fetch failed HTTP '+r.status);
+          console.log('EXECUTION_STATUS='+d.status);
+          console.log('EXECUTION_RESPONSE_STATUS='+d.responseStatusCode);
+          console.log('EXECUTION_LOGS='+String(d.logs||'').slice(0,5000));
+          console.log('EXECUTION_ERRORS='+String(d.errors||'').slice(0,5000));
+          NODE
