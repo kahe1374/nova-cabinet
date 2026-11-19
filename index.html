@@ -1044,7 +1044,7 @@ async function novaAiAction(action,payload,jwt){
  const response=await fetch(NOVA_APPWRITE_ENDPOINT+'/functions/'+encodeURIComponent(NOVA_APPWRITE_FUNCTION)+'/executions',{
   method:'POST',
   headers:{'X-Appwrite-Project':NOVA_APPWRITE_PROJECT,'Content-Type':'application/json'},
-  body:JSON.stringify({body:JSON.stringify({action,...payload}),async:false,method:'POST',headers:{origin:window.location.origin,'x-appwrite-user-jwt':jwt}})
+  body:JSON.stringify({body:JSON.stringify({action,...payload,session_jwt:jwt}),async:false,method:'POST',headers:{origin:window.location.origin}})
  });
  const execution=await response.json().catch(()=>({}));
  let result={};
