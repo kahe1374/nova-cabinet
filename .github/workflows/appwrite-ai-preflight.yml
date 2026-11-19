@@ -80,10 +80,10 @@ jobs:
             } else {
               const b=bucket.data;
               const safe=b.enabled===true && b.fileSecurity===true &&
-                Array.isArray(b.$permissions) && b.$permissions.length===0 &&
+                Array.isArray(b.$permissions) && b.$permissions.length===1 && b.$permissions[0]==='create("users")' &&
                 b.maximumFileSize===31457280 && b.encryption===true &&
                 b.antivirus===true && b.stripMetadata===true;
-              console.log('AI_STORAGE_BUCKET_PRIVATE_AND_HARDENED='+safe);
+              console.log('AI_STORAGE_BUCKET_PRIVATE_USER_UPLOAD_ONLY='+safe);
               console.log('AI_STORAGE_ALLOWED_EXTENSIONS='+JSON.stringify(b.allowedFileExtensions||[]));
               if (!safe) allReady=false;
             }
