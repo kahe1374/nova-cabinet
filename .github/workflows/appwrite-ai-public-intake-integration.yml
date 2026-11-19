@@ -1,0 +1,142 @@
+name: NOVA Appwrite AI public intake integration test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-public-intake-integration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-ai-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Create synthetic AI request, upload private image, confirm upload and accept quoted price
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint=process.env.APPWRITE_ENDPOINT;
+          const project=process.env.APPWRITE_PROJECT_ID;
+          const db=encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const key=process.env.APPWRITE_API_KEY;
+          const bucket='nova-ai-designs';
+          const fn='nova-admin-api';
+          if(!key) throw new Error('Missing APPWRITE_API_KEY');
+          const serverHeaders={'X-Appwrite-Project':project,'X-Appwrite-Key':key,'Content-Type':'application/json'};
+          const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p3sAAAAASUVORK5CYII=','base64');
+          async function api(path,headers=serverHeaders){
+            const r=await fetch(endpoint+path,{headers});
+            const data=await r.json().catch(()=>({}));
+            if(!r.ok) throw new Error('Appwrite GET failed HTTP '+r.status+' '+JSON.stringify({code:data.code,type:data.type,message:data.message}));
+            return data;
+          }
+          async function invoke(action,payload,jwt){
+            const r=await fetch(endpoint+'/functions/'+encodeURIComponent(fn)+'/executions',{
+              method:'POST',
+              headers:{'X-Appwrite-Project':project,'Content-Type':'application/json'},
+              body:JSON.stringify({
+                body:JSON.stringify({action,...payload}),
+                async:false,
+                method:'POST',
+                headers:{origin:'https://kahe1374.github.io','x-appwrite-user-jwt':jwt}
+              })
+            });
+            const execution=await r.json().catch(()=>({}));
+            let body={};
+            try{body=JSON.parse(execution.responseBody||'{}');}catch{}
+            if(!r.ok||execution.status!=='completed'||execution.responseStatusCode<200||execution.responseStatusCode>=300)
+              throw new Error(action+' failed: '+JSON.stringify({http:r.status,execution:execution.status,status:execution.responseStatusCode,code:body.code}));
+            return body;
+          }
+          async function main(){
+            const anon=await fetch(endpoint+'/account/sessions/anonymous',{
+              method:'POST',headers:{'X-Appwrite-Project':project,'Content-Type':'application/json'},body:'{}'
+            });
+            const session=await anon.json().catch(()=>({}));
+            const cookie=(anon.headers.get('set-cookie')||'').split(';')[0];
+            if(!anon.ok||!session.$id||!cookie) throw new Error('Could not create temporary anonymous Appwrite session.');
+            let accountId='';
+            try{
+              const jwtRes=await fetch(endpoint+'/account/jwt',{
+                method:'POST',headers:{'X-Appwrite-Project':project,'Content-Type':'application/json','Cookie':cookie},body:'{}'
+              });
+              const jwtData=await jwtRes.json().catch(()=>({}));
+              if(!jwtRes.ok||!jwtData.jwt) throw new Error('Anonymous JWT creation failed.');
+              const jwt=jwtData.jwt;
+              const account=await api('/account',{'X-Appwrite-Project':project,'X-Appwrite-JWT':jwt});
+              accountId=account.$id;
+              const request=await invoke('public_create_ai_design_request',{
+                name:'NOVA AI INTEGRATION TEST',
+                phone:'09127047616',
+                city:'NOVA-TEST',
+                design_mode:'preserve',
+                style:'مدرن و مینیمال',
+                complexity_level:'simple',
+                door_material:'AUTOMATED TEST ONLY',
+                countertop_material:'AUTOMATED TEST ONLY',
+                material_codes:'NOVA-TEST',
+                instructions:'AUTOMATED TEST ONLY. Synthetic integration test; do not process as a customer request.',
+                file_name:'NOVA-INTEGRATION-TEST.png',
+                mime_type:'image/png',
+                file_size:png.length,
+                website:''
+              },jwt);
+              if(!request.request_id||!request.request_number||request.quoted_price_toman!==700000||!request.price_acceptance_token)
+                throw new Error('AI request response did not match expected price and identifiers.');
+              const permissions=['read("user:'+accountId+'")','update("user:'+accountId+'")','delete("user:'+accountId+'")'];
+              const form=new FormData();
+              form.append('fileId',request.request_id);
+              form.append('file',new Blob([png],{type:'image/png'}),'NOVA-INTEGRATION-TEST.png');
+              for(const p of permissions) form.append('permissions[]',p);
+              const upload=await fetch(endpoint+'/storage/buckets/'+encodeURIComponent(bucket)+'/files',{
+                method:'POST',headers:{'X-Appwrite-Project':project,'X-Appwrite-JWT':jwt},body:form
+              });
+              const uploaded=await upload.json().catch(()=>({}));
+              if(!upload.ok||uploaded.$id!==request.request_id) throw new Error('AI test file upload failed HTTP '+upload.status+' '+JSON.stringify({code:uploaded.code,type:uploaded.type,message:uploaded.message}));
+              const confirmed=await invoke('public_confirm_ai_design_upload',{request_id:request.request_id},jwt);
+              if(confirmed.code!=='AI_UPLOAD_CONFIRMED'&&confirmed.code!=='AI_UPLOAD_ALREADY_CONFIRMED')
+                throw new Error('AI upload confirmation failed: '+JSON.stringify(confirmed));
+              const accepted=await invoke('public_accept_ai_design_price',{
+                request_id:request.request_id,
+                accepted_amount_toman:request.quoted_price_toman,
+                price_acceptance_token:request.price_acceptance_token
+              },jwt);
+              if(accepted.code!=='AI_PRICE_ACCEPTED'&&accepted.code!=='AI_PRICE_ALREADY_ACCEPTED')
+                throw new Error('AI price acceptance failed: '+JSON.stringify(accepted));
+              const row=await api('/tablesdb/'+db+'/tables/ai_design_requests/rows/'+encodeURIComponent(request.request_id));
+              if(row.$id!==request.request_id||row.request_number!==request.request_number||
+                 row.upload_completed_at==null||row.price_accepted_at==null||
+                 Number(row.price_accepted_amount_toman)!==700000||row.payment_status!=='pending'||
+                 row.status!=='awaiting_payment'||row.full_name!=='NOVA AI INTEGRATION TEST')
+                throw new Error('AI request row verification failed.');
+              const file=await api('/storage/buckets/'+encodeURIComponent(bucket)+'/files/'+encodeURIComponent(request.request_id),{'X-Appwrite-Project':project,'X-Appwrite-JWT':jwt});
+              if(file.$id!==request.request_id||!(file.$permissions||[]).some(p=>p.includes('user:'+accountId)))
+                throw new Error('AI test file privacy verification failed.');
+              console.log('PUBLIC_AI_REQUEST_CREATED=true');
+              console.log('PUBLIC_AI_REQUEST_NUMBER='+request.request_number);
+              console.log('PUBLIC_AI_REQUEST_ID='+request.request_id);
+              console.log('PUBLIC_AI_PRIVATE_FILE_UPLOAD_VERIFIED=true');
+              console.log('PUBLIC_AI_UPLOAD_CONFIRMATION_VERIFIED=true');
+              console.log('PUBLIC_AI_PRICE_ACCEPTANCE_VERIFIED=true');
+              console.log('PUBLIC_AI_PRICE_TOMAN=700000');
+              console.log('PUBLIC_AI_PAYMENT_STILL_PENDING=true');
+              console.log('SYNTHETIC_AI_TEST_ROW_LEFT_FOR_OWNER_REVIEW=true');
+              console.log('SYNTHETIC_AI_TEST_FILE_LEFT_PRIVATE=true');
+            } finally {
+              if(accountId){
+                const deleted=await fetch(endpoint+'/account',{
+                  method:'DELETE',headers:{'X-Appwrite-Project':project,'Cookie':cookie}
+                }).catch(()=>null);
+                console.log('TEMPORARY_ANONYMOUS_TEST_ACCOUNT_CLEANED='+(!!deleted&&deleted.ok));
+              }
+            }
+          }
+          main().catch(e=>{console.error('PUBLIC_AI_INTEGRATION_FAILED:',e.message);process.exit(1);});
+          NODE
