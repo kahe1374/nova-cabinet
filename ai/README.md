@@ -24,3 +24,19 @@ Use only a model and code whose license permits the intended commercial use. Rev
 ## Cost policy
 
 Local CPU development can be free but will be slow and may not support useful image generation. Free hosted GPU sessions are temporary and unsuitable for guaranteed customer jobs. Benchmark candidate models before selecting hardware.
+
+## Automated checks
+
+Run the gateway unit tests locally:
+
+```bash
+cd ai/gateway
+pip install -r requirements-dev.txt
+PYTHONPATH=. pytest -q
+```
+
+GitHub Actions runs the same ticket-validation tests when gateway files change. The tests cover valid signatures, modified signatures, expired tickets, missing required claims, and fail-closed behavior when the signing secret is absent.
+
+## Model evaluation
+
+See [MODEL-SELECTION.md](MODEL-SELECTION.md) for the initial Qwen-Image-Edit-2511 license and deployment review. No model weights are included or downloaded, and no inference model is active yet.
