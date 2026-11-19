@@ -41,14 +41,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK and NDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install NDK and CMake
+      - name: Install Android NDK and CMake
         run: |
-          sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
-          echo "ANDROID_NDK=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
-          echo "${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_PATH"
+          echo "ANDROID_SDK_ROOT=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.2.12479018" "cmake;3.22.1"
+          echo "ANDROID_NDK=${ANDROID_HOME}/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "${ANDROID_HOME}/ndk/27.2.12479018" >> "$GITHUB_PATH"
 
       - name: Build MNN Android arm64 with diffusion and OpenCL
         working-directory: third_party/MNN/project/android
@@ -69,7 +68,7 @@ jobs:
           cp -a third_party/MNN/project/android/build_64/. dist/nova-mnn-android-arm64/
           cp third_party/MNN/LICENSE dist/nova-mnn-android-arm64/ 2>/dev/null || true
           cp -a third_party/MNN/project/android/build_64/include dist/nova-mnn-android-arm64/ 2>/dev/null || true
-          printf 'Upstream: https://github.com/alibaba/MNN\nCommit: %s\nABI: arm64-v8a\nTarget: Android native diffusion engine (not an APK)\n' "$(git -C third_party/MNN rev-parse HEAD)" > dist/nova-mnn-android-arm64/BUILD-INFO.txt
+          printf 'Upstream: https://github.com/alibaba/MNN\\nCommit: %s\\nABI: arm64-v8a\\nTarget: Android native diffusion engine (not an APK)\\n' "$(git -C third_party/MNN rev-parse HEAD)" > dist/nova-mnn-android-arm64/BUILD-INFO.txt
           cd dist
           zip -qr nova-mnn-android-arm64.zip nova-mnn-android-arm64
 
