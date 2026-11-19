@@ -1,0 +1,128 @@
+name: NOVA public forms integration tests
+
+on:
+  push:
+    paths:
+      - '.github/workflows/nova-public-forms-integration.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-public-forms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Submit and verify all three public form types in Appwrite
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const key = process.env.APPWRITE_API_KEY;
+          if (!key) throw new Error('APPWRITE_API_KEY is missing');
+          const headers = {
+            'X-Appwrite-Project': project,
+            'X-Appwrite-Key': key,
+            'Content-Type': 'application/json'
+          };
+          async function get(path) {
+            const r = await fetch(endpoint + path, { headers });
+            const raw = await r.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!r.ok) throw new Error('Appwrite GET failed: HTTP ' + r.status + ' ' + path);
+            return data;
+          }
+          const tests = [
+            {
+              label: 'SMART_CONSULTATION',
+              name: 'NOVA TEST - مشاوره هوشمند',
+              type: 'مشاوره هوشمند - کابینت آشپزخانه',
+              order_type: 'cabinet',
+              details: 'AUTOMATED TEST ONLY. Synthetic smart consultation form submission. Do not process as a customer request.'
+            },
+            {
+              label: 'PRICE_INQUIRY',
+              name: 'NOVA TEST - استعلام قیمت',
+              type: 'استعلام قیمت - کابینت آشپزخانه',
+              order_type: 'cabinet',
+              details: 'AUTOMATED TEST ONLY. Synthetic price inquiry form submission. Do not process as a customer request.'
+            },
+            {
+              label: 'SITE_VISIT',
+              name: 'NOVA TEST - بازدید و اندازه‌گیری',
+              type: 'درخواست بازدید و اندازه‌گیری - کابینت آشپزخانه',
+              order_type: 'workshop_service',
+              city: 'NOVA-TEST',
+              address: 'AUTOMATED TEST ONLY - no real visit address',
+              details: 'AUTOMATED TEST ONLY. Synthetic site visit form submission. Do not schedule a visit or process as a customer request.'
+            }
+          ];
+          async function submit(test, index) {
+            const id = crypto.randomUUID();
+            const phone = '0912' + String(1000000 + Math.floor(Math.random() * 8999999));
+            const payload = {
+              action: 'public_create_order',
+              name: test.name,
+              phone,
+              type: test.type,
+              order_type: test.order_type,
+              city: test.city || 'NOVA-TEST',
+              address: test.address || '',
+              details: test.details,
+              idempotency_key: id,
+              website: ''
+            };
+            const response = await fetch(endpoint + '/functions/nova-admin-api/executions', {
+              method: 'POST',
+              headers: { 'X-Appwrite-Project': project, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                body: JSON.stringify(payload),
+                async: false,
+                method: 'POST',
+                headers: { origin: 'https://kahe1374.github.io' }
+              })
+            });
+            const execution = await response.json().catch(() => ({}));
+            let result = {};
+            try { result = JSON.parse(execution.responseBody || '{}'); } catch {}
+            if (!response.ok || execution.status !== 'completed' ||
+                execution.responseStatusCode !== 201 || result.code !== 'ORDER_CREATED' ||
+                !result.order_number) {
+              throw new Error(test.label + ' submission failed: ' + JSON.stringify({
+                http: response.status, execution: execution.status,
+                responseStatusCode: execution.responseStatusCode, code: result.code
+              }));
+            }
+            const order = await get('/tablesdb/' + db + '/tables/orders/rows/' + encodeURIComponent(id));
+            if (order.$id !== id || order.order_number !== result.order_number ||
+                order.title !== test.type || order.order_type !== test.order_type ||
+                order.status !== 'new') {
+              throw new Error(test.label + ' order row verification failed');
+            }
+            const customerId = typeof order.customer === 'string' ? order.customer : order.customer?.$id;
+            if (!customerId) throw new Error(test.label + ' customer relationship missing');
+            const customer = await get('/tablesdb/' + db + '/tables/customers/rows/' + encodeURIComponent(customerId));
+            if (customer.$id !== customerId || customer.full_name !== test.name) {
+              throw new Error(test.label + ' customer row verification failed');
+            }
+            console.log(test.label + '_PASSED=true');
+            console.log(test.label + '_ORDER_NUMBER=' + result.order_number);
+            console.log(test.label + '_ROW_ID=' + id);
+          }
+          (async () => {
+            for (let i = 0; i < tests.length; i++) await submit(tests[i], i);
+            console.log('ALL_THREE_PUBLIC_FORMS_PASSED=true');
+            console.log('SYNTHETIC_TEST_ROWS_LEFT_FOR_OWNER_REVIEW=true');
+          })().catch(err => {
+            console.error('PUBLIC_FORMS_INTEGRATION_FAILED:', err.message);
+            process.exit(1);
+          });
+          NODE
