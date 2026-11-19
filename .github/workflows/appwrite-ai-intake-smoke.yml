@@ -1,0 +1,78 @@
+name: NOVA Appwrite AI intake smoke test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-intake-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Verify Appwrite AI request, private upload, confirmation and price acceptance
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint=process.env.APPWRITE_ENDPOINT, project=process.env.APPWRITE_PROJECT_ID;
+          const db=encodeURIComponent(process.env.APPWRITE_DATABASE_ID), key=process.env.APPWRITE_API_KEY;
+          if(!key) throw new Error('Missing APPWRITE_API_KEY');
+          const bucket='nova-ai-designs', fn='nova-admin-api';
+          const server={'X-Appwrite-Project':project,'X-Appwrite-Key':key,'Content-Type':'application/json'};
+          const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p3sAAAAASUVORK5CYII=','base64');
+          async function get(path,headers=server){const r=await fetch(endpoint+path,{headers});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error('GET '+path+' HTTP '+r.status);return d;}
+          async function invoke(action,payload,jwt){
+            const r=await fetch(endpoint+'/functions/'+fn+'/executions',{method:'POST',headers:{'X-Appwrite-Project':project,'Content-Type':'application/json'},body:JSON.stringify({body:JSON.stringify({action,...payload,session_jwt:jwt}),async:false,method:'POST',headers:{origin:'https://kahe1374.github.io'}})});
+            const e=await r.json().catch(()=>({}));
+            let b={};try{b=JSON.parse(e.responseBody||'{}')}catch{}
+            if(!r.ok||e.status!=='completed'||e.responseStatusCode<200||e.responseStatusCode>=300)
+              throw new Error(action+' HTTP '+r.status+' execution '+e.status+' response '+e.responseStatusCode+' code '+b.code+' detail '+JSON.stringify(e).slice(0,1000));
+            return b;
+          }
+          async function main(){
+            const anon=await fetch(endpoint+'/account/sessions/anonymous',{method:'POST',headers:{'X-Appwrite-Project':project,'Content-Type':'application/json'},body:'{}'});
+            const s=await anon.json().catch(()=>({}));
+            const cookie=(anon.headers.get('set-cookie')||'').split(';')[0];
+            if(!anon.ok||!cookie)throw new Error('Anonymous session unavailable HTTP '+anon.status);
+            const jr=await fetch(endpoint+'/account/jwt',{method:'POST',headers:{'X-Appwrite-Project':project,'Content-Type':'application/json','Cookie':cookie},body:'{}'});
+            const jd=await jr.json().catch(()=>({}));
+            if(!jr.ok||!jd.jwt)throw new Error('JWT create failed HTTP '+jr.status);
+            const user=await get('/account',{'X-Appwrite-Project':project,'X-Appwrite-JWT':jd.jwt});
+            const request=await invoke('public_create_ai_design_request',{
+              name:'NOVA AI INTEGRATION TEST',phone:'09127047616',city:'NOVA-TEST',
+              design_mode:'preserve',style:'مدرن و مینیمال',complexity_level:'simple',
+              door_material:'AUTOMATED TEST ONLY',countertop_material:'AUTOMATED TEST ONLY',
+              material_codes:'NOVA-TEST',instructions:'AUTOMATED TEST ONLY. Do not process as a customer request.',
+              file_name:'NOVA-INTEGRATION-TEST.png',mime_type:'image/png',file_size:png.length,website:''
+            },jd.jwt);
+            if(!request.request_id||request.quoted_price_toman!==700000)throw new Error('Unexpected AI request response '+JSON.stringify(request));
+            const form=new FormData();form.append('fileId',request.request_id);form.append('file',new Blob([png],{type:'image/png'}),'NOVA-INTEGRATION-TEST.png');
+            for(const p of ['read("user:'+user.$id+'")','update("user:'+user.$id+'")','delete("user:'+user.$id+'")'])form.append('permissions[]',p);
+            const up=await fetch(endpoint+'/storage/buckets/'+bucket+'/files',{method:'POST',headers:{'X-Appwrite-Project':project,'X-Appwrite-JWT':jd.jwt},body:form});
+            const uploaded=await up.json().catch(()=>({}));
+            if(!up.ok||uploaded.$id!==request.request_id)throw new Error('Upload failed HTTP '+up.status+' '+JSON.stringify({code:uploaded.code,type:uploaded.type,message:uploaded.message}));
+            const confirmed=await invoke('public_confirm_ai_design_upload',{request_id:request.request_id},jd.jwt);
+            if(!['AI_UPLOAD_CONFIRMED','AI_UPLOAD_ALREADY_CONFIRMED'].includes(confirmed.code))throw new Error('Confirm failed '+JSON.stringify(confirmed));
+            const accepted=await invoke('public_accept_ai_design_price',{request_id:request.request_id,accepted_amount_toman:700000,price_acceptance_token:request.price_acceptance_token},jd.jwt);
+            if(!['AI_PRICE_ACCEPTED','AI_PRICE_ALREADY_ACCEPTED'].includes(accepted.code))throw new Error('Accept failed '+JSON.stringify(accepted));
+            const row=await get('/tablesdb/'+db+'/tables/ai_design_requests/rows/'+request.request_id);
+            if(!row.upload_completed_at||!row.price_accepted_at||row.payment_status!=='pending'||row.status!=='awaiting_payment')throw new Error('Final AI row state mismatch');
+            console.log('AI_PUBLIC_REQUEST_CREATED=true');
+            console.log('AI_PRIVATE_UPLOAD_CONFIRMED=true');
+            console.log('AI_PRICE_ACCEPTED=true');
+            console.log('AI_PRICE_TOMAN=700000');
+            console.log('AI_PAYMENT_PENDING=true');
+            console.log('AI_TEST_REQUEST_NUMBER='+request.request_number);
+            console.log('AI_TEST_REQUEST_ID='+request.request_id);
+            console.log('AI_TEST_RECORD_LEFT_FOR_OWNER_REVIEW=true');
+          }
+          main().catch(e=>{console.error('AI_INTAKE_SMOKE_FAILED:',e.message);process.exit(1)});
+          NODE
