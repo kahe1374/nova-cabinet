@@ -1,0 +1,95 @@
+name: Appwrite AI design preflight (read-only)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-ai-schema-and-storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Inspect private AI tables, columns, and storage bucket without changing data
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint = process.env.APPWRITE_ENDPOINT;
+          const project = process.env.APPWRITE_PROJECT_ID;
+          const db = encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const key = process.env.APPWRITE_API_KEY;
+          if (!key) throw new Error('APPWRITE_API_KEY is missing');
+          const headers = {'X-Appwrite-Project':project,'X-Appwrite-Key':key};
+          async function get(path) {
+            const r = await fetch(endpoint + path, {headers});
+            const raw = await r.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch {}
+            if (!r.ok) return {missing:r.status===404,status:r.status,data};
+            return {missing:false,status:r.status,data};
+          }
+          async function main() {
+            const definitions = {
+              ai_design_requests: [
+                'request_number','full_name','mobile','city','design_mode','style',
+                'door_material','countertop_material','material_codes','instructions',
+                'structure_locked','payment_status','status','file_key','original_file_name',
+                'mime_type','file_size_bytes','created_at','updated_at','upload_completed_at',
+                'admin_note','fal_request_id','fal_status_url','fal_response_url',
+                'output_file_key','output_description','generation_started_at','generated_at',
+                'complexity_level','quoted_price_toman','price_accepted_at',
+                'price_accepted_amount_toman','price_acceptance_token_hash'
+              ],
+              ai_design_pricing: [
+                'style_key','style_label','base_price_toman','updated_at','updated_by'
+              ]
+            };
+            let allReady = true;
+            for (const [tableId, required] of Object.entries(definitions)) {
+              const table = await get('/tablesdb/'+db+'/tables/'+encodeURIComponent(tableId));
+              if (table.missing) {
+                console.log('AI_TABLE_MISSING='+tableId);
+                allReady = false;
+                continue;
+              }
+              if (table.status !== 200) throw new Error('Cannot inspect table '+tableId+': HTTP '+table.status);
+              const t=table.data;
+              const privateOk=t.enabled===true && t.rowSecurity===true && Array.isArray(t.$permissions) && t.$permissions.length===0;
+              console.log('AI_TABLE_PRIVATE_'+tableId+'='+privateOk);
+              if (!privateOk) allReady=false;
+              const cols=await get('/tablesdb/'+db+'/tables/'+encodeURIComponent(tableId)+'/columns?queries[]='+encodeURIComponent(JSON.stringify({method:'limit',values:[100]})));
+              if (cols.status!==200 || !Array.isArray(cols.data.columns)) throw new Error('Cannot inspect columns for '+tableId);
+              const missing=required.filter(k=>!cols.data.columns.some(c=>c.key===k && c.status==='available'));
+              console.log('AI_TABLE_MISSING_COLUMNS_'+tableId+'='+JSON.stringify(missing));
+              if (missing.length) allReady=false;
+            }
+            const bucket=await get('/storage/buckets/nova-ai-designs');
+            if (bucket.missing) {
+              console.log('AI_STORAGE_BUCKET_MISSING=true');
+              allReady=false;
+            } else if (bucket.status!==200) {
+              throw new Error('Cannot inspect AI storage bucket: HTTP '+bucket.status);
+            } else {
+              const b=bucket.data;
+              const safe=b.enabled===true && b.fileSecurity===true &&
+                Array.isArray(b.$permissions) && b.$permissions.length===0 &&
+                b.maximumFileSize===31457280 && b.encryption===true &&
+                b.antivirus===true && b.stripMetadata===true;
+              console.log('AI_STORAGE_BUCKET_PRIVATE_AND_HARDENED='+safe);
+              console.log('AI_STORAGE_ALLOWED_EXTENSIONS='+JSON.stringify(b.allowedFileExtensions||[]));
+              if (!safe) allReady=false;
+            }
+            console.log('AI_PREFLIGHT_READY='+allReady);
+            console.log('READ_ONLY_PREFLIGHT_NO_CHANGES=true');
+            if (!allReady) process.exitCode=2;
+          }
+          main().catch(e=>{console.error('AI_PREFLIGHT_FAILED:',e.message);process.exit(1);});
+          NODE
