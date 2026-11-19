@@ -205,12 +205,12 @@ async function handlePublicOrder(body, key, req, res, responseHeaders, error) {
 }
 
 
-async function verifyPublicAiAccount(jwt) {
-  if (!jwt) return null;
+async function verifyPublicAiAccount(jwt, error) {
+  if (typeof jwt !== 'string' || !jwt) { error('NOVA AI session JWT missing from request payload'); return null; }
   const response = await fetch(ENDPOINT + '/account', {
     headers: { 'X-Appwrite-Project': PROJECT_ID, 'X-Appwrite-JWT': jwt }
   });
-  if (!response.ok) return null;
+  if (!response.ok) { error('NOVA AI session JWT verification returned HTTP ' + response.status); return null; }
   const account = await response.json();
   return account && account.$id ? account : null;
 }
@@ -333,7 +333,7 @@ async function handlePublicAiCreate(body, key, req, res, responseHeaders, error)
   }, 201, responseHeaders);
 }
 async function handlePublicAiConfirmUpload(body, key, req, res, responseHeaders) {
-  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096));
+  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
   if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
   const requestId = cleanRowId(body.request_id);
   if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
