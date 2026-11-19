@@ -18,7 +18,7 @@ button{border:1px solid var(--gold);background:var(--gold);color:#171716;font-we
 .toolbar{display:grid;grid-template-columns:1fr 220px;gap:10px;margin:8px 0 14px}.toolbar input,.toolbar select{margin:0}
 select{font:inherit;background:#151514;color:var(--text);border:1px solid var(--line);padding:10px;border-radius:6px}
 .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--gold);font-size:12px}
-.empty{padding:22px;text-align:center;color:var(--muted)}.notice{border-right:3px solid var(--gold);padding:8px 12px}
+.empty{padding:22px;text-align:center;color:var(--muted)}.notice{border-right:3px solid var(--gold);padding:8px 12px}.history-panel{margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:8px}.history-panel table{min-width:600px}
 @media(max-width:600px){.card{padding:15px}.toolbar{grid-template-columns:1fr}}
 </style></head>
 <body><main>
@@ -29,7 +29,7 @@ select{font:inherit;background:#151514;color:var(--text);border:1px solid var(--
 <div id="loginStatus" class="status" role="status" aria-live="polite">برای شروع، کد ورود را ارسال کن.</div></section>
 <section id="dashboard" class="hidden">
 <div class="card"><div class="row"><h2>وضعیت اتصال</h2><button id="refresh">به‌روزرسانی همه اطلاعات</button></div><div id="health" class="status">در حال بررسی...</div><p class="notice">حالت فعلی فقط‌خواندنی است؛ ثبت، ویرایش و حذف از این پنل غیرفعال است. داده‌های Supabase تغییری نمی‌کنند.</p></div>
-<div class="card"><div class="row"><h2>سفارش‌ها</h2><span id="ordersCount" class="muted"></span></div><div class="toolbar"><input id="orderSearch" type="search" placeholder="جست‌وجوی شماره، مشتری یا عنوان"><select id="orderStatusFilter" aria-label="فیلتر وضعیت"><option value="">همه وضعیت‌ها</option></select></div><div id="ordersStatus" class="status">در انتظار دریافت...</div><div id="orders" class="table"></div></div>
+<div class="card"><div class="row"><h2>سفارش‌ها</h2><span id="ordersCount" class="muted"></span></div><div class="toolbar"><input id="orderSearch" type="search" placeholder="جست‌وجوی شماره، مشتری یا عنوان"><select id="orderStatusFilter" aria-label="فیلتر وضعیت"><option value="">همه وضعیت‌ها</option></select></div><div id="ordersStatus" class="status">در انتظار دریافت...</div><div id="orders" class="table"></div><section id="orderHistory" class="history-panel hidden" aria-live="polite"><div class="row"><h3 id="historyTitle">سوابق تغییر وضعیت</h3><button id="historyClose" type="button">بستن سوابق</button></div><div id="historyStatus" class="status">برای مشاهده، سوابق یک سفارش را باز کن.</div><div id="historyRows" class="table"></div></section></div>
 <div class="card"><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><span id="aiCount" class="muted"></span></div><div id="aiStatus" class="status">در انتظار دریافت...</div><div id="ai" class="grid"></div></div>
 <div class="card"><div class="row"><h2>تعرفه‌های طراحی</h2><span id="pricingCount" class="muted"></span></div><div id="pricingStatus" class="status">در انتظار دریافت...</div><div id="pricing" class="grid"></div></div>
 </section></main>
@@ -58,8 +58,12 @@ function renderOrders(){
  const rows=ordersCache.filter(r=>{const c=r.customer||{};const hay=[r.order_number,r.title,r.description,c.full_name,c.mobile].filter(Boolean).join(' ').toLocaleLowerCase('fa');return(!query||hay.includes(query))&&(!filter||r.status===filter)});
  $('orders').replaceChildren();$('ordersCount').textContent=rows.length+' از '+ordersCache.length;
  if(!rows.length){$('orders').append(node('div',ordersCache.length?'موردی با این جست‌وجو یا فیلتر پیدا نشد.':'هنوز سفارشی در Appwrite ثبت نشده است.','empty'));return;}
- const table=node('table'),thead=node('thead'),hr=node('tr');for(const h of ['شماره سفارش','مشتری / تماس','شرح درخواست','نوع','وضعیت','تاریخ ثبت','مدیریت وضعیت'])hr.append(node('th',h));thead.append(hr);table.append(thead);
+ const table=node('table'),thead=node('thead'),hr=node('tr');for(const h of ['شماره سفارش','مشتری / تماس','شرح درخواست','نوع','وضعیت','تاریخ ثبت','مدیریت وضعیت','سوابق'])hr.append(node('th',h));thead.append(hr);table.append(thead);
  const tbody=node('tbody');for(const r of rows){const tr=node('tr'),c=r.customer||{};const vals=[r.order_number||'—',[c.full_name,c.mobile].filter(Boolean).join(' · ')||'—',r.title||r.description||'—',r.order_type==='workshop_service'?'خدمات کارگاهی':'کابینت و دکوراسیون',orderLabels[r.status]||r.status||'—',r.created_at?new Date(r.created_at).toLocaleString('fa-IR'):'—'];for(const v of vals)tr.append(node('td',String(v)));
+  const historyCell=node('td');
+  const historyButton=node('button','مشاهده سوابق');historyButton.type='button';
+  historyButton.addEventListener('click',()=>showOrderHistory(r));
+  historyCell.append(historyButton);tr.append(historyCell);
   const actionCell=node('td');
   const statusSelect=node('select');statusSelect.setAttribute('aria-label','وضعیت جدید سفارش');
   for(const [key,label] of Object.entries(orderLabels))statusSelect.append(new Option(label,key));
@@ -74,6 +78,29 @@ function renderOrders(){
    catch(e){say('ordersStatus','تغییر وضعیت انجام نشد: '+e.message);save.disabled=false;}
   });
   actionCell.append(statusSelect,noteInput,save);tr.append(actionCell);tbody.append(tr);}table.append(tbody);$('orders').append(table);
+}
+async function showOrderHistory(order){
+ const panel=$('orderHistory');panel.classList.remove('hidden');
+ $('historyTitle').textContent='سوابق سفارش '+(order.order_number||'');
+ say('historyStatus','در حال دریافت سوابق...');
+ $('historyRows').replaceChildren();
+ try{
+  const result=await api('list_order_status_history',{order_id:order.$id});
+  const rows=result.rows||[];
+  if(!rows.length){say('historyStatus','برای این سفارش هنوز سابقه‌ای ثبت نشده است.');return;}
+  say('historyStatus',rows.length+' تغییر وضعیت ثبت شده است.');
+  const table=node('table'),head=node('thead'),hr=node('tr');
+  for(const label of ['وضعیت قبلی','وضعیت جدید','تاریخ و ساعت','شناسه مدیر','یادداشت مدیر'])hr.append(node('th',label));
+  head.append(hr);table.append(head);
+  const body=node('tbody');
+  for(const item of rows){
+   const tr=node('tr');
+   const values=[orderLabels[item.old_status]||item.old_status||'—',orderLabels[item.new_status]||item.new_status||'—',item.changed_at?new Date(item.changed_at).toLocaleString('fa-IR'):'—',item.changed_by||'ثبت عمومی / نامشخص',item.note||'—'];
+   for(const value of values)tr.append(node('td',String(value)));
+   body.append(tr);
+  }
+  table.append(body);$('historyRows').append(table);
+ }catch(e){say('historyStatus','دریافت سوابق ناموفق بود: '+e.message);}
 }
 function renderAI(rows){
  $('ai').replaceChildren();$('aiCount').textContent=rows.length+' درخواست';
@@ -101,6 +128,7 @@ function showDashboard(){ $('login').classList.add('hidden');$('dashboard').clas
 async function verifyOwner(){const u=await account.get();if(u.email?.toLowerCase()!==OWNER||u.emailVerification!==true)throw new Error('این حساب مالک تأییدشده نیست.');showDashboard();await load();}
 $('send').onclick=async()=>{const b=$('send');b.disabled=true;try{const t=await account.createEmailToken({userId:'unique()',email:OWNER});pendingUserId=t.userId;$('otpBox').classList.remove('hidden');say('loginStatus','کد ورود به ایمیل مالک ارسال شد.')}catch(e){say('loginStatus','ارسال کد ناموفق بود: '+(e.message||String(e)))}finally{b.disabled=false;}};
 $('verify').onclick=async()=>{const b=$('verify');b.disabled=true;try{if(!pendingUserId)throw new Error('ابتدا کد ورود را درخواست کن.');await account.createSession({userId:pendingUserId,secret:$('otp').value.trim()});await verifyOwner();}catch(e){say('loginStatus','ورود یا دریافت اطلاعات انجام نشد: '+(e.message||String(e)))}finally{b.disabled=false;}};
+$('historyClose').onclick=()=> $('orderHistory').classList.add('hidden');
 $('refresh').onclick=()=>load().catch(()=>{});
 $('logout').onclick=async()=>{await account.deleteSession({sessionId:'current'}).catch(()=>{});$('dashboard').classList.add('hidden');$('logout').classList.add('hidden');$('login').classList.remove('hidden');$('otp').value='';pendingUserId='';say('loginStatus','از حساب خارج شدی.');};
 $('orderSearch').addEventListener('input',renderOrders);$('orderStatusFilter').addEventListener('change',renderOrders);
