@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'admin/index.html'
       - 'appwrite/functions/nova-admin-api/**'
       - 'tests/nova-admin-api.test.js'
       - 'tests/appwrite-admin-client.test.mjs'
@@ -30,6 +31,18 @@ jobs:
         run: |
           node --check appwrite/functions/nova-admin-api/index.js
           node --check appwrite/functions/nova-public-order-intake/index.js
+      - name: Check admin dashboard module syntax
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('admin/index.html', 'utf8');
+          const startTag = '<script type="module">';
+          const start = html.indexOf(startTag);
+          const end = html.indexOf('</script>', start);
+          if (start < 0 || end < 0) throw new Error('Admin module script boundaries are invalid.');
+          fs.writeFileSync('/tmp/nova-admin-dashboard.mjs', html.slice(start + startTag.length, end));
+          NODE
+          node --check /tmp/nova-admin-dashboard.mjs
       - name: Check customer form script syntax
         run: |
           node <<'NODE'
