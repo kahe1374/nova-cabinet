@@ -422,6 +422,175 @@ async function handlePublicAiAcceptPrice(body, key, req, res, responseHeaders, e
   return reply(res, { ok: true, code: 'AI_PRICE_ACCEPTED', accepted_amount_toman: amount, accepted_at: acceptedAt, payment_status: 'pending' }, 200, responseHeaders);
 }
 
+
+function aiDesignPrompt(row) {
+  const preserve = row.design_mode === 'preserve';
+  const instructions = String(row.instructions ?? '').slice(0, 2500);
+  return [
+    'Create one photorealistic, premium interior-design visualization by editing the supplied real room photograph.',
+    'This is a cabinetry and wood-interior project for NOVA CABINET.',
+    preserve
+      ? 'CRITICAL: preserve the exact existing room architecture, camera angle, perspective, wall positions, windows, doors, ceiling, floor, plumbing/electrical fixtures, appliance positions, cabinet layout, cabinet count, dimensions, and all built-in geometry. Do not move, resize, add, or remove any structural or fixed element. Only refine cabinet door finishes, colors, handles, countertop finish, and decorative surface materials.'
+      : 'Keep the room architecture and camera perspective believable and unchanged. You may propose a coherent new cabinet arrangement only where it fits the existing room and does not alter structural walls, windows, doors, or fixed utilities.',
+    'Design style: ' + String(row.style ?? 'modern'),
+    'Cabinet door material: ' + String(row.door_material ?? "designer's best matching premium material"),
+    'Countertop material: ' + String(row.countertop_material ?? 'coordinated premium countertop'),
+    'Material/color codes: ' + String(row.material_codes ?? 'choose a harmonious warm neutral palette'),
+    'Customer brief: ' + (instructions || 'Create a refined, functional, high-end design.'),
+    'Use realistic joinery, plausible cabinet proportions, accurate lighting and shadows, premium wood grain, refined hardware, natural material texture, editorial architectural photography. No text, no watermark, no logos, no collage, no split-screen.'
+  ].join('\n');
+}
+function validFalQueueUrl(value) {
+  try { const u = new URL(String(value)); return u.protocol === 'https:' && u.hostname === 'queue.fal.run'; }
+  catch { return false; }
+}
+function validFalImageUrl(value) {
+  try {
+    const u = new URL(String(value));
+    return u.protocol === 'https:' &&
+      (u.hostname === 'storage.googleapis.com' || u.hostname === 'fal.media' || u.hostname.endsWith('.fal.media'));
+  } catch { return false; }
+}
+async function handlePublicAiStart(body, key, req, res, responseHeaders, error) {
+  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
+  if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
+  const requestId = cleanRowId(body.request_id);
+  if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+    return reply(res, { ok: false, code: 'INVALID_REQUEST_ID' }, 400, responseHeaders);
+  }
+  const falKey = cleanString(process.env.FAL_KEY, 500);
+  if (!falKey) return reply(res, { ok: false, code: 'AI_GENERATION_NOT_CONFIGURED' }, 503, responseHeaders);
+  const current = await getRow('ai_design_requests', requestId, key);
+  if (!current.response.ok || current.data.$id !== requestId) return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+  const row = current.data;
+  if (row.payment_status !== 'paid') return reply(res, { ok: false, code: 'PAYMENT_REQUIRED' }, 409, responseHeaders);
+  if (!row.price_accepted_at || Number(row.price_accepted_amount_toman) !== Number(row.quoted_price_toman)) {
+    return reply(res, { ok: false, code: 'PRICE_ACCEPTANCE_REQUIRED' }, 409, responseHeaders);
+  }
+  if (!row.upload_completed_at || !row.file_key) return reply(res, { ok: false, code: 'UPLOAD_NOT_COMPLETE' }, 409, responseHeaders);
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(row.mime_type)) {
+    return reply(res, { ok: false, code: 'IMAGE_FORMAT_NOT_SUPPORTED' }, 415, responseHeaders);
+  }
+  const source = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(row.file_key), key);
+  if (!source.response.ok || !ownsPrivateFile(source.data, account.$id)) {
+    return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_OWNED' }, 403, responseHeaders);
+  }
+  if (row.fal_request_id) return reply(res, { ok: true, code: 'AI_GENERATION_ALREADY_STARTED', status: row.status || 'processing' }, 200, responseHeaders);
+  const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  const token = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(row.file_key) + '/tokens', key, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expire: expires })
+  });
+  if (!token.response.ok || !token.data.secret) {
+    error('NOVA AI source file token creation failed: HTTP ' + token.response.status);
+    return reply(res, { ok: false, code: 'SOURCE_FILE_TOKEN_FAILED' }, 502, responseHeaders);
+  }
+  const sourceUrl = ENDPOINT + '/storage/buckets/nova-ai-designs/files/' +
+    encodeURIComponent(row.file_key) + '/view?project=' + encodeURIComponent(PROJECT_ID) +
+    '&token=' + encodeURIComponent(token.data.secret);
+  const submitted = await fetch('https://queue.fal.run/google/nano-banana-2.1/edit', {
+    method: 'POST',
+    headers: { 'Authorization': 'Key ' + falKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt: aiDesignPrompt(row),
+      image_urls: [sourceUrl],
+      num_images: 1,
+      resolution: '2K',
+      output_format: 'png'
+    })
+  });
+  const queued = await submitted.json().catch(() => ({}));
+  if (!submitted.ok || !queued.request_id || !validFalQueueUrl(queued.status_url) || !validFalQueueUrl(queued.response_url)) {
+    error('NOVA AI FAL queue submission failed: HTTP ' + submitted.status);
+    return reply(res, { ok: false, code: 'FAL_SUBMIT_FAILED' }, 502, responseHeaders);
+  }
+  const now = new Date().toISOString();
+  const updated = await updateRow('ai_design_requests', requestId, {
+    fal_request_id: String(queued.request_id),
+    fal_status_url: queued.status_url,
+    fal_response_url: queued.response_url,
+    status: 'processing',
+    generation_started_at: now,
+    updated_at: now
+  }, key);
+  if (!updated.response.ok) return reply(res, { ok: false, code: 'FAL_REQUEST_TRACKING_FAILED' }, 502, responseHeaders);
+  return reply(res, { ok: true, code: 'AI_GENERATION_STARTED', request_number: row.request_number, status: 'processing' }, 202, responseHeaders);
+}
+async function handlePublicAiCheck(body, key, req, res, responseHeaders, error) {
+  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
+  if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
+  const requestId = cleanRowId(body.request_id);
+  if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+    return reply(res, { ok: false, code: 'INVALID_REQUEST_ID' }, 400, responseHeaders);
+  }
+  const current = await getRow('ai_design_requests', requestId, key);
+  if (!current.response.ok || current.data.$id !== requestId) return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+  const row = current.data;
+  const source = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(row.file_key || requestId), key);
+  if (!source.response.ok || !ownsPrivateFile(source.data, account.$id)) return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_OWNED' }, 403, responseHeaders);
+  if (row.output_file_key) return reply(res, { ok: true, code: 'AI_PREVIEW_READY', status: 'preview_ready', output_file_key: row.output_file_key, description: row.output_description || '' }, 200, responseHeaders);
+  if (!row.fal_request_id || !validFalQueueUrl(row.fal_status_url) || !validFalQueueUrl(row.fal_response_url)) {
+    return reply(res, { ok: false, code: 'AI_GENERATION_NOT_STARTED' }, 409, responseHeaders);
+  }
+  const falKey = cleanString(process.env.FAL_KEY, 500);
+  if (!falKey) return reply(res, { ok: false, code: 'AI_GENERATION_NOT_CONFIGURED' }, 503, responseHeaders);
+  const auth = { 'Authorization': 'Key ' + falKey };
+  const statusResponse = await fetch(row.fal_status_url, { headers: auth });
+  const state = await statusResponse.json().catch(() => ({}));
+  if (!statusResponse.ok) return reply(res, { ok: false, code: 'FAL_STATUS_CHECK_FAILED' }, 502, responseHeaders);
+  if (state.status !== 'COMPLETED') {
+    const status = state.status === 'IN_QUEUE' ? 'queued' : 'processing';
+    return reply(res, { ok: true, code: 'AI_GENERATION_IN_PROGRESS', status, queue_position: state.queue_position ?? null }, 200, responseHeaders);
+  }
+  const resultResponse = await fetch(row.fal_response_url, { headers: auth });
+  const result = await resultResponse.json().catch(() => ({}));
+  if (!resultResponse.ok) {
+    const note = 'Fal generation failed: ' + String(result.detail ?? result.error ?? 'unknown').slice(0, 500);
+    await updateRow('ai_design_requests', requestId, { status: 'revision_requested', admin_note: note, updated_at: new Date().toISOString() }, key);
+    return reply(res, { ok: false, code: 'FAL_GENERATION_FAILED' }, 502, responseHeaders);
+  }
+  const imageUrl = result?.images?.[0]?.url;
+  const description = cleanString(result.description, 3000);
+  if (!validFalImageUrl(imageUrl)) return reply(res, { ok: false, code: 'FAL_OUTPUT_URL_REJECTED' }, 502, responseHeaders);
+  const imageResponse = await fetch(imageUrl);
+  const contentType = cleanString(imageResponse.headers.get('content-type') || '', 100).split(';')[0].toLowerCase();
+  const length = Number(imageResponse.headers.get('content-length') || '0');
+  if (!imageResponse.ok || !contentType.startsWith('image/') || (length && length > 25 * 1024 * 1024)) {
+    return reply(res, { ok: false, code: 'AI_OUTPUT_DOWNLOAD_FAILED' }, 502, responseHeaders);
+  }
+  const bytes = new Uint8Array(await imageResponse.arrayBuffer());
+  if (!bytes.length || bytes.length > 25 * 1024 * 1024) return reply(res, { ok: false, code: 'AI_OUTPUT_TOO_LARGE' }, 413, responseHeaders);
+  const extension = contentType === 'image/webp' ? 'webp' : contentType === 'image/jpeg' ? 'jpg' : 'png';
+  const outputId = crypto.randomUUID();
+  const form = new FormData();
+  form.append('fileId', outputId);
+  form.append('file', new Blob([bytes], { type: contentType }), 'NOVA-' + row.request_number + '-preview.' + extension);
+  for (const permission of ['read("user:' + account.$id + '")', 'update("user:' + account.$id + '")', 'delete("user:' + account.$id + '")']) {
+    form.append('permissions[]', permission);
+  }
+  const uploadResponse = await fetch(ENDPOINT + '/storage/buckets/nova-ai-designs/files', {
+    method: 'POST',
+    headers: { 'X-Appwrite-Project': PROJECT_ID, 'X-Appwrite-Key': key },
+    body: form
+  });
+  const uploaded = await uploadResponse.json().catch(() => ({}));
+  if (!uploadResponse.ok || uploaded.$id !== outputId) {
+    error('NOVA AI output storage failed: HTTP ' + uploadResponse.status);
+    return reply(res, { ok: false, code: 'AI_OUTPUT_STORAGE_FAILED' }, 502, responseHeaders);
+  }
+  const now = new Date().toISOString();
+  const updated = await updateRow('ai_design_requests', requestId, {
+    output_file_key: outputId,
+    output_description: description,
+    generated_at: now,
+    status: 'preview_ready',
+    updated_at: now
+  }, key);
+  if (!updated.response.ok) return reply(res, { ok: false, code: 'AI_OUTPUT_TRACKING_FAILED' }, 502, responseHeaders);
+  return reply(res, { ok: true, code: 'AI_PREVIEW_READY', status: 'preview_ready', output_file_key: outputId, description }, 200, responseHeaders);
+}
+
 export default async ({ req, res, log, error }) => {
   const origin = header(req.headers, 'origin');
   const responseHeaders = corsHeaders(origin);
@@ -441,12 +610,14 @@ export default async ({ req, res, log, error }) => {
     } catch {
       return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
     }
-    if (['public_create_ai_design_request','public_confirm_ai_design_upload','public_accept_ai_design_price'].includes(earlyBody.action)) {
+    if (['public_create_ai_design_request','public_confirm_ai_design_upload','public_accept_ai_design_price','public_start_ai_design','public_check_ai_design'].includes(earlyBody.action)) {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
       if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
       if (earlyBody.action === 'public_create_ai_design_request') return handlePublicAiCreate(earlyBody, earlyKey, req, res, responseHeaders, error);
       if (earlyBody.action === 'public_confirm_ai_design_upload') return handlePublicAiConfirmUpload(earlyBody, earlyKey, req, res, responseHeaders, error);
-      return handlePublicAiAcceptPrice(earlyBody, earlyKey, req, res, responseHeaders, error);
+      if (earlyBody.action === 'public_accept_ai_design_price') return handlePublicAiAcceptPrice(earlyBody, earlyKey, req, res, responseHeaders, error);
+      if (earlyBody.action === 'public_start_ai_design') return handlePublicAiStart(earlyBody, earlyKey, req, res, responseHeaders, error);
+      return handlePublicAiCheck(earlyBody, earlyKey, req, res, responseHeaders, error);
     }
     if (earlyBody.action === 'public_create_order') {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
