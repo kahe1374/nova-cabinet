@@ -125,7 +125,7 @@ test('assignment action uses strict row identifier validation', () => {
   assert.match(source, /const orderId = cleanRowId\(body\.order_id\);[\s\S]*?const assigneeId/);
 });
 test('read-only health does not advertise write capabilities', () => {
-  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_ai_requests', 'list_ai_pricing'\]/);
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
 });
 
 
@@ -315,7 +315,7 @@ test('order status history is owner-only, read-only, and scoped to the requested
   await handler({ req: { method: 'POST', headers: { 'x-appwrite-user-jwt': 'jwt', 'x-appwrite-key': 'ephemeral-test-key' }, body: { action: 'list_order_status_history', order_id: 'order-123' } }, res, log() {}, error() {} });
   assert.equal(res.status, 200);
   assert.equal(res.body.code, 'ORDER_HISTORY_LOADED');
-  assert.deepEqual(res.body.rows.map(row => row.$id), ['h2', 'h1']);
+  assert.equal(Array.from(res.body.rows, row => row.$id).join(','), 'h2,h1');
   assert.equal(res.body.rows[0].note, 'checked');
   assert.equal(calls.some(path => /DELETE|PATCH|POST/.test(path)), false);
 });
