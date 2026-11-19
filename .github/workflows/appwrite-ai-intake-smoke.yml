@@ -1,4 +1,4 @@
-name: NOVA Appwrite AI intake smoke test
+name: NOVA Appwrite AI intake smoke test (session JWT payload)
 
 on:
   workflow_dispatch:
