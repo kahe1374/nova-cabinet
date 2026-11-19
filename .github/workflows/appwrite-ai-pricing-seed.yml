@@ -1,0 +1,75 @@
+name: Seed NOVA AI pricing into Appwrite (additive)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-pricing-seed.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  seed-ai-pricing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Copy approved AI pricing values to the private Appwrite table
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_DATABASE_ID: 6afcc05300302d503754
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint=process.env.APPWRITE_ENDPOINT;
+          const project=process.env.APPWRITE_PROJECT_ID;
+          const db=encodeURIComponent(process.env.APPWRITE_DATABASE_ID);
+          const key=process.env.APPWRITE_API_KEY;
+          if(!key) throw new Error('Missing APPWRITE_API_KEY');
+          const headers={'X-Appwrite-Project':project,'X-Appwrite-Key':key,'Content-Type':'application/json'};
+          const approved=[
+            {style_key:'classic',style_label:'کلاسیک',base_price_toman:2000000},
+            {style_key:'designer_recommendation',style_label:'پیشنهاد طراح',base_price_toman:1200000},
+            {style_key:'luxury',style_label:'لوکس',base_price_toman:1600000},
+            {style_key:'modern',style_label:'مدرن و مینیمال',base_price_toman:700000},
+            {style_key:'neoclassical',style_label:'نئوکلاسیک',base_price_toman:1200000}
+          ];
+          async function call(path,method='GET',body){
+            const r=await fetch(endpoint+path,{method,headers,...(body===undefined?{}:{body:JSON.stringify(body)})});
+            const data=await r.json().catch(()=>({}));
+            if(!r.ok) throw new Error('Appwrite HTTP '+r.status+' '+JSON.stringify({code:data.code,type:data.type,message:data.message}));
+            return data;
+          }
+          async function main(){
+            const list=await call('/tablesdb/'+db+'/tables/ai_design_pricing/rows?queries[]='+encodeURIComponent(JSON.stringify({method:'limit',values:[200]})));
+            const existing=Array.isArray(list.rows)?list.rows:[];
+            for(const item of approved){
+              const match=existing.find(r=>r.style_key===item.style_key);
+              if(match){
+                if(match.style_label!==item.style_label||Number(match.base_price_toman)!==item.base_price_toman)
+                  throw new Error('Existing Appwrite price differs from approved source; no overwrite: '+item.style_key);
+                console.log('PRICING_ALREADY_MATCHED='+item.style_key);
+                continue;
+              }
+              const now=new Date().toISOString();
+              const saved=await call('/tablesdb/'+db+'/tables/ai_design_pricing/rows','POST',{
+                rowId:item.style_key,
+                data:{...item,updated_at:now,updated_by:null},
+                permissions:[]
+              });
+              if(saved.$id!==item.style_key) throw new Error('Pricing row id verification failed: '+item.style_key);
+              console.log('PRICING_SEEDED='+item.style_key+':'+item.base_price_toman);
+            }
+            const verify=await call('/tablesdb/'+db+'/tables/ai_design_pricing/rows?queries[]='+encodeURIComponent(JSON.stringify({method:'limit',values:[200]})));
+            for(const item of approved){
+              const row=(verify.rows||[]).find(r=>r.style_key===item.style_key);
+              if(!row||row.style_label!==item.style_label||Number(row.base_price_toman)!==item.base_price_toman)
+                throw new Error('Pricing verification failed: '+item.style_key);
+            }
+            console.log('AI_PRICING_ROWS_VERIFIED='+approved.length);
+            console.log('APPWRITE_PRICING_PRIVATE=true');
+            console.log('SUPABASE_PRICING_UNCHANGED=true');
+          }
+          main().catch(e=>{console.error('AI_PRICING_SEED_FAILED:',e.message);process.exit(1);});
+          NODE
