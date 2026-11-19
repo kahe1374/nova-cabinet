@@ -1,0 +1,35 @@
+name: Check Appwrite AI generation configuration (read-only)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/appwrite-ai-generation-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check-generation-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect only whether the existing function has the required FAL secret
+        env:
+          APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
+          APPWRITE_PROJECT_ID: 6afcbe4e002df50df86f
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+        run: |
+          node <<'NODE'
+          const endpoint=process.env.APPWRITE_ENDPOINT,project=process.env.APPWRITE_PROJECT_ID,key=process.env.APPWRITE_API_KEY;
+          const headers={'X-Appwrite-Project':project,'X-Appwrite-Key':key};
+          async function main(){
+            const r=await fetch(endpoint+'/functions/nova-admin-api/variables',{headers});
+            const d=await r.json().catch(()=>({}));
+            if(!r.ok)throw new Error('Function variables inspection failed HTTP '+r.status);
+            const names=(d.variables||[]).map(v=>v.key);
+            console.log('FAL_KEY_CONFIGURED='+(names.includes('FAL_KEY')));
+            console.log('NOVA_PUBLIC_AI_INTAKE_ENABLED='+(names.includes('NOVA_PUBLIC_AI_INTAKE_ENABLED')));
+            console.log('NO_SECRET_VALUES_PRINTED=true');
+          }
+          main().catch(e=>{console.error('GENERATION_PREFLIGHT_FAILED:',e.message);process.exit(1)});
+          NODE
