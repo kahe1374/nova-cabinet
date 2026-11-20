@@ -1116,9 +1116,11 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
   let probe='not_run';
   if(diagnosticStage==='account_get_failed'){
    try{
-    const probeResponse=await fetch(NOVA_APPWRITE_ENDPOINT+'/account',{method:'GET',headers:{'X-Appwrite-Project':NOVA_APPWRITE_PROJECT,'X-Appwrite-Response-Format':'1.6.0'},credentials:'include'});
-    probe='http_'+probeResponse.status;
-   }catch(probeError){probe='fetch_'+String(probeError?.name||'error');}
+    const probeHeaders={'x-sdk-name':'Web','x-sdk-platform':'client','x-sdk-language':'web','x-sdk-version':'17.0.0','X-Appwrite-Response-Format':'1.6.0','X-Appwrite-Project':NOVA_APPWRITE_PROJECT,'content-type':'application/json'};
+    try{const fallback=window.localStorage.getItem('cookieFallback');if(fallback)probeHeaders['X-Fallback-Cookies']=fallback;}catch(storageError){}
+    const probeResponse=await fetch(NOVA_APPWRITE_ENDPOINT+'/account',{method:'GET',headers:probeHeaders,credentials:'include'});
+    probe='sdk_headers_http_'+probeResponse.status;
+   }catch(probeError){probe='sdk_headers_fetch_'+String(probeError?.name||'error');}
   }
   const safeDetail=value=>String(value??'').replace(/[^a-zA-Z0-9_. -]/g,'').trim().slice(0,100);
   const diagnostic=[
