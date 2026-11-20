@@ -1091,6 +1091,23 @@ async function novaAiAction(action,payload,jwt){
  }
  return result;
 }
+async function novaAiCompressImage(file){
+ if(file.size<=2*1024*1024||!('createImageBitmap' in window))return file;
+ let bitmap;try{bitmap=await createImageBitmap(file);}catch{return file;}
+ try{
+  let scale=Math.min(1,2400/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d'),blob=null;
+  if(!ctx)return file;
+  for(let pass=0;pass<4;pass++){
+   canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+   let quality=.88;
+   for(let q=0;q<5;q++){blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));if(blob&&blob.size<=2*1024*1024)break;quality-=.1;}
+   if(blob&&blob.size<=2*1024*1024)break;scale*=.82;
+  }
+  if(!blob||blob.size>=file.size)return file;
+  return new File([blob],(file.name.replace(/\.[^.]+$/,'')||'design')+'.jpg',{type:'image/jpeg',lastModified:Date.now()});
+ }finally{bitmap.close?.();}
+}
 document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const f=e.currentTarget,v=new FormData(f),file=v.get('design_file');
@@ -1098,47 +1115,41 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
  if(!(file instanceof File)||!file.size){status.textContent='لطفاً یک تصویر JPG، PNG یا WEBP انتخاب کنید.';return;}
  if(file.size>30*1024*1024){status.textContent='حجم فایل نباید بیشتر از ۳۰ مگابایت باشد.';return;}
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){status.textContent='فرمت مجاز: JPG، PNG یا WEBP.';return;}
- btn.disabled=true;btn.textContent='در حال ثبت و بارگذاری...';status.textContent='در حال ایجاد اتصال امن به نوا...';
- let diagnosticStage='session_start';
- try{
-  const {user,jwt}=await novaAiSession(step=>diagnosticStage=step);
+ btn.disabled=true;btn.textContent='در حال ثبت و بارگذاری...';status.textContent='در حال آماده‌سازی و فشرده‌سازی عکس...';
+ let diagnosticStage='image_compression',pendingUpload=null;
+ const showConfirmed=(result)=>{
+  status.replaceChildren();const confirmationText=document.createElement('p');
+  confirmationText.textContent='درخواست شما با موفقیت ثبت شد. کد پیگیری: '+result.request_number+' — هزینه طراحی: '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان.';
+  status.append(confirmationText);const acceptButton=document.createElement('button');
+  acceptButton.type='button';acceptButton.className='btn';acceptButton.textContent='تأیید هزینه طراحی';
+  acceptButton.addEventListener('click',async()=>{
+   acceptButton.disabled=true;acceptButton.textContent='در حال ثبت تأیید...';
+   try{const fresh=await novaAiAccount.createJWT();novaAiClient.setJWT(fresh.jwt);
+    const accepted=await novaAiAction('public_accept_ai_design_price',{request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman,price_acceptance_token:result.price_acceptance_token},fresh.jwt);
+    if(!accepted.ok)throw new Error(accepted.code||'price_acceptance_failed');
+    confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده؛ تولید تصویر پس از فعال‌شدن درگاه پرداخت و تأیید پرداخت آغاز می‌شود.';acceptButton.remove();
+   }catch(err){console.error('NOVA AI price acceptance failed',err);acceptButton.disabled=false;acceptButton.textContent='تلاش دوباره برای تأیید هزینه';}
+  });
+  status.append(acceptButton);f.reset();pendingUpload=null;
+ };
+ let preparedFile=file;try{preparedFile=await novaAiCompressImage(file);}catch(err){console.warn('NOVA image compression skipped',err);}
+ const {user,jwt}=await novaAiSession(step=>diagnosticStage=step);
   diagnosticStage='function_create_execution';
   status.textContent='در حال ثبت درخواست در سامانه نوا...';
   const result=await novaAiAction('public_create_ai_design_request',{
    name:v.get('name'),phone:v.get('phone'),city:v.get('city'),design_mode:v.get('design_mode'),
    style:v.get('style'),complexity_level:v.get('complexity_level'),door_material:v.get('door_material'),
    countertop_material:v.get('countertop_material'),material_codes:v.get('material_codes'),
-   instructions:v.get('instructions'),file_name:file.name,mime_type:file.type,file_size:file.size,website:''
+   instructions:v.get('instructions'),file_name:preparedFile.name,mime_type:preparedFile.type,file_size:preparedFile.size,website:''
   },jwt);
   if(!result.ok||!result.request_id||!result.price_acceptance_token)throw new Error(result.code||'ai_request_failed');
-  diagnosticStage='storage_upload';
-  status.textContent='درخواست ثبت شد؛ در حال بارگذاری امن عکس...';
+  diagnosticStage='storage_upload';status.textContent='درخواست ثبت شد؛ در حال بارگذاری امن عکس'+(preparedFile!==file?' فشرده‌شده':'')+'...';
   const permissions=['read("user:'+user.$id+'")','update("user:'+user.$id+'")','delete("user:'+user.$id+'")'];
-  await novaAiStorage.createFile(NOVA_APPWRITE_BUCKET,result.request_id,file,permissions);
-  diagnosticStage='function_confirm_upload';
-  status.textContent='عکس بارگذاری شد؛ در حال تأیید فایل...';
+  pendingUpload={user,jwt,result,file:preparedFile,permissions};
+  await novaAiStorage.createFile(NOVA_APPWRITE_BUCKET,result.request_id,preparedFile,permissions);
+  diagnosticStage='function_confirm_upload';status.textContent='عکس بارگذاری شد؛ در حال تأیید فایل...';
   const confirmed=await novaAiAction('public_confirm_ai_design_upload',{request_id:result.request_id},jwt);
-  if(!confirmed.ok)throw new Error(confirmed.code||'upload_confirmation_failed');
-  status.replaceChildren();
-  const confirmationText=document.createElement('p');
-  confirmationText.textContent='درخواست شما با موفقیت ثبت شد. کد پیگیری: '+result.request_number+' — هزینه طراحی: '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان.';
-  status.append(confirmationText);
-  const acceptButton=document.createElement('button');
-  acceptButton.type='button';acceptButton.className='btn';acceptButton.textContent='تأیید هزینه طراحی';
-  acceptButton.addEventListener('click',async()=>{
-   acceptButton.disabled=true;acceptButton.textContent='در حال ثبت تأیید...';
-   try{
-    const fresh=await novaAiAccount.createJWT();novaAiClient.setJWT(fresh.jwt);
-    const accepted=await novaAiAction('public_accept_ai_design_price',{
-     request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman,
-     price_acceptance_token:result.price_acceptance_token
-    },fresh.jwt);
-    if(!accepted.ok)throw new Error(accepted.code||'price_acceptance_failed');
-    confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده؛ تولید تصویر پس از فعال‌شدن درگاه پرداخت و تأیید پرداخت آغاز می‌شود.';
-    acceptButton.remove();
-   }catch(err){console.error('NOVA AI price acceptance failed',err);acceptButton.disabled=false;acceptButton.textContent='تلاش دوباره برای تأیید هزینه';}
-  });
-  status.append(acceptButton);f.reset();
+  if(!confirmed.ok)throw new Error(confirmed.code||'upload_confirmation_failed');showConfirmed(result);
  }catch(error){
   console.error('NOVA Appwrite AI design request failed',error);
   let probe='not_run';
@@ -1159,6 +1170,18 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
    'direct_probe='+safeDetail(probe)
   ].join(' | ');
   status.textContent='ثبت درخواست یا بارگذاری امن انجام نشد. مرحله: '+diagnosticStage+' — جزئیات: '+diagnostic;
+  if(diagnosticStage==='storage_upload'&&pendingUpload){
+   const retry=document.createElement('button');retry.type='button';retry.className='btn';retry.textContent='تلاش دوباره برای بارگذاری عکس';
+   retry.addEventListener('click',async()=>{
+    retry.disabled=true;retry.textContent='در حال تلاش دوباره...';status.textContent='در حال بررسی و بارگذاری عکس برای همان درخواست...';
+    try{
+     try{await novaAiStorage.getFile(NOVA_APPWRITE_BUCKET,pendingUpload.result.request_id);}
+     catch(checkError){if(Number(checkError?.code)!==404)throw checkError;await novaAiStorage.createFile(NOVA_APPWRITE_BUCKET,pendingUpload.result.request_id,pendingUpload.file,pendingUpload.permissions);}
+     const confirmed=await novaAiAction('public_confirm_ai_design_upload',{request_id:pendingUpload.result.request_id},pendingUpload.jwt);
+     if(!confirmed.ok)throw new Error(confirmed.code||'upload_confirmation_failed');showConfirmed(pendingUpload.result);
+    }catch(retryError){console.error('NOVA AI upload retry failed',retryError);status.textContent='بارگذاری هنوز انجام نشد. درخواست قبلی حفظ شده؛ دوباره تلاش کنید. جزئیات: '+String(retryError?.message||retryError).slice(0,160);retry.disabled=false;retry.textContent='تلاش دوباره برای بارگذاری عکس';status.append(retry);}
+   });status.append(retry);
+  }
  }finally{btn.disabled=false;btn.textContent='ثبت درخواست طراحی ✧';}
 });
 </script>>
