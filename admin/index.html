@@ -192,12 +192,12 @@ $('restoreUpload').onclick=async()=>{
  let ids=[];try{ids=JSON.parse(button.dataset.requestIds||'[]')}catch{}
  if(ids.length!==3){say('restoreStatus','سه درخواست معتبر شناسایی نشدند.');return;}
  button.disabled=true;
+ let uploaded=0;
  try{
   say('restoreStatus','در حال تأیید مالکیت و مشخصات سه درخواست...');
   const verified=await api('get_ai_upload_restore_targets',{request_ids:ids});
   if(verified.targets?.length!==3||verified.targets.some(t=>t.mime_type!=='image/jpeg'||t.file_size_bytes!==file.size))throw new Error('مشخصات فایل با درخواست‌ها یکسان نیست.');
   const permissions=[Permission.read(Role.user(verified.uploader_user_id)),Permission.update(Role.user(verified.uploader_user_id)),Permission.delete(Role.user(verified.uploader_user_id))];
-  let uploaded=0;
   for(const target of verified.targets){
    await storage.createFile('nova-ai-designs',target.request_id,file,permissions);
    uploaded++;
