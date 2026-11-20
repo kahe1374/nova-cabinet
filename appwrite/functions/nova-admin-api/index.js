@@ -678,8 +678,8 @@ export default async ({ req, res, log, error }) => {
     if (action === 'health') return reply(res, {
       ok: true, code: 'OWNER_AUTHENTICATED',
       capabilities: readOnly
-        ? ['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing']
-        : ['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing',
+        ? ['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'list_ai_pricing']
+        : ['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'list_ai_pricing',
           'update_order_status', 'assign_order', 'upsert_ai_pricing'],
       readOnly
     }, 200, responseHeaders);
@@ -732,6 +732,56 @@ export default async ({ req, res, log, error }) => {
       const rows = result.rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
         .map(({ price_acceptance_token_hash, ...safeRow }) => safeRow);
       return reply(res, { ok: true, code: 'AI_REQUESTS_LOADED', rows, total: result.total, truncated: result.total > rows.length }, 200, responseHeaders);
+    }
+
+    if (action === 'get_ai_request_file_access') {
+      const requestId = cleanRowId(body.request_id);
+      if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+        return reply(res, { ok: false, code: 'INVALID_AI_REQUEST_ID' }, 400, responseHeaders);
+      }
+      const request = await getRow('ai_design_requests', requestId, key);
+      if (!request.response.ok || request.data.$id !== requestId) {
+        return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+      }
+      const row = request.data;
+      const fileKey = cleanRowId(row.file_key || row.$id);
+      if (!fileKey || fileKey !== requestId) {
+        return reply(res, { ok: false, code: 'AI_FILE_REFERENCE_INVALID' }, 409, responseHeaders);
+      }
+      const file = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(fileKey), key);
+      if (!file.response.ok || file.data.$id !== fileKey) {
+        return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_FOUND' }, 404, responseHeaders);
+      }
+      const allowedMime = new Set([
+        'image/jpeg', 'image/png', 'image/webp', 'image/heic',
+        'video/mp4', 'video/quicktime', 'video/webm'
+      ]);
+      if (!allowedMime.has(file.data.mimeType) ||
+          file.data.mimeType !== row.mime_type ||
+          Number(file.data.sizeOriginal) !== Number(row.file_size_bytes)) {
+        return reply(res, { ok: false, code: 'AI_UPLOAD_METADATA_MISMATCH' }, 409, responseHeaders);
+      }
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const token = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(fileKey) + '/tokens', key, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expire: expiresAt })
+      });
+      if (!token.response.ok || !token.data.secret) {
+        error('NOVA admin AI file token creation failed: HTTP ' + token.response.status);
+        return reply(res, { ok: false, code: 'AI_FILE_TOKEN_FAILED' }, 502, responseHeaders);
+      }
+      const fileUrl = ENDPOINT + '/storage/buckets/nova-ai-designs/files/' +
+        encodeURIComponent(fileKey);
+      const tokenQuery = '?project=' + encodeURIComponent(PROJECT_ID) +
+        '&token=' + encodeURIComponent(token.data.secret);
+      return reply(res, {
+        ok: true,
+        code: 'AI_FILE_ACCESS_READY',
+        view_url: fileUrl + '/view' + tokenQuery,
+        download_url: fileUrl + '/download' + tokenQuery,
+        expires_at: expiresAt
+      }, 200, responseHeaders);
     }
 
     if (action === 'list_ai_pricing') {
