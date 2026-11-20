@@ -31,13 +31,14 @@ select{font:inherit;background:#151514;color:var(--text);border:1px solid var(--
 <section id="dashboard" class="hidden">
 <div class="card"><div class="row"><h2>وضعیت اتصال</h2><button id="refresh">به‌روزرسانی همه اطلاعات</button></div><div id="health" class="status">در حال بررسی...</div><p class="notice">حالت فعلی فقط‌خواندنی است؛ ثبت، ویرایش و حذف از این پنل غیرفعال است. داده‌های Supabase تغییری نمی‌کنند.</p></div>
 <div class="card"><div class="row"><h2>سفارش‌ها</h2><span id="ordersCount" class="muted"></span></div><div class="toolbar"><input id="orderSearch" type="search" placeholder="جست‌وجوی شماره، مشتری یا عنوان"><select id="orderStatusFilter" aria-label="فیلتر وضعیت"><option value="">همه وضعیت‌ها</option></select></div><div id="ordersStatus" class="status">در انتظار دریافت...</div><div id="orders" class="table"></div><section id="orderHistory" class="history-panel hidden" aria-live="polite"><div class="row"><h3 id="historyTitle">سوابق تغییر وضعیت</h3><button id="historyClose" type="button">بستن سوابق</button></div><div id="historyStatus" class="status">برای مشاهده، سوابق یک سفارش را باز کن.</div><div id="historyRows" class="table"></div></section></div>
+<div class="card"><div class="row"><h2>بازیابی فایل ورودی سه درخواست</h2><span class="pill">فقط همین سه درخواست</span></div><p>فایل اصلی JPEG را انتخاب کن. پنل پیش از بارگذاری، مالک فایل و مشخصات هر سه درخواست را بررسی می‌کند. شناسه‌ها و رکوردها حفظ می‌شوند.</p><input id="restoreFile" type="file" accept="image/jpeg,.jpg,.jpeg"><button id="restoreUpload" type="button">بازگردانی تصویر برای سه درخواست قبلی</button><div id="restoreStatus" class="status" role="status" aria-live="polite">هنوز فایلی انتخاب نشده است.</div></div>
 <div class="card"><div class="row"><h2>درخواست‌های طراحی هوشمند</h2><span id="aiCount" class="muted"></span></div><div id="aiStatus" class="status">در انتظار دریافت...</div><div id="ai" class="grid"></div></div>
 <div class="card"><div class="row"><h2>تعرفه‌های طراحی</h2><span id="pricingCount" class="muted"></span></div><div id="pricingStatus" class="status">در انتظار دریافت...</div><div id="pricing" class="grid"></div></div>
 </section></main>
 <script type="module">
-import { Client, Account, Functions } from 'https://cdn.jsdelivr.net/npm/appwrite@29.0.0/+esm';
+import { Client, Account, Functions, Storage, Permission, Role } from 'https://cdn.jsdelivr.net/npm/appwrite@29.0.0/+esm';
 const ENDPOINT='https://fra.cloud.appwrite.io/v1', PROJECT='6afcbe4e002df50df86f', FUNCTION='nova-admin-api', OWNER='vahiiidk74@gmail.com';
-const client=new Client().setEndpoint(ENDPOINT).setProject(PROJECT), account=new Account(client), functions=new Functions(client);
+const client=new Client().setEndpoint(ENDPOINT).setProject(PROJECT), account=new Account(client), functions=new Functions(client), storage=new Storage(client);
 const $=id=>document.getElementById(id);let pendingUserId='',ordersCache=[],assigneesCache=[],adminCanWrite=false,adminCanAssign=false;
 const orderLabels={new:'جدید',under_review:'در حال بررسی',awaiting_quote_approval:'در انتظار تأیید پیش‌فاکتور',awaiting_payment:'در انتظار پرداخت',approved_for_production:'تأیید تولید',in_production:'در حال تولید',quality_control:'کنترل کیفیت',ready_for_delivery:'آماده تحویل',delivered:'تحویل شده',completed:'تکمیل شده',cancelled:'لغو شده'};
 const aiLabels={awaiting_payment:'در انتظار پرداخت',queued:'در صف طراحی',processing:'در حال طراحی',preview_ready:'پیش‌نمایش آماده',revision_requested:'درخواست اصلاح',completed:'تکمیل شده',cancelled:'لغو شده'};
@@ -170,6 +171,11 @@ async function load(){
   say('ordersStatus','در حال دریافت سفارش‌ها...');say('aiStatus','در حال دریافت درخواست‌ها...');say('pricingStatus','در حال دریافت تعرفه‌ها...');
   const [o,a,p,people]=await Promise.all([api('list_orders'),api('list_ai_requests'),api('list_ai_pricing'),api('list_order_assignees')]);
   ordersCache=o.rows||[];assigneesCache=people.rows||[];renderOrders();renderAI(a.rows||[]);renderPricing(p.rows||[]);
+  const restoreRows=(a.rows||[]).filter(r=>r.original_file_name==='۲۰۲۶۱۰۲۳_۲۰۰۸۰۰.jpg'&&String(r.mobile||'').replace(/[\\s-]/g,'')==='+989223685532'&&r.mime_type==='image/jpeg');
+  $('restoreUpload').dataset.requestIds=JSON.stringify(restoreRows.map(r=>r.$id));
+  $('restoreUpload').disabled=restoreRows.length!==3;
+  say('restoreStatus',restoreRows.length===3?'سه درخواست قبلی شناسایی شدند؛ برای شروع فایل اصلی JPEG را انتخاب کن.':'تعداد درخواست‌های منطبق دقیقاً سه مورد نیست؛ هیچ فایلی بارگذاری نمی‌شود.');
+
   say('ordersStatus','دریافت سفارش‌ها کامل شد. '+assigneesCache.length+' مسئول فعال برای تخصیص شناسایی شد.'+(adminCanAssign?' امکان تخصیص فعال است.':' تخصیص تا فعال‌سازی امن مجوز نوشتن فقط‌خواندنی است.'));say('aiStatus','دریافت درخواست‌های طراحی کامل شد.');say('pricingStatus','دریافت تعرفه‌ها کامل شد.');
  }catch(e){say('health','خطا: '+e.message);throw e;}finally{$('refresh').disabled=false;}
 }
@@ -179,6 +185,30 @@ $('send').onclick=async()=>{const b=$('send');b.disabled=true;try{try{const curr
 $('verify').onclick=async()=>{const b=$('verify');b.disabled=true;try{if(!pendingUserId)throw new Error('ابتدا کد ورود را درخواست کن.');await account.createSession({userId:pendingUserId,secret:$('otp').value.trim()});await verifyOwner();}catch(e){say('loginStatus','ورود یا دریافت اطلاعات انجام نشد: '+(e.message||String(e)))}finally{b.disabled=false;}};
 $('historyClose').onclick=()=> $('orderHistory').classList.add('hidden');
 $('refresh').onclick=()=>load().catch(()=>{});
+$('restoreUpload').onclick=async()=>{
+ const button=$('restoreUpload'),file=$('restoreFile').files?.[0];
+ if(!file){say('restoreStatus','ابتدا فایل JPEG را انتخاب کن.');return;}
+ if(file.type!=='image/jpeg'||file.size!==201389){say('restoreStatus','فایل انتخابی با فایل اصلی مطابقت ندارد؛ باید JPEG با حجم دقیق ۲۰۱٬۳۸۹ بایت باشد.');return;}
+ let ids=[];try{ids=JSON.parse(button.dataset.requestIds||'[]')}catch{}
+ if(ids.length!==3){say('restoreStatus','سه درخواست معتبر شناسایی نشدند.');return;}
+ button.disabled=true;
+ try{
+  say('restoreStatus','در حال تأیید مالکیت و مشخصات سه درخواست...');
+  const verified=await api('get_ai_upload_restore_targets',{request_ids:ids});
+  if(verified.targets?.length!==3||verified.targets.some(t=>t.mime_type!=='image/jpeg'||t.file_size_bytes!==file.size))throw new Error('مشخصات فایل با درخواست‌ها یکسان نیست.');
+  const permissions=[Permission.read(Role.user(verified.uploader_user_id)),Permission.update(Role.user(verified.uploader_user_id)),Permission.delete(Role.user(verified.uploader_user_id))];
+  let uploaded=0;
+  for(const target of verified.targets){
+   await storage.createFile('nova-ai-designs',target.request_id,file,permissions);
+   uploaded++;
+   say('restoreStatus','بارگذاری امن انجام شد: '+uploaded+' از 3 فایل. رکوردها تغییری نکرده‌اند.');
+  }
+  say('restoreStatus','هر سه فایل با شناسه درخواست اصلی بارگذاری شدند. اکنون صفحه را به‌روزرسانی کن و لینک موقت هر فایل را آزمایش کن.');
+ }catch(e){
+  say('restoreStatus','بارگذاری کامل نشد: '+(e?.message||String(e))+' . تعداد فایل‌های بارگذاری‌شده تا پیش از خطا: '+(typeof uploaded==='number'?uploaded:0)+'.');
+ }finally{button.disabled=false;}
+};
+
 $('logout').onclick=async()=>{await account.deleteSession({sessionId:'current'}).catch(()=>{});$('dashboard').classList.add('hidden');$('logout').classList.add('hidden');$('login').classList.remove('hidden');$('otp').value='';pendingUserId='';say('loginStatus','از حساب خارج شدی.');};
 $('orderSearch').addEventListener('input',renderOrders);$('orderStatusFilter').addEventListener('change',renderOrders);
 for(const [value,label] of Object.entries(orderLabels))$('orderStatusFilter').append(new Option(label,value));
