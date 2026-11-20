@@ -12,13 +12,13 @@ export function createNovaAdminApi() {
   let ready = false;
 
   async function authenticate() {
-    // Appwrite SDK forwards the authenticated session to function executions.
-    // Do not create a separate JWT: the pilot verified that this extra request
-    // is unnecessary and can fail browser CORS checks.
     const user = await account.get();
     if (!user.email || user.email.toLowerCase() !== OWNER_EMAIL || user.emailVerification !== true) {
       throw new Error('OWNER_VERIFICATION_REQUIRED');
     }
+    // Attach a fresh, short-lived JWT for the admin Function execution.
+    const jwt = await account.createJWT();
+    client.setJWT(jwt.jwt);
     ready = true;
     return { id: user.$id, email: user.email };
   }
