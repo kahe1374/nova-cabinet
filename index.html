@@ -1080,7 +1080,14 @@ async function novaAiAction(action,payload,jwt){
  let result={};
  try{result=JSON.parse(execution.responseBody||'{}');}catch{}
  if(!response.ok||execution.status!=='completed'||execution.responseStatusCode<200||execution.responseStatusCode>=300){
-  throw new Error(result.code||execution.responseStatusCode||'appwrite_request_failed');
+  const detail=[
+   'http_'+response.status,
+   'execution_'+String(execution.status||'unknown'),
+   'function_http_'+String(execution.responseStatusCode||'none'),
+   'code_'+String(result.code||'none'),
+   'errors_'+String(execution.errors||'none').slice(0,180)
+  ].join('|');
+  throw new Error(detail);
  }
  return result;
 }
