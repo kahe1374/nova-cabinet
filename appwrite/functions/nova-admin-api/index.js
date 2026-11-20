@@ -678,7 +678,7 @@ export default async ({ req, res, log, error }) => {
     if (action === 'health') return reply(res, {
       ok: true, code: 'OWNER_AUTHENTICATED',
       capabilities: readOnly
-        ? ['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'list_ai_pricing']
+        ? ['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'get_ai_upload_restore_targets', 'list_ai_pricing']
         : ['health', 'list_orders', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'list_ai_pricing',
           'update_order_status', 'assign_order', 'upsert_ai_pricing'],
       readOnly
@@ -732,6 +732,51 @@ export default async ({ req, res, log, error }) => {
       const rows = result.rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
         .map(({ price_acceptance_token_hash, ...safeRow }) => safeRow);
       return reply(res, { ok: true, code: 'AI_REQUESTS_LOADED', rows, total: result.total, truncated: result.total > rows.length }, 200, responseHeaders);
+    }
+
+    if (action === 'get_ai_upload_restore_targets') {
+      const requestIds = Array.isArray(body.request_ids) ? body.request_ids.map(cleanRowId) : [];
+      if (requestIds.length !== 3 || requestIds.some((id) => !id || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) || new Set(requestIds).size !== 3) {
+        return reply(res, { ok: false, code: 'INVALID_RESTORE_REQUEST_SET' }, 400, responseHeaders);
+      }
+      const requests = await Promise.all(requestIds.map((id) => getRow('ai_design_requests', id, key)));
+      if (requests.some((result, index) => !result.response.ok || result.data.$id !== requestIds[index])) {
+        return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+      }
+      const rows = requests.map((result) => result.data);
+      const first = rows[0];
+      const sameCustomer = rows.every((row) =>
+        cleanString(row.full_name, 160) === cleanString(first.full_name, 160) &&
+        normalizeAiMobile(row.mobile) === normalizeAiMobile(first.mobile) &&
+        row.original_file_name === first.original_file_name &&
+        row.mime_type === first.mime_type &&
+        Number(row.file_size_bytes) === Number(first.file_size_bytes) &&
+        row.file_key === row.$id
+      );
+      if (!sameCustomer || first.mime_type !== 'image/jpeg' || first.original_file_name !== '۲۰۲۶۱۰۲۳_۲۰۰۸۰۰.jpg') {
+        return reply(res, { ok: false, code: 'RESTORE_REQUESTS_DO_NOT_MATCH' }, 409, responseHeaders);
+      }
+      const audit = await listRows('audit_log', key, 1000);
+      const uploaderIds = rows.map((row) => {
+        const entry = audit.rows.find((item) => item.action === 'ai.request.created.public' &&
+          item.entity_type === 'ai_design_request' && item.entity_id === row.$id);
+        let details = {};
+        try { details = typeof entry?.details === 'string' ? JSON.parse(entry.details) : (entry?.details || {}); } catch {}
+        return cleanString(details.uploader_user_id, 64);
+      });
+      if (uploaderIds.some((id) => !id) || new Set(uploaderIds).size !== 1) {
+        return reply(res, { ok: false, code: 'RESTORE_UPLOADER_NOT_VERIFIED' }, 409, responseHeaders);
+      }
+      for (const row of rows) {
+        const existing = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(row.$id), key);
+        if (existing.response.ok) return reply(res, { ok: false, code: 'RESTORE_FILE_ALREADY_EXISTS', request_id: row.$id }, 409, responseHeaders);
+        if (existing.response.status !== 404) return reply(res, { ok: false, code: 'RESTORE_STORAGE_CHECK_FAILED' }, 502, responseHeaders);
+      }
+      return reply(res, {
+        ok: true, code: 'AI_RESTORE_TARGETS_VERIFIED',
+        uploader_user_id: uploaderIds[0],
+        targets: rows.map((row) => ({ request_id: row.$id, mime_type: row.mime_type, file_size_bytes: Number(row.file_size_bytes) }))
+      }, 200, responseHeaders);
     }
 
     if (action === 'get_ai_request_file_access') {
