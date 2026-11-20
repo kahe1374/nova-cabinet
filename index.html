@@ -1036,7 +1036,14 @@ async function novaAiSession(onStage=()=>{}){
  let user;
  onStage('account_get');
  try{user=await novaAiAccount.get();}
- catch{onStage('anonymous_session_create');await novaAiAccount.createAnonymousSession();onStage('account_get_after_create');user=await novaAiAccount.get();}
+ catch(error){
+  const hasNoSession=Number(error?.code)===401||error?.type==='user_unauthorized';
+  if(!hasNoSession){onStage('account_get_failed');throw error;}
+  onStage('anonymous_session_create');
+  await novaAiAccount.createAnonymousSession();
+  onStage('account_get_after_create');
+  user=await novaAiAccount.get();
+ }
  onStage('jwt_create');
  const token=await novaAiAccount.createJWT();
  novaAiClient.setJWT(token.jwt);
