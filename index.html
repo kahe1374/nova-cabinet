@@ -1132,6 +1132,7 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
   });
   status.append(acceptButton);f.reset();pendingUpload=null;
  };
+ try{
  let preparedFile=file;try{preparedFile=await novaAiCompressImage(file);}catch(err){console.warn('NOVA image compression skipped',err);}
  const {user,jwt}=await novaAiSession(step=>diagnosticStage=step);
   diagnosticStage='function_create_execution';
