@@ -1100,8 +1100,8 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
   status.append(acceptButton);f.reset();
  }catch(error){
   console.error('NOVA Appwrite AI design request failed',error);
-  const diagnostic=String(error?.type||error?.code||'unknown_client_error').replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,80);
-  status.textContent='ثبت درخواست یا بارگذاری امن انجام نشد. کد خطا: '+diagnostic;
+  const diagnostic=String(error?.type||error?.code||error?.message||error?.name||'unknown_client_error').replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,100);
+  status.textContent='ثبت درخواست یا بارگذاری امن انجام نشد. جزئیات خطا: '+diagnostic;
  }finally{btn.disabled=false;btn.textContent='ثبت درخواست طراحی ✧';}
 });
 </script>>
