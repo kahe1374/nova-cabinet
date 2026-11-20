@@ -1032,17 +1032,41 @@ const NOVA_APPWRITE_FUNCTION='nova-admin-api';
 const novaAiClient=new Client().setEndpoint(NOVA_APPWRITE_ENDPOINT).setProject(NOVA_APPWRITE_PROJECT);
 const novaAiAccount=new Account(novaAiClient);
 const novaAiStorage=new Storage(novaAiClient);
+async function novaAiDirectAccountGet(){
+ const headers={
+  'x-sdk-name':'Web',
+  'x-sdk-platform':'client',
+  'x-sdk-language':'web',
+  'x-sdk-version':'17.0.0',
+  'X-Appwrite-Response-Format':'1.6.0',
+  'X-Appwrite-Project':NOVA_APPWRITE_PROJECT,
+  'content-type':'application/json'
+ };
+ try{
+  const fallback=window.localStorage.getItem('cookieFallback');
+  if(fallback)headers['X-Fallback-Cookies']=fallback;
+ }catch(storageError){}
+ const response=await fetch(NOVA_APPWRITE_ENDPOINT+'/account',{method:'GET',headers,credentials:'include'});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok){
+  const error=new Error(data?.message||('Appwrite account request failed: '+response.status));
+  error.code=response.status;
+  error.type=data?.type||'';
+  throw error;
+ }
+ return data;
+}
 async function novaAiSession(onStage=()=>{}){
  let user;
- onStage('account_get');
- try{user=await novaAiAccount.get();}
+ onStage('account_get_direct');
+ try{user=await novaAiDirectAccountGet();}
  catch(error){
   const hasNoSession=Number(error?.code)===401||error?.type==='user_unauthorized';
-  if(!hasNoSession){onStage('account_get_failed');throw error;}
+  if(!hasNoSession){onStage('account_get_direct_failed');throw error;}
   onStage('anonymous_session_create');
   await novaAiAccount.createAnonymousSession();
-  onStage('account_get_after_create');
-  user=await novaAiAccount.get();
+  onStage('account_get_after_create_direct');
+  user=await novaAiDirectAccountGet();
  }
  onStage('jwt_create');
  const token=await novaAiAccount.createJWT();
