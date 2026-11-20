@@ -13,7 +13,11 @@ function header(headers, name) {
   const key = Object.keys(headers || {}).find((item) => item.toLowerCase() === name.toLowerCase());
   return key ? headers[key] : '';
 }
-const ALLOWED_ORIGINS = new Set(['https://kahe1374.github.io']);
+const ALLOWED_ORIGINS = new Set([
+  'https://kahe1374.github.io',
+  'https://novacabinet.ir',
+  'https://www.novacabinet.ir'
+]);
 const publicRateBuckets = new Map();
 function consumePublicRateLimit(req, mobile) {
   const forwarded = header(req.headers, 'x-forwarded-for').split(',')[0].trim();
@@ -612,7 +616,7 @@ export default async ({ req, res, log, error }) => {
     }
     if (['public_create_ai_design_request','public_confirm_ai_design_upload','public_accept_ai_design_price','public_start_ai_design','public_check_ai_design'].includes(earlyBody.action)) {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
-      if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
+      if (!ALLOWED_ORIGINS.has(origin)) return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
       if (earlyBody.action === 'public_create_ai_design_request') return handlePublicAiCreate(earlyBody, earlyKey, req, res, responseHeaders, error);
       if (earlyBody.action === 'public_confirm_ai_design_upload') return handlePublicAiConfirmUpload(earlyBody, earlyKey, req, res, responseHeaders, error);
       if (earlyBody.action === 'public_accept_ai_design_price') return handlePublicAiAcceptPrice(earlyBody, earlyKey, req, res, responseHeaders, error);
@@ -621,7 +625,7 @@ export default async ({ req, res, log, error }) => {
     }
     if (earlyBody.action === 'public_create_order') {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
-      if (origin !== 'https://kahe1374.github.io') return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
+      if (!ALLOWED_ORIGINS.has(origin)) return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
       return handlePublicOrder(earlyBody, earlyKey, req, res, responseHeaders, error);
     }
     const jwt = header(req.headers, 'x-appwrite-user-jwt');
