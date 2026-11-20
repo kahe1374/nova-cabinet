@@ -50,7 +50,11 @@ async function api(action,parameters={}){
  catch(e){throw new Error('ارتباط با تابع برقرار نشد: '+(e?.message||String(e)));}
  let data={};try{data=JSON.parse(result.responseBody||'{}')}catch{throw new Error('پاسخ API قابل خواندن نیست.')}
  const status=Number(result.responseStatusCode||0);
- if(status<200||status>=300||data.ok!==true)throw new Error('خطای API ('+status+'): '+(data.code||'درخواست ناموفق'));
+ if(status<200||status>=300||data.ok!==true){
+  const raw=String(result.responseBody||'').trim().slice(0,500);
+  const details=[data.code||'',result.status?'execution='+result.status:'',result.$id?'execution_id='+result.$id:'',raw?'response='+raw:''].filter(Boolean);
+  throw new Error('خطای API ('+status+'): '+(details.join(' | ')||'درخواست ناموفق'));
+ }
  return data;
 }
 function renderOrders(){
