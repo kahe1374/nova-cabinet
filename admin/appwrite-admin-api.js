@@ -16,9 +16,7 @@ export function createNovaAdminApi() {
     if (!user.email || user.email.toLowerCase() !== OWNER_EMAIL || user.emailVerification !== true) {
       throw new Error('OWNER_VERIFICATION_REQUIRED');
     }
-    // Attach a fresh, short-lived JWT for the admin Function execution.
-    const jwt = await account.createJWT();
-    client.setJWT(jwt.jwt);
+    // Keep the authenticated browser session; the Appwrite SDK forwards it to Function executions.
     ready = true;
     return { id: user.$id, email: user.email };
   }
