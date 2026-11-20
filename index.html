@@ -1032,10 +1032,12 @@ const NOVA_APPWRITE_FUNCTION='nova-admin-api';
 const novaAiClient=new Client().setEndpoint(NOVA_APPWRITE_ENDPOINT).setProject(NOVA_APPWRITE_PROJECT);
 const novaAiAccount=new Account(novaAiClient);
 const novaAiStorage=new Storage(novaAiClient);
-async function novaAiSession(){
+async function novaAiSession(onStage=()=>{}){
  let user;
+ onStage('account_get');
  try{user=await novaAiAccount.get();}
- catch{await novaAiAccount.createAnonymousSession();user=await novaAiAccount.get();}
+ catch{onStage('anonymous_session_create');await novaAiAccount.createAnonymousSession();onStage('account_get_after_create');user=await novaAiAccount.get();}
+ onStage('jwt_create');
  const token=await novaAiAccount.createJWT();
  novaAiClient.setJWT(token.jwt);
  return {user,jwt:token.jwt};
@@ -1062,8 +1064,10 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
  if(file.size>30*1024*1024){status.textContent='حجم فایل نباید بیشتر از ۳۰ مگابایت باشد.';return;}
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){status.textContent='فرمت مجاز: JPG، PNG یا WEBP.';return;}
  btn.disabled=true;btn.textContent='در حال ثبت و بارگذاری...';status.textContent='در حال ایجاد اتصال امن به نوا...';
+ let diagnosticStage='session_start';
  try{
-  const {user,jwt}=await novaAiSession();
+  const {user,jwt}=await novaAiSession(step=>diagnosticStage=step);
+  diagnosticStage='function_create_execution';
   status.textContent='در حال ثبت درخواست در سامانه نوا...';
   const result=await novaAiAction('public_create_ai_design_request',{
    name:v.get('name'),phone:v.get('phone'),city:v.get('city'),design_mode:v.get('design_mode'),
@@ -1072,9 +1076,11 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
    instructions:v.get('instructions'),file_name:file.name,mime_type:file.type,file_size:file.size,website:''
   },jwt);
   if(!result.ok||!result.request_id||!result.price_acceptance_token)throw new Error(result.code||'ai_request_failed');
+  diagnosticStage='storage_upload';
   status.textContent='درخواست ثبت شد؛ در حال بارگذاری امن عکس...';
   const permissions=['read("user:'+user.$id+'")','update("user:'+user.$id+'")','delete("user:'+user.$id+'")'];
   await novaAiStorage.createFile(NOVA_APPWRITE_BUCKET,result.request_id,file,permissions);
+  diagnosticStage='function_confirm_upload';
   status.textContent='عکس بارگذاری شد؛ در حال تأیید فایل...';
   const confirmed=await novaAiAction('public_confirm_ai_design_upload',{request_id:result.request_id},jwt);
   if(!confirmed.ok)throw new Error(confirmed.code||'upload_confirmation_failed');
@@ -1100,8 +1106,8 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
   status.append(acceptButton);f.reset();
  }catch(error){
   console.error('NOVA Appwrite AI design request failed',error);
-  const diagnostic=String(error?.type||error?.code||error?.message||error?.name||'unknown_client_error').replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,100);
-  status.textContent='ثبت درخواست یا بارگذاری امن انجام نشد. جزئیات خطا: '+diagnostic;
+  const diagnostic=String(error?.type||error?.code||error?.message||error?.name||'unknown_client_error').replace(/[^a-zA-Z0-9_.-]/g,'').slice(0,80);
+  status.textContent='ثبت درخواست یا بارگذاری امن انجام نشد. مرحله: '+diagnosticStage+' — خطا: '+diagnostic;
  }finally{btn.disabled=false;btn.textContent='ثبت درخواست طراحی ✧';}
 });
 </script>>
