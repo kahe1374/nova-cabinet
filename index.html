@@ -1032,30 +1032,27 @@ const NOVA_APPWRITE_FUNCTION='nova-admin-api';
 const novaAiClient=new Client().setEndpoint(NOVA_APPWRITE_ENDPOINT).setProject(NOVA_APPWRITE_PROJECT);
 const novaAiAccount=new Account(novaAiClient);
 const novaAiStorage=new Storage(novaAiClient);
-async function novaAiDirectAccountGet(){
+function novaAiDirectHeaders(){
  const headers={
-  'x-sdk-name':'Web',
-  'x-sdk-platform':'client',
-  'x-sdk-language':'web',
-  'x-sdk-version':'17.0.0',
-  'X-Appwrite-Response-Format':'1.6.0',
-  'X-Appwrite-Project':NOVA_APPWRITE_PROJECT,
-  'content-type':'application/json'
+  'x-sdk-name':'Web','x-sdk-platform':'client','x-sdk-language':'web',
+  'x-sdk-version':'17.0.0','X-Appwrite-Response-Format':'1.6.0',
+  'X-Appwrite-Project':NOVA_APPWRITE_PROJECT,'content-type':'application/json'
  };
- try{
-  const fallback=window.localStorage.getItem('cookieFallback');
-  if(fallback)headers['X-Fallback-Cookies']=fallback;
- }catch(storageError){}
- const response=await fetch(NOVA_APPWRITE_ENDPOINT+'/account',{method:'GET',headers,credentials:'include'});
+ try{const fallback=window.localStorage.getItem('cookieFallback');if(fallback)headers['X-Fallback-Cookies']=fallback;}catch(storageError){}
+ return headers;
+}
+async function novaAiDirectRequest(path,method='GET',body){
+ const response=await fetch(NOVA_APPWRITE_ENDPOINT+path,{method,headers:novaAiDirectHeaders(),credentials:'include',...(body===undefined?{}:{body:JSON.stringify(body)})});
+ const fallback=response.headers.get('X-Fallback-Cookies');
+ if(fallback){try{window.localStorage.setItem('cookieFallback',fallback);}catch(storageError){}}
  const data=await response.json().catch(()=>({}));
  if(!response.ok){
-  const error=new Error(data?.message||('Appwrite account request failed: '+response.status));
-  error.code=response.status;
-  error.type=data?.type||'';
-  throw error;
+  const error=new Error(data?.message||('Appwrite request failed: '+response.status));
+  error.code=response.status;error.type=data?.type||'';throw error;
  }
  return data;
 }
+async function novaAiDirectAccountGet(){return novaAiDirectRequest('/account');}
 async function novaAiSession(onStage=()=>{}){
  let user;
  onStage('account_get_direct');
@@ -1069,7 +1066,7 @@ async function novaAiSession(onStage=()=>{}){
   user=await novaAiDirectAccountGet();
  }
  onStage('jwt_create');
- const token=await novaAiAccount.createJWT();
+ const token=await novaAiDirectRequest('/account/jwts','POST',{});
  novaAiClient.setJWT(token.jwt);
  return {user,jwt:token.jwt};
 }
