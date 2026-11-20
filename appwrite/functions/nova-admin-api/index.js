@@ -596,6 +596,7 @@ async function handlePublicAiCheck(body, key, req, res, responseHeaders, error) 
 }
 
 export default async ({ req, res, log, error }) => {
+  if (typeof log === 'function') log('NOVA_DIAG_HANDLER_ENTERED');
   const origin = header(req.headers, 'origin');
   const responseHeaders = corsHeaders(origin);
   try {
@@ -604,13 +605,24 @@ export default async ({ req, res, log, error }) => {
     }
     if (req.method === 'OPTIONS') return reply(res, {}, 204, responseHeaders);
     if (req.method !== 'POST') return reply(res, { ok: false, code: 'METHOD_NOT_ALLOWED' }, 405, responseHeaders);
-    const earlyKey = header(req.headers, 'x-appwrite-key') || process.env.APPWRITE_FUNCTION_API_KEY || '';
+    const requestKey = header(req.headers, 'x-appwrite-key');
+    const environmentKey = process.env.APPWRITE_FUNCTION_API_KEY || '';
+    const earlyKey = requestKey || environmentKey;
+    if (typeof log === 'function') log('NOVA_DIAG_RUNTIME_CONTEXT ' + JSON.stringify({
+      method: req.method,
+      originAllowed: ALLOWED_ORIGINS.has(origin),
+      requestKeyPresent: Boolean(requestKey),
+      environmentKeyPresent: Boolean(environmentKey)
+    }));
     let earlyBody = {};
     try {
       const raw = typeof req.body === 'string' ? (req.body || '{}') : JSON.stringify(req.body || {});
       if (new TextEncoder().encode(raw).byteLength > 16384) return reply(res, { ok: false, code: 'REQUEST_TOO_LARGE' }, 413, responseHeaders);
       earlyBody = typeof req.body === 'string' ? JSON.parse(raw) : (req.body || {});
       if (!earlyBody || typeof earlyBody !== 'object' || Array.isArray(earlyBody)) return reply(res, { ok: false, code: 'INVALID_REQUEST_BODY' }, 400, responseHeaders);
+      if (typeof log === 'function') log('NOVA_DIAG_REQUEST_PARSED ' + JSON.stringify({
+        action: typeof earlyBody.action === 'string' ? earlyBody.action.slice(0, 64) : 'none'
+      }));
     } catch {
       return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
     }
