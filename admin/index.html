@@ -13,7 +13,8 @@ input,button{font:inherit;padding:11px;border-radius:6px}input{background:#15151
 button{border:1px solid var(--gold);background:var(--gold);color:#171716;font-weight:bold;cursor:pointer}button:disabled{opacity:.5;cursor:wait}
 .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.hidden{display:none!important}
 .status{padding:12px;background:#151514;border-radius:6px;color:var(--muted);margin:12px 0;overflow-wrap:anywhere}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.item{border:1px solid var(--line);border-radius:8px;padding:14px;overflow-wrap:anywhere}.item strong{color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.file-access{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}.file-links{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.file-links a{color:var(--gold);text-decoration:underline}.file-links span{font-size:12px;color:var(--muted)}
+.item{border:1px solid var(--line);border-radius:8px;padding:14px;overflow-wrap:anywhere}.item strong{color:var(--gold)}
 .table{overflow:auto}table{border-collapse:collapse;width:100%;min-width:680px}td,th{padding:10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}th{color:var(--gold)}
 .toolbar{display:grid;grid-template-columns:1fr 220px;gap:10px;margin:8px 0 14px}.toolbar input,.toolbar select{margin:0}
 select{font:inherit;background:#151514;color:var(--text);border:1px solid var(--line);padding:10px;border-radius:6px}
@@ -129,7 +130,30 @@ async function showOrderHistory(order){
 function renderAI(rows){
  $('ai').replaceChildren();$('aiCount').textContent=rows.length+' درخواست';
  if(!rows.length){$('ai').append(node('div','درخواستی در Appwrite ثبت نشده است.','empty'));return;}
- for(const r of rows){const card=node('div',undefined,'item');card.append(cell(r,'کد پیگیری','request_number'),cell(r,'نام','full_name'),cell(r,'موبایل','mobile'),cell(r,'سبک','style'),cell(r,'حالت طراحی','design_mode'),cell(r,'وضعیت', 'status'),cell(r,'پرداخت','payment_status'),cell(r,'فایل ورودی','original_file_name'),cell(r,'قیمت پیشنهادی','quoted_price_toman'));$('ai').append(card);}
+ for(const r of rows){
+  const card=node('div',undefined,'item');
+  card.append(cell(r,'کد پیگیری','request_number'),cell(r,'نام','full_name'),cell(r,'موبایل','mobile'),cell(r,'سبک','style'),cell(r,'حالت طراحی','design_mode'),cell(r,'وضعیت','status'),cell(r,'پرداخت','payment_status'),cell(r,'فایل ورودی','original_file_name'),cell(r,'قیمت پیشنهادی','quoted_price_toman'));
+  const fileAction=node('div',undefined,'file-access');
+  const fileButton=node('button',r.file_key?'ایجاد لینک موقت فایل':'فایل ورودی ثبت نشده است');
+  fileButton.type='button';fileButton.disabled=!r.file_key||!r.$id;
+  fileButton.title='لینک مشاهده و دریافت فایل فقط ۵ دقیقه اعتبار دارد';
+  const fileLinks=node('div',undefined,'file-links');
+  fileButton.addEventListener('click',async()=>{
+   fileButton.disabled=true;fileLinks.replaceChildren();say('aiStatus','در حال آماده‌سازی دسترسی موقت فایل '+(r.request_number||'')+'...');
+   try{
+    const access=await api('get_ai_request_file_access',{request_id:r.$id});
+    const view=node('a','مشاهده فایل');view.href=access.view_url;view.target='_blank';view.rel='noopener noreferrer';
+    const download=node('a','دریافت فایل');download.href=access.download_url;download.rel='noopener noreferrer';download.download=r.original_file_name||'NOVA-upload';
+    const expiry=node('span','اعتبار لینک تا '+new Date(access.expires_at).toLocaleTimeString('fa-IR'));
+    fileLinks.append(view,download,expiry);
+    say('aiStatus','لینک موقت فایل '+(r.request_number||'')+' آماده شد؛ اعتبار آن ۵ دقیقه است.');
+   }catch(e){
+    fileLinks.append(node('span','آماده‌سازی لینک ناموفق بود: '+e.message,'muted'));
+    say('aiStatus','دریافت فایل ناموفق بود: '+e.message);
+   }finally{fileButton.disabled=false;}
+  });
+  fileAction.append(fileButton,fileLinks);card.append(fileAction);$('ai').append(card);
+ }
 }
 function renderPricing(rows){
  $('pricing').replaceChildren();$('pricingCount').textContent=rows.length+' تعرفه';
