@@ -53,7 +53,7 @@ jobs:
           const fs = require('node:fs');
           const html = fs.readFileSync('index.html', 'utf8');
           const checks = [
-            ['3D preview retained', html.includes('nova3DCanvas') && html.includes('nova-3d-swatch')],
+            ['3D preview removed', !html.includes('nova3DCanvas') && !html.includes('nova-3d-swatch')],
             ['AI image request form removed', !html.includes('aiDesignForm')],
             ['AI generation client removed', !html.includes('novaAiSession') && !html.includes('NOVA_APPWRITE_BUCKET')],
             ['Appwrite order intake retained', html.includes('public_create_order')],
