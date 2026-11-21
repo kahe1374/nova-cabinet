@@ -124,8 +124,25 @@ test('assignment action uses strict row identifier validation', () => {
   assert.match(source, /INVALID_ASSIGNMENT/);
   assert.match(source, /const orderId = cleanRowId\(body\.order_id\);[\s\S]*?const assigneeId/);
 });
+test('blocks every public AI action when public AI intake is disabled', async () => {
+  const handler = load(async () => { throw new Error('disabled AI action must not contact Appwrite'); });
+  const actions = [
+    'public_create_ai_design_request',
+    'public_confirm_ai_design_upload',
+    'public_accept_ai_design_price',
+    'public_start_ai_design',
+    'public_check_ai_design'
+  ];
+  for (const action of actions) {
+    const res = response();
+    await handler({ req: { method: 'POST', headers: { origin: 'https://kahe1374.github.io' }, body: { action } }, res, log() {}, error() {} });
+    assert.equal(res.status, 423, action);
+    assert.equal(res.body.code, 'PUBLIC_AI_INTAKE_DISABLED', action);
+  }
+});
+
 test('read-only health does not advertise write capabilities', () => {
-  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'get_ai_upload_restore_targets', 'list_ai_pricing'\]/);
 });
 
 
@@ -323,7 +340,7 @@ test('order status history is owner-only, read-only, and scoped to the requested
 test('read-only health advertises history but still no write capabilities', () => {
   assert.match(source, /'list_order_status_history'/);
   assert.match(source, /if \(action === 'list_order_status_history'\)/);
-  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'get_ai_upload_restore_targets', 'list_ai_pricing'\]/);
 });
 
 test('order assignees lists only active authorized managers with minimal fields', async () => {
