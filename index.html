@@ -1147,7 +1147,7 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
   diagnosticStage='storage_upload';status.textContent='درخواست ثبت شد؛ در حال بارگذاری امن عکس'+(preparedFile!==file?' فشرده‌شده':'')+'...';
   const permissions=['read("user:'+user.$id+'")','update("user:'+user.$id+'")','delete("user:'+user.$id+'")'];
   pendingUpload={user,jwt,result,file:preparedFile,permissions};
-  await novaAiStorage.createFile(NOVA_APPWRITE_BUCKET,result.request_id,preparedFile,permissions);
+  await novaAiStorage.createFile({bucketId:NOVA_APPWRITE_BUCKET,fileId:result.request_id,file:preparedFile,permissions});
   diagnosticStage='function_confirm_upload';status.textContent='عکس بارگذاری شد؛ در حال تأیید فایل...';
   const confirmed=await novaAiAction('public_confirm_ai_design_upload',{request_id:result.request_id},jwt);
   if(!confirmed.ok)throw new Error(confirmed.code||'upload_confirmation_failed');showConfirmed(result);
@@ -1176,8 +1176,8 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
    retry.addEventListener('click',async()=>{
     retry.disabled=true;retry.textContent='در حال تلاش دوباره...';status.textContent='در حال بررسی و بارگذاری عکس برای همان درخواست...';
     try{
-     try{await novaAiStorage.getFile(NOVA_APPWRITE_BUCKET,pendingUpload.result.request_id);}
-     catch(checkError){if(Number(checkError?.code)!==404)throw checkError;await novaAiStorage.createFile(NOVA_APPWRITE_BUCKET,pendingUpload.result.request_id,pendingUpload.file,pendingUpload.permissions);}
+     try{await novaAiStorage.getFile({bucketId:NOVA_APPWRITE_BUCKET,fileId:pendingUpload.result.request_id});}
+     catch(checkError){if(Number(checkError?.code)!==404)throw checkError;await novaAiStorage.createFile({bucketId:NOVA_APPWRITE_BUCKET,fileId:pendingUpload.result.request_id,file:pendingUpload.file,permissions:pendingUpload.permissions});}
      const confirmed=await novaAiAction('public_confirm_ai_design_upload',{request_id:pendingUpload.result.request_id},pendingUpload.jwt);
      if(!confirmed.ok)throw new Error(confirmed.code||'upload_confirmation_failed');showConfirmed(pendingUpload.result);
     }catch(retryError){console.error('NOVA AI upload retry failed',retryError);status.textContent='بارگذاری هنوز انجام نشد. درخواست قبلی حفظ شده؛ دوباره تلاش کنید. جزئیات: '+String(retryError?.message||retryError).slice(0,160);retry.disabled=false;retry.textContent='تلاش دوباره برای بارگذاری عکس';status.append(retry);}
