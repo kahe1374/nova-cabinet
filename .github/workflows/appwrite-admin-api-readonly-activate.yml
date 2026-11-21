@@ -54,7 +54,7 @@ jobs:
             const desiredVariables=[
               {variableId:'nova-public-intake-enabled',key:'NOVA_PUBLIC_ORDER_INTAKE_ENABLED',value:'true',secret:false},
               {variableId:'nova-admin-api-readonly',key:'NOVA_ADMIN_API_READ_ONLY',value:'true',secret:false},
-              {variableId:'nova-public-ai-intake-enabled',key:'NOVA_PUBLIC_AI_INTAKE_ENABLED',value:'true',secret:false}
+              {variableId:'nova-public-ai-intake-enabled',key:'NOVA_PUBLIC_AI_INTAKE_ENABLED',value:'false',secret:false}
             ];
             const existingVariables=await request(variableEndpoint);
             for (const desired of desiredVariables) {
@@ -102,7 +102,7 @@ jobs:
               final.scopes?.length!==4 || !['rows.read','rows.write','files.read','files.write'].every(s=>final.scopes.includes(s)) ||
               final.deploymentId!==deployment.$id ||
               varMap.get('NOVA_PUBLIC_ORDER_INTAKE_ENABLED')!=='true' ||
-              varMap.get('NOVA_PUBLIC_AI_INTAKE_ENABLED')!=='true' ||
+              varMap.get('NOVA_PUBLIC_AI_INTAKE_ENABLED')!=='false' ||
               varMap.get('NOVA_ADMIN_API_READ_ONLY')!=='true') {
               console.log('VERIFY_ENABLED='+final.enabled);
               console.log('VERIFY_EXECUTE='+(final.execute||[]).join(','));
@@ -113,7 +113,7 @@ jobs:
               throw new Error('Final public-intake/read-only-admin verification failed.');
             }
             console.log('PUBLIC_ORDER_INTAKE_ENABLED=true');
-            console.log('PUBLIC_AI_INTAKE_ENABLED=true');
+            console.log('PUBLIC_AI_INTAKE_ENABLED=false');
             console.log('FUNCTION_FILE_SCOPES=files.read,files.write');
             console.log('PUBLIC_EXECUTE_ANY=true');
             console.log('ADMIN_API_READ_ONLY=true');
