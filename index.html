@@ -18,7 +18,7 @@ main{padding:36px 0 70px}.gallery-head{text-align:center;margin:0 auto 26px}.gal
 .nova-visit-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.nova-visit-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#e7d9c7}.nova-visit-form input,.nova-visit-form select,.nova-visit-form textarea{width:100%;min-height:46px;border:1px solid #ffffff24;border-radius:9px;background:#11100e;color:var(--cream);padding:10px 12px;outline:none}.nova-visit-form input:focus,.nova-visit-form select:focus,.nova-visit-form textarea:focus{border-color:var(--gold)}.nova-visit-form .wide{grid-column:1/-1}.nova-visit-form button{justify-self:start;border:0;border-radius:30px;background:var(--gold);color:#20170d;padding:11px 24px;font-weight:700;cursor:pointer}.status{margin-top:16px;color:var(--gold)}
 footer{border-top:1px solid var(--line);padding:23px 0;text-align:center;color:var(--muted);font-size:13px}footer b{display:block;color:var(--gold);font:21px Georgia;letter-spacing:2px}footer p{margin:5px 0 0}
 #novaLightbox{position:fixed;inset:0;z-index:50;background:#050505f2;display:grid;place-items:center;padding:22px}#novaLightbox[hidden]{display:none}#novaLightbox img{max-width:min(1100px,94vw);max-height:82vh;object-fit:contain;border-radius:10px}#novaLightboxCaption{color:#f5eee4;text-align:center;margin-top:10px}#novaLightbox button{position:absolute;border:1px solid #d6ad7380;background:#191612;color:var(--gold);border-radius:50%;width:42px;height:42px;font-size:22px;cursor:pointer}#novaLightbox .nova-lightbox-close{top:18px;left:18px}#novaLightbox .nova-lightbox-prev{left:18px;top:50%}#novaLightbox .nova-lightbox-next{right:18px;top:50%}
-@media(max-width:800px){.nova-work-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nova-panel{padding:20px}}
+.nova-wa-link{justify-self:start;color:var(--gold);font-size:13px;text-decoration:underline;text-underline-offset:4px;align-self:center}\n@media(max-width:800px){.nova-work-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nova-panel{padding:20px}}
 @media(max-width:520px){.nav{min-height:65px}.brand{font-size:23px}.nav a:last-child{padding:7px 12px;font-size:12px}.nova-work-grid{gap:9px}.nova-work-card{aspect-ratio:1/1}.nova-work-caption{padding:30px 9px 9px}.nova-work-caption b{font-size:12px}.nova-work-caption small{font-size:10px}.nova-visit-form{grid-template-columns:1fr}.nova-visit-form .wide{grid-column:auto}.nova-panel{margin-top:42px;padding:16px}.gallery-head p{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
@@ -86,7 +86,7 @@ footer{border-top:1px solid var(--line);padding:23px 0;text-align:center;color:v
   <label>تاریخ پیشنهادی<input name="date" type="date" required></label>
   <label>بازه زمانی<select name="time"><option>۹ تا ۱۲</option><option>۱۲ تا ۱۵</option><option>۱۵ تا ۱۸</option><option>۱۸ تا ۲۰</option></select></label>
   <label class="wide">نشانی یا توضیحات<textarea name="address" rows="2" placeholder="نشانی دقیق و توضیحات تکمیلی"></textarea></label>
-  <button class="btn" type="submit">ثبت درخواست اندازه‌گیری</button>
+  <button class="btn" type="submit">ثبت درخواست اندازه‌گیری</button><a class="nova-wa-link" href="https://wa.me/989367374312" target="_blank" rel="noopener">ارتباط مستقیم در واتساپ</a>
  </form>
 </section>
 </main>
