@@ -1145,7 +1145,23 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
     const accepted=await novaAiAction('public_accept_ai_design_price',{request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman,price_acceptance_token:result.price_acceptance_token},fresh.jwt);
     if(!accepted.ok)throw new Error(accepted.code||'price_acceptance_failed');
     confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده؛ تولید تصویر پس از فعال‌شدن درگاه پرداخت و تأیید پرداخت آغاز می‌شود.';acceptButton.remove();
-   }catch(err){console.error('NOVA AI price acceptance failed',err);acceptButton.disabled=false;acceptButton.textContent='تلاش دوباره برای تأیید هزینه';}
+   }catch(err){
+    console.error('NOVA AI price acceptance failed',err);
+    const code=String(err&&err.message||'price_acceptance_failed').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,80);
+    const messages={
+     INVALID_AI_SESSION:'نشست کاربری منقضی شده است؛ دوباره تلاش کنید.',
+     AI_REQUEST_NOT_FOUND:'درخواست پیدا نشد. با پشتیبانی تماس بگیرید.',
+     AI_UPLOAD_NOT_OWNED:'دسترسی به فایل درخواست تأیید نشد. با پشتیبانی تماس بگیرید.',
+     INVALID_PRICE_CONFIRMATION_TOKEN:'اعتبار تأیید این درخواست معتبر نیست. با پشتیبانی تماس بگیرید.',
+     AI_PRICE_MISMATCH:'مبلغ تأیید با مبلغ ثبت‌شده یکسان نیست. با پشتیبانی تماس بگیرید.',
+     AI_UPLOAD_NOT_COMPLETED:'بارگذاری تصویر هنوز تأیید نشده است. لطفاً کمی بعد دوباره تلاش کنید.',
+     AI_REQUEST_NOT_AWAITING_PAYMENT:'وضعیت درخواست تغییر کرده است. برای بررسی با پشتیبانی تماس بگیرید.',
+     AI_PRICE_ACCEPTED_AUDIT_FAILED:'تأیید مبلغ ثبت شده، اما ثبت گزارش سیستمی کامل نشد. دوباره تلاش کنید.',
+     AI_PRICE_ACCEPTANCE_FAILED:'ثبت تأیید مبلغ انجام نشد. دوباره تلاش کنید.'
+    };
+    confirmationText.textContent=(messages[code]||'تأیید هزینه انجام نشد. کد خطا: '+(code||'unknown'))+' (درخواست '+String(result.request_number||'')+')';
+    acceptButton.disabled=false;acceptButton.textContent='تلاش دوباره برای تأیید هزینه';
+   }
   });
   status.append(acceptButton);f.reset();pendingUpload=null;
  };
