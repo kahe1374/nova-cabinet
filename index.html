@@ -1118,6 +1118,38 @@ async function novaAiStorageCreateFile(fileId,file,permissions){
  if(!response.ok){const error=new Error(data?.message||('Appwrite storage upload failed: '+response.status));error.code=data?.code||response.status;error.type=data?.type||'storage_upload_failed';throw error;}
  return data;
 }
+
+function novaAiShowReceiptForm(result,jwt){
+ const status=document.getElementById('aiDesignStatus');
+ const panel=document.createElement('div');panel.style.cssText='margin-top:14px;padding:14px;border:1px solid #c9a46b;border-radius:12px;background:#17120d;color:#f8f1e7;direction:rtl;text-align:right';
+ const info=document.createElement('div');info.textContent='در حال دریافت اطلاعات واریز...';panel.append(info);status.append(panel);
+ novaAiAction('public_get_ai_payment_info',{request_id:result.request_id},jwt).then(payment=>{
+  info.textContent=payment.configured
+   ? 'مبلغ قابل پرداخت: '+Number(payment.amount_toman).toLocaleString('fa-IR')+' تومان\nشماره کارت: '+payment.card_number+'\nبه نام: '+payment.card_holder+'\nپس از واریز، تصویر رسید را ارسال کنید.'
+   : 'اطلاعات کارت هنوز در تنظیمات امن سامانه ثبت نشده است. لطفاً بعداً دوباره مراجعه کنید یا با پشتیبانی نوا تماس بگیرید.';
+  if(!payment.configured)return;
+  const form=document.createElement('form');form.style.cssText='display:grid;gap:10px;margin-top:12px';
+  const label=document.createElement('label');label.textContent='تصویر رسید واریز (JPG، PNG یا WEBP؛ حداکثر ۸ مگابایت)';
+  const input=document.createElement('input');input.type='file';input.accept='image/jpeg,image/png,image/webp';input.required=true;label.append(input);
+  const submit=document.createElement('button');submit.type='submit';submit.className='btn';submit.textContent='ارسال رسید برای بررسی';
+  const note=document.createElement('small');note.textContent='ارسال رسید به معنی تأیید پرداخت نیست؛ پس از بررسی و تأیید واریز، تولید طراحی آغاز می‌شود.';
+  form.append(label,submit,note);panel.append(form);
+  form.addEventListener('submit',async e=>{
+   e.preventDefault();const file=input.files&&input.files[0];
+   if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>8*1024*1024){note.textContent='فقط تصویر JPG، PNG یا WEBP تا حجم ۸ مگابایت مجاز است.';return;}
+   submit.disabled=true;submit.textContent='در حال بارگذاری امن رسید...';
+   try{
+    const session=await novaAiSession();const receiptId=crypto.randomUUID();
+    await novaAiStorageCreateFile(receiptId,file,['read("user:'+session.user.$id+'")','update("user:'+session.user.$id+'")','delete("user:'+session.user.$id+'")']);
+    const saved=await novaAiAction('public_submit_ai_receipt',{request_id:result.request_id,receipt_file_id:receiptId,file_name:file.name},session.jwt);
+    if(!saved.ok)throw new Error(saved.code||'receipt_submit_failed');
+    note.textContent='رسید دریافت شد و در صف بررسی دستی قرار گرفت. وضعیت پرداخت همچنان «در انتظار تأیید» است.';
+    submit.remove();input.disabled=true;
+   }catch(error){console.error('NOVA receipt submission failed',error);note.textContent='ارسال رسید انجام نشد. لطفاً دوباره تلاش کنید.';submit.disabled=false;submit.textContent='تلاش دوباره برای ارسال رسید';}
+  });
+ }).catch(error=>{console.error('NOVA payment info unavailable',error);info.textContent='دریافت اطلاعات واریز ناموفق بود؛ لطفاً بعداً تلاش کنید.';});
+}
+
 async function novaAiStorageGetFile(fileId){
  const response=await fetch(NOVA_APPWRITE_ENDPOINT+'/storage/buckets/'+encodeURIComponent(NOVA_APPWRITE_BUCKET)+'/files/'+encodeURIComponent(fileId),{method:'GET',headers:novaAiDirectHeaders(),credentials:'include'});
  const fallback=response.headers.get('X-Fallback-Cookies');if(fallback){try{localStorage.setItem('cookieFallback',fallback);}catch(storageError){}}
@@ -1144,7 +1176,7 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
    try{const fresh=await novaAiDirectRequest('/account/jwts','POST',{});novaAiClient.setJWT(fresh.jwt);
     const accepted=await novaAiAction('public_accept_ai_design_price',{request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman,price_acceptance_token:result.price_acceptance_token},fresh.jwt);
     if(!accepted.ok)throw new Error(accepted.code||'price_acceptance_failed');
-    confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده؛ تولید تصویر پس از فعال‌شدن درگاه پرداخت و تأیید پرداخت آغاز می‌شود.';acceptButton.remove();
+    confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. اکنون می‌توانید پس از واریز، تصویر رسید را برای بررسی ارسال کنید.';acceptButton.remove();novaAiShowReceiptForm(result,fresh.jwt);
    }catch(err){
     console.error('NOVA AI price acceptance failed',err);
     const code=String(err&&err.message||'price_acceptance_failed').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,80);
