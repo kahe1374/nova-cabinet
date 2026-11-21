@@ -462,6 +462,73 @@ function validFalImageUrl(value) {
       (u.hostname === 'storage.googleapis.com' || u.hostname === 'fal.media' || u.hostname.endsWith('.fal.media'));
   } catch { return false; }
 }
+
+async function handlePublicAiPaymentInfo(body, key, req, res, responseHeaders, error) {
+  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
+  if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
+  const requestId = cleanRowId(body.request_id);
+  if (!requestId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+    return reply(res, { ok: false, code: 'INVALID_REQUEST_ID' }, 400, responseHeaders);
+  }
+  const current = await getRow('ai_design_requests', requestId, key);
+  if (!current.response.ok || current.data.$id !== requestId) return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+  const file = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(requestId), key);
+  if (!file.response.ok || !ownsPrivateFile(file.data, account.$id)) return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_OWNED' }, 403, responseHeaders);
+  if (!current.data.price_accepted_at || Number(current.data.price_accepted_amount_toman) !== Number(current.data.quoted_price_toman)) {
+    return reply(res, { ok: false, code: 'PRICE_ACCEPTANCE_REQUIRED' }, 409, responseHeaders);
+  }
+  const card = cleanString(process.env.NOVA_AI_PAYMENT_CARD, 32).replace(/\s/g, '');
+  const holder = cleanString(process.env.NOVA_AI_PAYMENT_HOLDER, 120);
+  if (!/^\d{16}$/.test(card) || !holder) {
+    return reply(res, { ok: true, code: 'PAYMENT_DETAILS_NOT_CONFIGURED', configured: false }, 200, responseHeaders);
+  }
+  return reply(res, { ok: true, code: 'PAYMENT_DETAILS_READY', configured: true, card_number: card, card_holder: holder,
+    amount_toman: Number(current.data.quoted_price_toman), request_number: current.data.request_number }, 200, responseHeaders);
+}
+async function handlePublicAiReceiptSubmit(body, key, req, res, responseHeaders, error) {
+  const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
+  if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
+  const requestId = cleanRowId(body.request_id);
+  const receiptId = cleanRowId(body.receipt_file_id);
+  const fileName = cleanString(body.file_name, 255);
+  if (!requestId || !receiptId ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId) ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(receiptId) || !fileName) {
+    return reply(res, { ok: false, code: 'INVALID_RECEIPT_SUBMISSION' }, 400, responseHeaders);
+  }
+  if (!consumePublicRateLimit(req, account.$id)) return reply(res, { ok: false, code: 'PUBLIC_RATE_LIMITED', retry_after_seconds: 600 }, 429, responseHeaders);
+  const current = await getRow('ai_design_requests', requestId, key);
+  if (!current.response.ok || current.data.$id !== requestId) return reply(res, { ok: false, code: 'AI_REQUEST_NOT_FOUND' }, 404, responseHeaders);
+  const original = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(requestId), key);
+  if (!original.response.ok || !ownsPrivateFile(original.data, account.$id)) return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_OWNED' }, 403, responseHeaders);
+  if (!current.data.price_accepted_at || Number(current.data.price_accepted_amount_toman) !== Number(current.data.quoted_price_toman) ||
+      current.data.payment_status === 'paid') return reply(res, { ok: false, code: 'AI_REQUEST_NOT_AWAITING_RECEIPT' }, 409, responseHeaders);
+  const receipt = await api('/storage/buckets/nova-ai-designs/files/' + encodeURIComponent(receiptId), key);
+  if (!receipt.response.ok || !ownsPrivateFile(receipt.data, account.$id)) return reply(res, { ok: false, code: 'RECEIPT_FILE_NOT_OWNED' }, 403, responseHeaders);
+  const mime = cleanString(receipt.data.mimeType, 100).toLowerCase();
+  const size = Number(receipt.data.sizeOriginal);
+  if (!['image/jpeg','image/png','image/webp'].includes(mime) || !Number.isSafeInteger(size) || size < 1 || size > 8 * 1024 * 1024) {
+    return reply(res, { ok: false, code: 'INVALID_RECEIPT_FILE' }, 415, responseHeaders);
+  }
+  if (current.data.receipt_submitted_at && current.data.receipt_file_key === receiptId) {
+    return reply(res, { ok: true, code: 'RECEIPT_ALREADY_SUBMITTED', review_status: current.data.receipt_review_status || 'pending_review' }, 200, responseHeaders);
+  }
+  const now = new Date().toISOString();
+  const updated = await updateRow('ai_design_requests', requestId, {
+    receipt_file_key: receiptId, receipt_original_file_name: fileName, receipt_mime_type: mime,
+    receipt_file_size_bytes: size, receipt_submitted_at: now, receipt_review_status: 'pending_review',
+    receipt_ocr_status: 'not_run', updated_at: now
+  }, key);
+  if (!updated.response.ok) return reply(res, { ok: false, code: 'RECEIPT_SUBMISSION_FAILED' }, 502, responseHeaders);
+  const audit = await createRow('audit_log', {
+    actor: null, action: 'ai.payment.receipt.submitted', entity_type: 'ai_design_request', entity_id: requestId,
+    details: JSON.stringify({ request_number: current.data.request_number, receipt_file_key: receiptId, uploader_user_id: account.$id, review_status: 'pending_review' }),
+    created_at: now
+  }, key);
+  if (!audit.response.ok) return reply(res, { ok: false, code: 'RECEIPT_SAVED_AUDIT_FAILED', partial: true }, 502, responseHeaders);
+  return reply(res, { ok: true, code: 'RECEIPT_SUBMITTED_FOR_REVIEW', review_status: 'pending_review', payment_status: 'pending' }, 201, responseHeaders);
+}
+
 async function handlePublicAiStart(body, key, req, res, responseHeaders, error) {
   const account = await verifyPublicAiAccount(cleanString(body.session_jwt, 4096), error);
   if (!account) return reply(res, { ok: false, code: 'INVALID_AI_SESSION' }, 401, responseHeaders);
@@ -633,12 +700,14 @@ export default async ({ req, res, log, error }) => {
     } catch {
       return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
     }
-    if (['public_create_ai_design_request','public_confirm_ai_design_upload','public_accept_ai_design_price','public_start_ai_design','public_check_ai_design'].includes(earlyBody.action)) {
+    if (['public_create_ai_design_request','public_confirm_ai_design_upload','public_accept_ai_design_price','public_get_ai_payment_info','public_submit_ai_receipt','public_start_ai_design','public_check_ai_design'].includes(earlyBody.action)) {
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
       if (!ALLOWED_ORIGINS.has(origin)) return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
       if (earlyBody.action === 'public_create_ai_design_request') return handlePublicAiCreate(earlyBody, earlyKey, req, res, responseHeaders, error);
       if (earlyBody.action === 'public_confirm_ai_design_upload') return handlePublicAiConfirmUpload(earlyBody, earlyKey, req, res, responseHeaders, error);
       if (earlyBody.action === 'public_accept_ai_design_price') return handlePublicAiAcceptPrice(earlyBody, earlyKey, req, res, responseHeaders, error);
+      if (earlyBody.action === 'public_get_ai_payment_info') return handlePublicAiPaymentInfo(earlyBody, earlyKey, req, res, responseHeaders, error);
+      if (earlyBody.action === 'public_submit_ai_receipt') return handlePublicAiReceiptSubmit(earlyBody, earlyKey, req, res, responseHeaders, error);
       if (earlyBody.action === 'public_start_ai_design') return handlePublicAiStart(earlyBody, earlyKey, req, res, responseHeaders, error);
       return handlePublicAiCheck(earlyBody, earlyKey, req, res, responseHeaders, error);
     }
