@@ -63,7 +63,17 @@ jobs:
               ['quoted_price_toman','integer',{}],
               ['price_accepted_at','datetime',{}],
               ['price_accepted_amount_toman','integer',{}],
-              ['price_acceptance_token_hash','varchar',{size:128}]
+              ['price_acceptance_token_hash','varchar',{size:128}],
+              ['receipt_file_key','text',{}],
+              ['receipt_original_file_name','varchar',{size:255}],
+              ['receipt_mime_type','varchar',{size:120}],
+              ['receipt_file_size_bytes','integer',{}],
+              ['receipt_submitted_at','datetime',{}],
+              ['receipt_review_status','varchar',{size:32}],
+              ['receipt_review_note','text',{}],
+              ['receipt_ocr_status','varchar',{size:24}],
+              ['receipt_ocr_text','text',{}],
+              ['payment_reference','varchar',{size:120}],
             ],
             ai_design_pricing: [
               ['style_key','varchar',{size:80,required:true}],
