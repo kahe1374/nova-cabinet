@@ -634,6 +634,9 @@ export default async ({ req, res, log, error }) => {
       return reply(res, { ok: false, code: 'INVALID_JSON' }, 400, responseHeaders);
     }
     if (['public_create_ai_design_request','public_confirm_ai_design_upload','public_accept_ai_design_price','public_start_ai_design','public_check_ai_design'].includes(earlyBody.action)) {
+      if (String(process.env.NOVA_PUBLIC_AI_INTAKE_ENABLED || 'false').toLowerCase() !== 'true') {
+        return reply(res, { ok: false, code: 'PUBLIC_AI_INTAKE_DISABLED' }, 423, responseHeaders);
+      }
       if (!earlyKey) return reply(res, { ok: false, code: 'FUNCTION_KEY_UNAVAILABLE' }, 503, responseHeaders);
       if (!ALLOWED_ORIGINS.has(origin)) return reply(res, { ok: false, code: 'ORIGIN_NOT_ALLOWED' }, 403, responseHeaders);
       if (earlyBody.action === 'public_create_ai_design_request') return handlePublicAiCreate(earlyBody, earlyKey, req, res, responseHeaders, error);
