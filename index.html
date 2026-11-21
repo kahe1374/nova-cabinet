@@ -100,7 +100,7 @@ footer{border-top:1px solid var(--line);padding:23px 0;text-align:center;color:v
  const form=document.getElementById('novaVisitForm');
  if(!form)return;
  const endpoint='https://fra.cloud.appwrite.io/v1/functions/nova-admin-api/executions';
- const projectId='6afcbe4e00302d503754';
+ const projectId='6afcbe4e002df50df86f';
  const date=form.elements.date,today=new Date(),localToday=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
  date.min=localToday;
  const status=document.createElement('div');status.id='novaVisitStatus';status.className='status';form.insertAdjacentElement('afterend',status);
