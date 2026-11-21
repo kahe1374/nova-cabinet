@@ -1,0 +1,42 @@
+name: NOVA AI receipt flow syntax checks
+
+on:
+  pull_request:
+    paths:
+      - "index.html"
+      - "appwrite/functions/nova-admin-api/**"
+      - ".github/workflows/nova-ai-receipt-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check Appwrite function syntax
+        run: node --check appwrite/functions/nova-admin-api/index.js
+      - name: Verify receipt workflow guards
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const backend = readFileSync('appwrite/functions/nova-admin-api/index.js', 'utf8');
+          const html = readFileSync('index.html', 'utf8');
+          const schema = readFileSync('.github/workflows/appwrite-ai-schema-prepare.yml', 'utf8');
+          const checks = [
+            ['public receipt action routed', backend.includes('public_submit_ai_receipt')],
+            ['receipt file ownership enforced', backend.includes('RECEIPT_FILE_NOT_OWNED')],
+            ['receipt image size bounded', backend.includes('size > 8 * 1024 * 1024')],
+            ['receipt does not mark paid', backend.includes("payment_status: 'pending'")],
+            ['AI still requires paid status', backend.includes("row.payment_status !== 'paid'")],
+            ['receipt schema private table workflow', schema.includes("['receipt_file_key','text'")],
+            ['customer receipt upload UI', html.includes('novaAiShowReceiptForm')],
+            ['read-only gate preserved', backend.includes("String(process.env.NOVA_ADMIN_API_READ_ONLY || 'true')")]
+          ];
+          for (const [label, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + label);
+          if (checks.some(([, ok]) => !ok)) process.exit(1);
+          NODE
