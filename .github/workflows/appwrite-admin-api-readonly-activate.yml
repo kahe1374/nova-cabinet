@@ -7,6 +7,10 @@ on:
       - 'appwrite/functions/nova-admin-api/**'
       - '.github/workflows/appwrite-admin-api-readonly-activate.yml'
 
+concurrency:
+  group: nova-admin-api-deploy
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
