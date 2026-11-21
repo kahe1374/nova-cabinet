@@ -354,15 +354,20 @@ async function handlePublicAiConfirmUpload(body, key, req, res, responseHeaders,
   if (!ownsPrivateFile(file.data, account.$id)) {
     return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_OWNED' }, 403, responseHeaders);
   }
-  if (file.data.mimeType !== current.data.mime_type ||
-      Number(file.data.sizeOriginal) !== Number(current.data.file_size_bytes)) {
-    return reply(res, { ok: false, code: 'AI_UPLOAD_METADATA_MISMATCH' }, 409, responseHeaders);
+  const actualMime = cleanString(file.data.mimeType, 120);
+  const actualSize = Number(file.data.sizeOriginal);
+  if (!actualMime || !Number.isSafeInteger(actualSize) || actualSize <= 0) {
+    return reply(res, { ok: false, code: 'AI_UPLOAD_METADATA_INVALID' }, 409, responseHeaders);
   }
   const now = new Date().toISOString();
   if (current.data.upload_completed_at) {
     return reply(res, { ok: true, code: 'AI_UPLOAD_ALREADY_CONFIRMED' }, 200, responseHeaders);
   }
+  // Reconcile the request metadata against the verified, owner-checked Storage object.
+  // This avoids rejecting uploads when the browser transforms/compresses the selected image.
   const updated = await updateRow('ai_design_requests', requestId, {
+    mime_type: actualMime,
+    file_size_bytes: actualSize,
     upload_completed_at: now,
     updated_at: now
   }, key);
