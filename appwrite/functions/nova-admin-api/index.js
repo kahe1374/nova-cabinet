@@ -401,14 +401,16 @@ async function handlePublicAiAcceptPrice(body, key, req, res, responseHeaders, e
     return reply(res, { ok: false, code: 'AI_PRICE_MISMATCH' }, 409, responseHeaders);
   }
   if (!current.data.upload_completed_at) return reply(res, { ok: false, code: 'AI_UPLOAD_NOT_COMPLETED' }, 409, responseHeaders);
-  if (current.data.payment_status !== 'pending' || current.data.status !== 'awaiting_payment') {
-    return reply(res, { ok: false, code: 'AI_REQUEST_NOT_AWAITING_PAYMENT' }, 409, responseHeaders);
-  }
+  // Idempotency must be checked before mutable workflow-state guards:
+  // a prior successful acceptance remains successful on safe retries.
   if (current.data.price_accepted_at) {
     if (Number(current.data.price_accepted_amount_toman) === amount) {
-      return reply(res, { ok: true, code: 'AI_PRICE_ALREADY_ACCEPTED', already_accepted: true, accepted_amount_toman: amount }, 200, responseHeaders);
+      return reply(res, { ok: true, code: 'AI_PRICE_ALREADY_ACCEPTED', already_accepted: true, accepted_amount_toman: amount, payment_status: current.data.payment_status || 'pending' }, 200, responseHeaders);
     }
     return reply(res, { ok: false, code: 'AI_PRICE_ALREADY_ACCEPTED_DIFFERENTLY' }, 409, responseHeaders);
+  }
+  if (current.data.payment_status !== 'pending' || current.data.status !== 'awaiting_payment') {
+    return reply(res, { ok: false, code: 'AI_REQUEST_NOT_AWAITING_PAYMENT' }, 409, responseHeaders);
   }
   const acceptedAt = new Date().toISOString();
   const updated = await updateRow('ai_design_requests', requestId, {
