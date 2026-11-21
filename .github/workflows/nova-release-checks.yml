@@ -1,0 +1,66 @@
+name: NOVA release readiness checks
+
+on:
+  pull_request:
+    paths:
+      - "index.html"
+      - ".github/workflows/nova-release-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  release-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check inline JavaScript syntax
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const tags = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+          if (!tags.length) throw new Error('No inline scripts found');
+          let checked = 0;
+          for (const [index, match] of tags.entries()) {
+            const attrs = match[1] || '';
+            const source = match[2] || '';
+            if (!source.trim() || /\bsrc\s*=/.test(attrs)) continue;
+            const ext = /\btype\s*=\s*["']module["']/i.test(attrs) ? 'mjs' : 'js';
+            fs.writeFileSync('/tmp/nova-inline-' + index + '.' + ext, source);
+            checked++;
+          }
+          if (checked < 3) throw new Error('Expected at least three inline scripts; checked ' + checked);
+          fs.writeFileSync('/tmp/nova-script-list.txt',
+            tags.map((m, i) => {
+              const attrs = m[1] || '';
+              const source = m[2] || '';
+              if (!source.trim() || /\bsrc\s*=/.test(attrs)) return '';
+              return '/tmp/nova-inline-' + i + '.' + (/\btype\s*=\s*["']module["']/i.test(attrs) ? 'mjs' : 'js');
+            }).filter(Boolean).join('\n'));
+          console.log('INLINE_SCRIPTS_FOUND=' + checked);
+          NODE
+          while IFS= read -r file; do node --check "$file"; done < /tmp/nova-script-list.txt
+      - name: Verify launch-critical site features and AI removal
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const checks = [
+            ['3D preview retained', html.includes('nova3DCanvas') && html.includes('nova-3d-swatch')],
+            ['AI image request form removed', !html.includes('aiDesignForm')],
+            ['AI generation client removed', !html.includes('novaAiSession') && !html.includes('NOVA_APPWRITE_BUCKET')],
+            ['Appwrite order intake retained', html.includes('public_create_order')],
+            ['WhatsApp contact retained', html.includes('wa.me/989367374312')],
+            ['business address retained', html.includes('شهرک صنعتی خاوران، سایت چوب‌فروشان، سپیدار ۲، پلاک ۳۳۰۴')],
+            ['read-only backend flag untouched in backend', fs.existsSync('appwrite/functions/nova-admin-api/index.js')]
+          ];
+          for (const [name, ok] of checks) {
+            console.log((ok ? 'PASS ' : 'FAIL ') + name);
+            if (!ok) process.exitCode = 1;
+          }
+          NODE
