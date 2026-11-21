@@ -1,6 +1,8 @@
 name: NOVA release readiness checks
 
 on:
+  push:
+    branches: [release/remove-ai-prepare-site]
   pull_request:
     paths:
       - "index.html"
