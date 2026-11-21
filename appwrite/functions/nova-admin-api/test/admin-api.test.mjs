@@ -125,7 +125,7 @@ test('assignment action uses strict row identifier validation', () => {
   assert.match(source, /const orderId = cleanRowId\(body\.order_id\);[\s\S]*?const assigneeId/);
 });
 test('read-only health does not advertise write capabilities', () => {
-  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'get_ai_upload_restore_targets', 'list_ai_pricing'\]/);
 });
 
 
@@ -323,7 +323,7 @@ test('order status history is owner-only, read-only, and scoped to the requested
 test('read-only health advertises history but still no write capabilities', () => {
   assert.match(source, /'list_order_status_history'/);
   assert.match(source, /if \(action === 'list_order_status_history'\)/);
-  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'list_ai_pricing'\]/);
+  assert.match(source, /capabilities: readOnly\s*\? \['health', 'list_orders', 'list_order_assignees', 'list_order_status_history', 'list_ai_requests', 'get_ai_request_file_access', 'get_ai_upload_restore_targets', 'list_ai_pricing'\]/);
 });
 
 test('order assignees lists only active authorized managers with minimal fields', async () => {
