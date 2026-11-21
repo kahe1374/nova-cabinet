@@ -1159,7 +1159,11 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
      AI_PRICE_ACCEPTED_AUDIT_FAILED:'تأیید مبلغ ثبت شده، اما ثبت گزارش سیستمی کامل نشد. دوباره تلاش کنید.',
      AI_PRICE_ACCEPTANCE_FAILED:'ثبت تأیید مبلغ انجام نشد. دوباره تلاش کنید.'
     };
-    confirmationText.textContent=(messages[code]||'تأیید هزینه انجام نشد. کد خطا: '+(code||'unknown'))+' (درخواست '+String(result.request_number||'')+')';
+    confirmationText.textContent=(messages[code]||'تأیید هزینه انجام نشد؛ جزئیات خطا برای بررسی ثبت شده است.')+' (درخواست '+String(result.request_number||'')+')';
+    let errorNote=status.querySelector('[data-ai-price-error]');
+    if(!errorNote){errorNote=document.createElement('p');errorNote.setAttribute('data-ai-price-error','true');errorNote.style.cssText='margin:10px 0;padding:10px;border:1px solid #b45309;border-radius:10px;color:#92400e;background:#fffbeb;direction:rtl;text-align:right;font-size:13px';status.insertBefore(errorNote,acceptButton);}
+    const safeDetail=String(err&&err.message||code||'unknown').replace(/[^a-zA-Z0-9_:-]/g,' ').slice(0,220);
+    errorNote.textContent='کد پیگیری خطا: '+safeDetail+' — شماره درخواست: '+String(result.request_number||'');
     acceptButton.disabled=false;acceptButton.textContent='تلاش دوباره برای تأیید هزینه';
    }
   });
