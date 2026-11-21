@@ -1141,7 +1141,7 @@ document.getElementById('aiDesignForm').addEventListener('submit',async e=>{
   acceptButton.type='button';acceptButton.className='btn';acceptButton.textContent='تأیید هزینه طراحی';
   acceptButton.addEventListener('click',async()=>{
    acceptButton.disabled=true;acceptButton.textContent='در حال ثبت تأیید...';
-   try{const fresh=await novaAiAccount.createJWT();novaAiClient.setJWT(fresh.jwt);
+   try{const fresh=await novaAiDirectRequest('/account/jwts','POST',{});novaAiClient.setJWT(fresh.jwt);
     const accepted=await novaAiAction('public_accept_ai_design_price',{request_id:result.request_id,accepted_amount_toman:result.quoted_price_toman,price_acceptance_token:result.price_acceptance_token},fresh.jwt);
     if(!accepted.ok)throw new Error(accepted.code||'price_acceptance_failed');
     confirmationText.textContent='هزینه '+Number(result.quoted_price_toman).toLocaleString('fa-IR')+' تومان تأیید شد. وضعیت پرداخت: پرداخت‌نشده؛ تولید تصویر پس از فعال‌شدن درگاه پرداخت و تأیید پرداخت آغاز می‌شود.';acceptButton.remove();
