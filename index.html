@@ -194,187 +194,45 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 }
 
 
-/* NOVA 20-image cinematic cabinet gallery */
-.nova-motion-gallery{background:radial-gradient(ellipse at 50% 55%,#343127 0%,#1c1e19 55%,#171916 100%);overflow:hidden}
-.motion-gallery-stage{height:590px;position:relative;perspective:1700px;isolation:isolate;overflow:hidden;border:1px solid #c1a16d35;background:radial-gradient(ellipse at 50% 45%,#51453235,transparent 62%)}
-.motion-gallery-stack{position:absolute;inset:0;transform-style:preserve-3d}
-.motion-gallery-card{position:absolute;width:clamp(150px,21vw,270px);height:clamp(110px,15vw,180px);left:50%;top:68%;overflow:hidden;border:1px solid #d1b17b88;border-radius:3px;background:#27251f;box-shadow:0 18px 35px #0009;transform-origin:center;transition:transform 1s cubic-bezier(.16,.78,.2,1),opacity .8s,width 1s,height 1s,left 1s,top 1s;will-change:transform;}
-.motion-gallery-card img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.92) contrast(1.05)}
-.motion-gallery-card:nth-child(1){transform:translate(-50%,-50%) rotate(-17deg) translate(-410px,45px) translateZ(-120px)}
-.motion-gallery-card:nth-child(2){transform:translate(-50%,-50%) rotate(13deg) translate(-310px,15px) translateZ(-80px)}
-.motion-gallery-card:nth-child(3){transform:translate(-50%,-50%) rotate(-11deg) translate(-210px,55px) translateZ(-40px)}
-.motion-gallery-card:nth-child(4){transform:translate(-50%,-50%) rotate(9deg) translate(-105px,22px) translateZ(-15px)}
-.motion-gallery-card:nth-child(5){transform:translate(-50%,-50%) rotate(-6deg) translate(5px,48px) translateZ(10px)}
-.motion-gallery-card:nth-child(6){transform:translate(-50%,-50%) rotate(12deg) translate(115px,15px) translateZ(-15px)}
-.motion-gallery-card:nth-child(7){transform:translate(-50%,-50%) rotate(-13deg) translate(220px,52px) translateZ(-45px)}
-.motion-gallery-card:nth-child(8){transform:translate(-50%,-50%) rotate(8deg) translate(325px,15px) translateZ(-90px)}
-.motion-gallery-card:nth-child(n+9){opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.6) translateY(150px)}
-.motion-gallery-card.is-active{z-index:30!important;opacity:1!important;left:50%;top:45%;width:min(76vw,900px);height:min(48vw,450px);transform:translate(-50%,-50%) rotateX(0) rotateY(0) rotateZ(0) scale(1) translateZ(180px)!important;box-shadow:0 45px 95px #000c,0 0 0 1px #e4c58f,0 0 55px #c1a16d30}
-.motion-gallery-card.is-returning{opacity:0;transform:translate(-50%,-50%) scale(.25) translateY(220px) rotateZ(24deg)!important}
-.motion-gallery-caption{position:absolute;right:26px;left:26px;bottom:20px;display:flex;justify-content:space-between;color:#d9c49a;font:10px Georgia;letter-spacing:2px;direction:ltr;pointer-events:none}
-@media(max-width:680px){.motion-gallery-stage{height:440px}.motion-gallery-card{width:125px;height:90px;top:75%}.motion-gallery-card:nth-child(1){transform:translate(-50%,-50%) rotate(-18deg) translate(-155px,22px) translateZ(-80px)}.motion-gallery-card:nth-child(2){transform:translate(-50%,-50%) rotate(13deg) translate(-105px,0) translateZ(-50px)}.motion-gallery-card:nth-child(3){transform:translate(-50%,-50%) rotate(-10deg) translate(-53px,24px) translateZ(-20px)}.motion-gallery-card:nth-child(4){transform:translate(-50%,-50%) rotate(8deg) translate(0,0) translateZ(0)}.motion-gallery-card:nth-child(5){transform:translate(-50%,-50%) rotate(-8deg) translate(53px,22px) translateZ(-20px)}.motion-gallery-card:nth-child(6){transform:translate(-50%,-50%) rotate(12deg) translate(105px,0) translateZ(-50px)}.motion-gallery-card:nth-child(7){transform:translate(-50%,-50%) rotate(-13deg) translate(155px,22px) translateZ(-80px)}.motion-gallery-card.is-active{top:43%;width:88vw;height:58vw;max-height:290px}.motion-gallery-caption{right:12px;left:12px;bottom:12px;font-size:8px}}
-@media(prefers-reduced-motion:reduce){.motion-gallery-card{transition:none!important}}
-
-/* FINAL FIX: remove the hero backdrop and lay out all twenty cabinet photos */
-.hero{background:#24251f!important}
+/* NOVA gallery — one authoritative layout; no conflicting overrides */
+.nova-motion-gallery{background:#171916;overflow:hidden}
+.motion-gallery-stage{height:590px;position:relative;perspective:1400px;isolation:isolate;overflow:hidden;border:1px solid #c1a16d35;background:radial-gradient(ellipse at 50% 45%,#51453235,transparent 62%)}
+.motion-gallery-stack{position:absolute;inset:0;overflow:visible;transform-style:preserve-3d}
+.motion-gallery-card{position:absolute;left:50%;top:76%;width:clamp(86px,9.5vw,132px);height:clamp(64px,7.2vw,100px);overflow:hidden;border:1px solid #d1b17b;border-radius:3px;background:#20211c;box-shadow:0 12px 26px #0009;transform:translate(-50%,-50%) rotate(var(--fan-angle));transform-origin:center;transition:transform .75s cubic-bezier(.16,.78,.2,1),opacity .5s,width .75s,height .75s,left .75s,top .75s;will-change:transform}
+.motion-gallery-card img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;filter:none}
+.motion-gallery-card.is-active{z-index:3!important;left:50%!important;top:50%!important;width:min(64vw,760px)!important;height:min(44svh,390px)!important;max-width:calc(100vw - 40px)!important;max-height:calc(100svh - 180px)!important;transform:translate(-50%,-50%)!important;border:1px solid #d1b17b!important;box-shadow:0 22px 50px #000b,0 0 0 1px #e4c58f!important;background:#1b1d18!important}
+.motion-gallery-card.is-active img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important}
+.motion-gallery-card.is-returning{opacity:0;transform:translate(-50%,-50%) scale(.25) translateY(180px) rotateZ(18deg)!important}
+.motion-gallery-caption{position:absolute;z-index:5;right:22px;left:22px;bottom:18px;display:flex;justify-content:space-between;color:#d9c49a;font:10px Georgia;letter-spacing:2px;direction:ltr;pointer-events:none}
+.hero{position:relative!important;height:100svh!important;min-height:620px!important;max-height:100svh!important;overflow:hidden!important;background:#171916!important}
 .hero-bg,.hero:before{display:none!important}
-.motion-gallery-stage{height:590px;overflow:hidden;position:relative}
-.motion-gallery-stage .motion-gallery-card:nth-child(n){
- left:var(--fan-left)!important;top:var(--fan-top)!important;
- width:clamp(76px,9.5vw,132px);height:clamp(68px,8vw,112px);
- opacity:1;pointer-events:auto;
- transform:translate(-50%,-50%) rotate(var(--fan-angle)) scale(.82) translateZ(0);
- transition:transform 1s cubic-bezier(.16,.78,.2,1),opacity .8s,width 1s,height 1s,left 1s,top 1s;
-}
-.motion-gallery-stage .motion-gallery-card.is-active{
- left:50%!important;top:44%!important;width:min(78vw,920px)!important;height:min(48vw,470px)!important;
- opacity:1!important;z-index:80!important;
- transform:translate(-50%,-50%) rotate(0deg) scale(1) translateZ(180px)!important;
- box-shadow:0 45px 95px #000c,0 0 0 1px #e4c58f,0 0 55px #c1a16d45;
-}
-@media(max-width:680px){
- .motion-gallery-stage{height:440px}
- .motion-gallery-stage .motion-gallery-card:nth-child(n){width:25vw;height:19vw}
- .motion-gallery-stage .motion-gallery-card.is-active{top:43%!important;width:88vw!important;height:58vw!important;max-height:290px}
-}
-
-
-/* HERO REPLACEMENT: the twenty-photo cabinet gallery takes the book's place */
 .hero-stack,.hero-stack-count,.nova-book,.book-pages,.book-cover,.book-turn-hand{display:none!important}
-.hero{position:relative}
-.hero-motion-stage{
- position:absolute;z-index:1;left:3.5%;top:16%;bottom:9%;width:53%;height:auto;
- border:0;background:transparent;overflow:hidden;perspective:1700px;
-}
-.hero-motion-stage .motion-gallery-card:nth-child(n){
- width:clamp(66px,7.5vw,112px);height:clamp(58px,6vw,90px);
-}
-.hero-motion-stage .motion-gallery-card.is-active{
- left:50%!important;top:48%!important;width:min(49vw,700px)!important;height:min(34vw,360px)!important;
-}
-.hero-motion-stage .motion-gallery-caption{right:5px;left:5px;bottom:4px;font-size:9px}
+.hero-motion-stage{position:absolute!important;z-index:1!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;border:0!important;background:#171916!important;perspective:1400px!important}
+.hero-motion-stage .motion-gallery-card:nth-child(n){left:var(--fan-left)!important;top:var(--fan-top)!important;width:clamp(86px,9.5vw,132px)!important;height:clamp(64px,7.2vw,100px)!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translate(-50%,-50%) rotate(var(--fan-angle))!important}
+.hero-motion-stage .motion-gallery-card.is-active{z-index:3!important;left:50%!important;top:50%!important;width:min(64vw,760px)!important;height:min(44svh,390px)!important;max-width:calc(100vw - 40px)!important;max-height:calc(100svh - 180px)!important;transform:translate(-50%,-50%)!important}
+.hero-motion-stage .motion-gallery-card.is-active img{object-fit:contain!important}
+.hero-content{position:absolute!important;z-index:4!important;right:7%!important;bottom:105px!important;width:min(39%,500px)!important;max-width:500px!important;margin:0!important;padding:0!important;text-align:right}
+.hero-index{z-index:5!important}
+.scroll-cue{z-index:5!important}
 @media(max-width:950px) and (min-width:681px){
- .hero-motion-stage{left:2%;width:51%;top:19%;bottom:10%}
- .hero-motion-stage .motion-gallery-card.is-active{width:48vw!important;height:34vw!important}
+ .hero-content{right:5%!important;width:43%!important}
+ .hero-motion-stage .motion-gallery-card.is-active{width:min(58vw,620px)!important;height:min(40svh,340px)!important}
 }
 @media(max-width:680px){
- .hero{height:92svh;min-height:690px}
- .hero-motion-stage{left:3%;right:3%;width:94%;top:auto;bottom:5%;height:39%;min-height:245px}
- .hero-motion-stage .motion-gallery-card:nth-child(n){width:21vw;height:17vw}
- .hero-motion-stage .motion-gallery-card.is-active{left:50%!important;top:43%!important;width:88vw!important;height:55vw!important;max-height:260px}
- .hero-motion-stage .motion-gallery-caption{font-size:8px;bottom:1px}
- .hero-content{z-index:3}
-}
-
-
-
-/* HERO FULL-BLEED GALLERY: preserve the fan layout, small cards at the bottom,
-   and expand the active photo to cover the complete hero background. */
-.hero-motion-stage{
-  inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;
-  width:100%!important;height:100%!important;min-height:0!important;
-  border:0!important;background:transparent!important;overflow:hidden!important;
-}
-.hero-motion-stage .motion-gallery-card:nth-child(n){
-  width:clamp(68px,8vw,112px)!important;
-  height:clamp(52px,6vw,82px)!important;
-  border-radius:2px!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active{
-  left:50%!important;top:50%!important;
-  width:100%!important;height:100%!important;max-height:none!important;
-  border:0!important;border-radius:0!important;
-  transform:translate(-50%,-50%) scale(1)!important;
-  box-shadow:none!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active img{
-  width:100%!important;height:100%!important;object-fit:cover!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active:after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(90deg,#11140f99 0%,#11140f35 48%,#11140f12 100%);
-  pointer-events:none;
-}
-.hero-motion-stage .motion-gallery-caption{z-index:85;bottom:22px!important;right:5%!important;left:5%!important}
-.hero-content{z-index:4!important}
-.hero-index,.scroll-cue{z-index:4!important}
-@media(max-width:950px) and (min-width:681px){
- .hero-motion-stage .motion-gallery-card:nth-child(n){width:clamp(76px,9vw,108px)!important;height:clamp(58px,7vw,80px)!important}
-}
-@media(max-width:680px){
- .hero-motion-stage .motion-gallery-card:nth-child(n){width:22vw!important;height:16vw!important}
- .hero-motion-stage .motion-gallery-card.is-active{width:100%!important;height:100%!important;top:50%!important}
- .hero-motion-stage .motion-gallery-caption{bottom:12px!important}
-}
-
-/* IMAGE FRAME SIZE FIX: enlarge every stacked photo and make the image fill its frame */
-.hero-motion-stage .motion-gallery-card:nth-child(n){
-  width:clamp(132px,16vw,218px)!important;
-  height:clamp(102px,12.5vw,170px)!important;
-  padding:0!important;
-  background:#24251f!important;
-  overflow:hidden!important;
-}
-.hero-motion-stage .motion-gallery-card img{
-  display:block!important;width:100%!important;height:100%!important;
-  min-width:100%!important;min-height:100%!important;
-  object-fit:cover!important;object-position:center!important;
-}
-@media(max-width:950px) and (min-width:681px){
-  .hero-motion-stage .motion-gallery-card:nth-child(n){
-    width:clamp(112px,17vw,170px)!important;
-    height:clamp(88px,13vw,132px)!important;
-  }
-}
-@media(max-width:680px){
-  .hero-motion-stage .motion-gallery-card:nth-child(n){
-    width:34vw!important;height:26vw!important;
-  }
-  .hero-motion-stage .motion-gallery-card img{
-    width:100%!important;height:100%!important;object-fit:cover!important;
-  }
-}
-
-
-/* NOVA gallery: centered active frame fully contained in viewport */
-.hero{position:relative!important;height:100svh!important;min-height:100svh!important;max-height:100svh!important;overflow:hidden!important;background:#171916!important}
-.hero-motion-stage{position:absolute!important;z-index:1!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;perspective:1700px!important;border:0!important;background:#171916!important}
-.hero-motion-stage .motion-gallery-stack{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:hidden!important;transform-style:flat!important}
-.hero-motion-stage .motion-gallery-card:nth-child(n){
- position:absolute!important;left:var(--fan-left)!important;top:var(--fan-top)!important;
- width:clamp(86px,9.5vw,132px)!important;height:clamp(64px,7.2vw,100px)!important;
- max-width:none!important;max-height:none!important;padding:0!important;display:block!important;
- opacity:1!important;visibility:visible!important;pointer-events:auto!important;overflow:hidden!important;
- border:1px solid #d1b17b!important;border-radius:3px!important;
- transform:translate(-50%,-50%) rotate(var(--fan-angle))!important;
- box-shadow:0 14px 30px #000b!important;filter:none!important;
- transition:transform .75s cubic-bezier(.16,.78,.2,1),opacity .5s,width .75s,height .75s,left .75s,top .75s!important;
-}
-.hero-motion-stage .motion-gallery-card:nth-child(n) img{display:block!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;object-fit:cover!important;object-position:center!important;filter:none!important;opacity:1!important}
-.hero-motion-stage .motion-gallery-card.is-active{
- z-index:1000!important;position:absolute!important;left:50%!important;top:50%!important;
- inset:auto!important;width:min(88vw,900px)!important;height:min(62svh,560px)!important;
- max-width:calc(100vw - 32px)!important;max-height:calc(100svh - 120px)!important;
- margin:0!important;padding:0!important;opacity:1!important;visibility:visible!important;overflow:hidden!important;
- border:1px solid #d1b17b!important;border-radius:3px!important;
- box-shadow:0 24px 60px #000c,0 0 0 1px #e4c58f!important;
- transform:translate(-50%,-50%)!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center center!important;filter:none!important}
-.hero-motion-stage .motion-gallery-caption{position:absolute!important;z-index:1001!important;bottom:18px!important;right:22px!important;left:22px!important;pointer-events:none!important}
-.hero-content,.hero-index,.scroll-cue{position:relative;z-index:4!important}
-@media(max-width:680px){
- .hero{height:100svh!important;min-height:100svh!important;max-height:100svh!important}
+ .hero{height:100svh!important;min-height:650px!important;max-height:none!important}
  .hero-motion-stage{inset:0!important;width:100%!important;height:100%!important}
  .hero-motion-stage .motion-gallery-card:nth-child(n){width:clamp(64px,16vw,88px)!important;height:clamp(48px,12vw,66px)!important}
- .hero-motion-stage .motion-gallery-card.is-active{
-  left:50%!important;top:50%!important;inset:auto!important;
-  width:calc(100vw - 32px)!important;height:min(48svh,380px)!important;
-  max-width:calc(100vw - 32px)!important;max-height:calc(100svh - 150px)!important;
-  transform:translate(-50%,-50%)!important;
- }
- .hero-motion-stage .motion-gallery-caption{bottom:12px!important;right:12px!important;left:12px!important}
+ .hero-motion-stage .motion-gallery-card.is-active{left:50%!important;top:43%!important;width:calc(100vw - 40px)!important;height:min(36svh,270px)!important;max-width:calc(100vw - 40px)!important;max-height:calc(100svh - 300px)!important;transform:translate(-50%,-50%)!important}
+ .hero-content{right:7%!important;left:7%!important;bottom:55px!important;width:86%!important;max-width:none!important;margin:0!important;padding:0!important}
+ .hero-content h1{font-size:34px;margin:8px 0}
+ .hero-copy{font-size:11px;line-height:1.8;max-width:100%}
+ .hero-buttons{margin-top:12px}
+ .hero-index{bottom:18px!important;right:7%!important;left:auto!important}
+ .hero-motion-stage .motion-gallery-caption{right:12px;left:12px;bottom:12px;font-size:8px}
+ .scroll-cue{display:none}
 }
+@media(prefers-reduced-motion:reduce){.motion-gallery-card{transition:none!important}}
+
 </style>
 </head>
 <body>
