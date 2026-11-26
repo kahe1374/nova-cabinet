@@ -476,11 +476,52 @@ nav{
  .hero:after{inset:122px 4% 20px!important}
  .hero-content{padding-top:116px!important}
 }
+
+/* NOVA signature mark + living wordmark */
+.brand{gap:10px!important}
+.brand-symbol{
+ width:55px!important;height:55px!important;flex:0 0 55px!important;
+ border:0!important;border-radius:3px!important;transform:none!important;
+ display:grid!important;place-items:center!important;overflow:hidden!important;
+ color:#e8c98f!important;
+ background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(193,161,109,.035) 48%,rgba(0,0,0,.16))!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.32),inset 0 -9px 18px rgba(0,0,0,.24),0 9px 22px rgba(0,0,0,.32),0 0 24px rgba(193,161,109,.14)!important;
+ animation:nova-mark-hover 5s ease-in-out infinite;
+}
+.brand-symbol:after{
+ content:"";position:absolute;inset:-70% -35%;pointer-events:none;
+ background:linear-gradient(110deg,transparent 42%,rgba(255,245,218,.42) 49%,transparent 56%);
+ transform:translateX(-65%) rotate(12deg);animation:nova-mark-sheen 6.5s ease-in-out infinite;
+}
+.brand-symbol svg{width:90%!important;height:90%!important;overflow:visible;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))!important}
+.brand-name{
+ color:#f4e5c5!important;text-shadow:0 2px 0 rgba(93,65,34,.85),0 7px 18px rgba(0,0,0,.6),0 0 22px rgba(193,161,109,.24)!important;
+}
+.brand-letters{display:inline-flex;direction:ltr;gap:1px;animation:nova-word-float 4.8s ease-in-out 1.4s infinite}
+.brand-letters i{
+ display:inline-block;font-style:normal;opacity:0;transform:translateY(-22px) rotateX(65deg);
+ animation:nova-letter-arrive .95s cubic-bezier(.18,.82,.22,1.18) forwards;
+}
+.brand-letters i:nth-child(1){animation-delay:.18s}
+.brand-letters i:nth-child(2){animation-delay:.38s}
+.brand-letters i:nth-child(3){animation-delay:.58s}
+.brand-letters i:nth-child(4){animation-delay:.78s}
+@keyframes nova-letter-arrive{0%{opacity:0;transform:translateY(-22px) rotateX(65deg);filter:blur(4px)}72%{opacity:1;transform:translateY(4px) rotateX(-8deg);filter:blur(0)}100%{opacity:1;transform:translateY(0) rotateX(0);filter:drop-shadow(0 2px 0 rgba(112,78,39,.7))}}
+@keyframes nova-word-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes nova-mark-hover{0%,100%{transform:translateY(0) rotateY(0deg)}50%{transform:translateY(-3px) rotateY(5deg)}}
+@keyframes nova-mark-sheen{0%,58%,100%{transform:translateX(-65%) rotate(12deg);opacity:0}68%{opacity:1}88%{transform:translateX(65%) rotate(12deg);opacity:0}}
+@media(max-width:950px){.brand-symbol{width:49px!important;height:49px!important;flex-basis:49px!important}}
+@media(max-width:680px){.brand-symbol{width:43px!important;height:43px!important;flex-basis:43px!important}.brand{gap:7px!important}}
+@media(prefers-reduced-motion:reduce){
+ .brand-symbol,.brand-symbol:after,.brand-letters{animation:none!important}
+ .brand-letters i{opacity:1!important;transform:none!important;filter:none!important;animation:none!important}
+}
+
 </style>
 </head>
 <body>
 <div class="progress" id="progress"></div><div class="grain"></div>
-<header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA Cabinet"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 100 100" role="img"><path d="M15 83V17h70v66M22 24h56v52H22z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M50 24v52M22 50h56M28 31h16v13H28zM56 31h16v13H56zM28 56h16v13H28zM56 56h16v13H56z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M46 17l4-7 4 7M50 10V4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="50" cy="50" r="3" fill="currentColor"/></svg></span><span class="brand-name"><span class="brand-letters" aria-label="NOVA"><i>N</i><i>O</i><i>V</i><i>A</i></span><small>DESIGN · CRAFT · DETAIL</small></span></a><button class="menu" id="menuBtn" aria-label="منو">☰</button><nav id="nav"><a href="#about">داستان نوا</a><a href="#collections">مدل کابینت</a><a href="#showcase">تجربه بصری</a><a href="#details">جزئیات ساخت</a><a href="#gallery">گالری</a><a href="#contact">تماس</a></nav><a class="nav-action" href="#contact">مشاوره اختصاصی ↗</a></div></header>
+<header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA Cabinet"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 100 100" role="img" aria-label="NOVA monogram"><defs><linearGradient id="novaGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0c9"/><stop offset=".38" stop-color="#b78a4d"/><stop offset=".68" stop-color="#f4d9a0"/><stop offset="1" stop-color="#75502c"/></linearGradient></defs><path d="M19 78V22h10l42 48V22h10v56H71L29 30v48z" fill="url(#novaGold)" stroke="#f5dfb4" stroke-width=".8" stroke-linejoin="round"/><path d="M12 87h76" stroke="url(#novaGold)" stroke-width="1.4" opacity=".75"/><path d="M19 14h62" stroke="#f5dfb4" stroke-width=".8" opacity=".5"/></svg></span><span class="brand-name"><span class="brand-letters" aria-label="NOVA"><i>N</i><i>O</i><i>V</i><i>A</i></span><small>DESIGN · CRAFT · DETAIL</small></span></a><button class="menu" id="menuBtn" aria-label="منو">☰</button><nav id="nav"><a href="#about">داستان نوا</a><a href="#collections">مدل کابینت</a><a href="#showcase">تجربه بصری</a><a href="#details">جزئیات ساخت</a><a href="#gallery">گالری</a><a href="#contact">تماس</a></nav><a class="nav-action" href="#contact">مشاوره اختصاصی ↗</a></div></header>
 <main id="home">
 <section class="hero"><div class="motion-gallery-stage hero-motion-stage" aria-label="گالری بیست تصویر کابینت"><div class="motion-gallery-stack" id="motionGalleryStack"></div><div class="motion-gallery-caption"><span id="motionGalleryCount">01 / 20</span><span>NOVA · KITCHEN STORIES</span></div></div><div class="wrap"><div class="hero-content"><div class="eyebrow">NOVA · BESPOKE KITCHEN STUDIO</div><h1>آشپزخانه‌ای<br>با <em>امضای شما.</em></h1><p class="hero-copy">طراحی و ساخت کابینت سفارشی؛ جایی که بافت چوب، سنگ، نور و جزئیات دقیق، شخصیت خانه شما را می‌سازند.</p><div class="hero-buttons"><a class="btn" href="#gallery">تماشای گالری <span>↗</span></a><a class="btn ghost" href="#showcase">تجربه سه‌بعدی</a></div></div></div><div class="hero-index">NOVA / 2026 — MADE TO MEASURE</div><div class="scroll-cue">SCROLL TO DISCOVER</div></section>
 <section class="section wrap" id="about"><div class="intro-grid"><div class="intro-visual reveal"><img src="https://goldenhome.sg/cdn/shop/articles/high-end-kitchen-cabinets.png?v=1768012373" alt="آشپزخانه مدرن با کابینت و جزیره" loading="lazy"><div class="intro-stamp"><strong>NOVA</strong><span>ساخت سفارشی، با دقت</span></div></div><div class="intro-copy reveal"><div class="section-kicker">BEYOND THE ORDINARY</div><h2 class="section-title">زیبایی از انتخاب درست شروع می‌شود.</h2><p>ما در نوا کابینت را فقط مجموعه‌ای از درها و کشوها نمی‌بینیم؛ آن را قلب فضای خانه می‌دانیم. به همین دلیل، طراحی از نیازهای واقعی شما شروع می‌شود و با انتخاب متریال، ساخت دقیق و نصب اصولی به پایان می‌رسد.</p><p>هر پروژه با توجه به ابعاد فضا، نور طبیعی، سبک دکوراسیون و سلیقه شما شکل می‌گیرد.</p><div class="metrics"><div class="metric"><strong>01</strong><span>طراحی اختصاصی</span></div><div class="metric"><strong>02</strong><span>ساخت دقیق</span></div><div class="metric"><strong>03</strong><span>اجرای اصولی</span></div></div></div></div></section>
