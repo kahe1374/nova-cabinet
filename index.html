@@ -63,44 +63,36 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 @media(prefers-reduced-motion:reduce){.collection,.detail-card,.gallery figure,.depth-photo,.intro-visual img{transform:none!important}}
 
 
-/* NOVA opening sequence + layered luxury kitchen hero gallery */
-.brand-letters{display:flex;direction:ltr;gap:1px;line-height:1}
-.brand-letters i{display:inline-block;font-style:normal;opacity:0;filter:blur(5px);animation:nova-letter-fall 1.35s cubic-bezier(.16,1,.3,1) forwards}
-.brand-letters i:nth-child(1){transform:translate3d(0,-110vh,0) rotate(-8deg);animation-delay:.35s}
-.brand-letters i:nth-child(2){transform:translate3d(0,-110vh,0) rotate(7deg);animation-delay:1.15s}
-.brand-letters i:nth-child(3){transform:translate3d(0,-110vh,0) rotate(-6deg);animation-delay:1.95s}
-.brand-letters i:nth-child(4){transform:translate3d(0,-110vh,0) rotate(5deg);animation-delay:2.75s}
-@keyframes nova-letter-fall{0%{opacity:0;filter:blur(5px)}72%{opacity:1;filter:blur(0);transform:translate3d(0,8px,0) rotate(0)}86%{transform:translate3d(0,-3px,0) rotate(0)}100%{opacity:1;filter:blur(0);transform:translate3d(0,0,0) rotate(0)}}
-.hero-stack{position:absolute;z-index:3;left:5%;top:55%;width:min(40%,520px);height:min(38%,310px);transform:none;perspective:1700px;pointer-events:none}
-.hero-card{position:absolute;inset:0;border:1px solid #d8b77b99;padding:6px;background:#1b1b17;box-shadow:0 20px 48px #000b,0 0 0 1px #ffffff18;overflow:hidden;transform-origin:center center;opacity:.55;transition:transform 1.55s cubic-bezier(.2,.75,.18,1),opacity 1.35s,filter 1.2s;filter:brightness(.42) saturate(.75)}
-.hero-card img{width:100%;height:100%;object-fit:cover;transform:scale(1.04);transition:transform 5s cubic-bezier(.2,.7,.2,1);}
-.hero-card:after{content:"";position:absolute;inset:7px;background:linear-gradient(130deg,#fff3,transparent 26%,transparent 70%,#0005);border:1px solid #ffffff35;pointer-events:none}
-.hero-card.active{opacity:1;transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 55vh - 50%),140px) rotateY(-3deg) rotateX(1deg) scale(1.16);filter:brightness(1) saturate(1.03);z-index:8}
-.hero-card.active img{transform:scale(1.07)}
-.hero-card.returning{opacity:.48;transform:translate3d(0,0,-100px) rotateY(8deg) rotateZ(-5deg) scale(.24);z-index:2;filter:brightness(.38)}
-.hero-card.next{opacity:.7;transform:translate3d(-13px,10px,-35px) rotateY(-7deg) rotateZ(-5deg) scale(.31);z-index:5;filter:brightness(.52)}
-.hero-card.back{opacity:.35;transform:translate3d(12px,-8px,-75px) rotateY(8deg) rotateZ(4deg) scale(.25);z-index:1;filter:brightness(.3)}
+/* NOVA luxury portfolio: individual paper sheets with a real page-turn motion */
+.hero-stack{position:absolute;z-index:3;left:5%;bottom:72px;top:auto;width:min(36%,470px);height:min(42%,330px);perspective:1900px;pointer-events:none;transform-style:preserve-3d}
+.hero-card{position:absolute;inset:0;padding:13px;background:linear-gradient(145deg,#f6f0e4,#d9cfbd);border:1px solid #fff8e8;box-shadow:0 18px 40px #0009,0 3px 0 #8f795c,0 0 0 1px #c1a16d88;overflow:visible;transform-origin:right center;backface-visibility:visible;opacity:0;transition:transform 1.1s cubic-bezier(.2,.7,.2,1),opacity .8s,filter .8s;filter:brightness(.8);transform-style:preserve-3d}
+.hero-card img{width:100%;height:100%;object-fit:cover;border:1px solid #6b5b45;transform:translateZ(1px);backface-visibility:hidden}
+.hero-card:before{content:"";position:absolute;inset:4px auto 4px 4px;width:8px;background:repeating-linear-gradient(90deg,#d5c8b2 0 1px,#f9f3e8 1px 3px);box-shadow:2px 0 4px #30231355;z-index:2}
+.hero-card:after{content:"NOVA  /  PORTFOLIO";position:absolute;right:20px;bottom:17px;padding:3px 8px;background:#171916c9;color:#e7d3ac;font:9px Georgia;letter-spacing:2px;z-index:3;box-shadow:0 2px 8px #0007}
+.hero-card.active{opacity:1;z-index:10;filter:brightness(1);transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 55vh - 50%),180px) rotateY(0) scale(1.16);box-shadow:0 32px 90px #000d,0 0 0 1px #e6cc9b}
+.hero-card.archived{opacity:1;z-index:calc(5 - var(--sheet-order,0));filter:brightness(.76);transform:translate3d(calc(var(--sheet-order,0)*-5px),calc(var(--sheet-order,0)*-4px),calc(var(--sheet-order,0)*-12px)) rotateZ(calc(var(--sheet-order,0)*-1deg)) scale(.31);box-shadow:0 9px 20px #000a,0 2px 0 #8f795c}
+.hero-card.turning{z-index:20;opacity:1;transform-origin:right center;animation:nova-page-turn 1.25s cubic-bezier(.55,.05,.35,1) forwards}
+@keyframes nova-page-turn{0%{transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 55vh - 50%),180px) rotateY(0) scale(1.16)}45%{transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 55vh - 50%),220px) rotateY(-105deg) scale(1.08)}100%{transform:translate3d(-8px,0,-80px) rotateY(-180deg) rotateZ(-3deg) scale(.29);opacity:.3}}
 .hero-stack-count{position:absolute;z-index:4;left:5%;bottom:35px;display:flex;align-items:center;gap:13px;direction:ltr;color:#f0dfbd;font:11px Georgia;letter-spacing:2px;text-shadow:0 2px 8px #000}
 .hero-stack-count i{display:block;width:56px;height:1px;background:linear-gradient(90deg,var(--gold2),#ffffff35)}
 .hero-content{position:absolute;z-index:6;right:7%;bottom:105px;width:min(39%,500px);max-width:500px;margin:0;padding:0;text-align:right}
 .hero:after{z-index:1}.hero-index{right:7%;left:auto;bottom:38px}.scroll-cue{right:2.5%}
-@media(max-width:950px){.hero-stack{left:3%;width:45%;height:50%}.hero-content{max-width:48%}}
+@media(max-width:950px){.hero-stack{left:3%;width:40%;height:36%}.hero-content{max-width:48%}}
 @media(max-width:680px){
  .hero{height:850px;min-height:850px;align-items:stretch}
- .hero-stack{left:5%;top:47%;width:58%;height:27%;transform:none}
- .hero-card.active{transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 47vh - 50%),90px) rotateY(-2deg) scale(1.08)}
- .hero-card.returning{transform:translate3d(0,0,-70px) rotateY(5deg) rotateZ(-4deg) scale(.22)}
- .hero-card.next{transform:translate3d(-9px,7px,-25px) rotateY(-4deg) rotateZ(-3deg) scale(.28)}
- .hero-card.back{transform:translate3d(10px,-7px,-50px) rotateY(6deg) rotateZ(3deg) scale(.22)}
+ .hero-stack{left:5%;bottom:100px;top:auto;width:57%;height:25%}
+ .hero-card.active{transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 47vh - 50%),110px) rotateY(0) scale(1.08)}
+ .hero-card.turning{animation-name:nova-page-turn-mobile}
+ @keyframes nova-page-turn-mobile{0%{transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 47vh - 50%),110px) rotateY(0) scale(1.08)}45%{transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 47vh - 50%),145px) rotateY(-105deg) scale(1.02)}100%{transform:translate3d(-5px,0,-55px) rotateY(-180deg) rotateZ(-3deg) scale(.27);opacity:.25}}
  .hero-content{right:7%;left:7%;bottom:55px;width:86%;max-width:none;margin:0;padding:0;text-align:right}
  .hero-content h1{font-size:34px;margin:8px 0}
  .hero-copy{font-size:11px;line-height:1.8;max-width:100%}
  .hero-buttons{margin-top:12px}
- .hero-stack-count{top:43%;bottom:auto;left:5%}
+ .hero-stack-count{top:auto;bottom:62px;left:5%}
  .hero-index{bottom:18px;right:7%;left:auto}
  .scroll-cue{display:none}
 }
-@media(prefers-reduced-motion:reduce){.brand-letters i{opacity:1;filter:none;animation:none;transform:none}.hero-card{transition:none}}
+@media(prefers-reduced-motion:reduce){.brand-letters i{opacity:1;filter:none;animation:none;transform:none}.hero-card{transition:none}.hero-card.turning{animation:none;opacity:0}}
 
 </style>
 </head>
@@ -127,7 +119,7 @@ const nav=document.getElementById('nav');document.getElementById('menuBtn').addE
 const progress=document.getElementById('progress');window.addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?scrollY/max*100:0)+'%';const hero=document.getElementById('heroBg')},{passive:true});
 document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.currentTarget);const msg='سلام، برای خدمات کابینت نوا درخواست مشاوره دارم.%0Aنام: '+encodeURIComponent(d.get('name'))+'%0Aتلفن: '+encodeURIComponent(d.get('phone'))+'%0Aنوع درخواست: '+encodeURIComponent(d.get('type'))+'%0Aتوضیحات: '+encodeURIComponent(d.get('message'));window.open('https://wa.me/989105348612?text='+msg,'_blank','noopener')});
 
-/* Sequential cinematic card deck for the NOVA opening screen */
+/* Sequential page-turn portfolio for the NOVA opening screen */
 (()=>{
  const root=document.getElementById('heroStack');
  if(!root)return;
@@ -138,13 +130,14 @@ document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefau
   ['https://www.housecustomize.com/wp-content/uploads/2023/09/07-premium-italian-wood-kitchen-cabinets-natural-beauty-and-functionality-2-64d9d26de5de5.webp','بافت گرم چوب و کابینت سفارشی'],
   ['https://goldenhome.sg/cdn/shop/articles/high-end-kitchen-cabinets.png?v=1768012373','جزئیات کابینت لوکس']
  ];
- photos.forEach((p,i)=>{const card=document.createElement('div');card.className='hero-card';card.innerHTML='<img src="'+p[0]+'" alt="'+p[1]+'" '+(i?'loading="lazy"':'fetchpriority="high"')+'>';root.appendChild(card)});
- const cards=[...root.children],counter=document.getElementById('heroCurrent');
- let current=0;
- function paint(){cards.forEach((c,i)=>{c.className='hero-card';const d=(i-current+cards.length)%cards.length;if(d===0)c.classList.add('active');else if(d===1)c.classList.add('next');else if(d===cards.length-1)c.classList.add('returning');else c.classList.add('back')});if(counter)counter.textContent=String(current+1).padStart(2,'0')}
+ photos.forEach((p,i)=>{const sheet=document.createElement('div');sheet.className='hero-card';sheet.style.setProperty('--sheet-order',i);sheet.innerHTML='<img src="'+p[0]+'" alt="'+p[1]+'" '+(i?'loading="lazy"':'fetchpriority="high"')+'>';root.appendChild(sheet)});
+ const sheets=[...root.children],counter=document.getElementById('heroCurrent');
+ let current=0,turning=false;
+ function paint(){sheets.forEach((s,i)=>{s.className='hero-card';if(i===current)s.classList.add('active');else{s.classList.add('archived');s.style.setProperty('--sheet-order',(i-current+sheets.length)%sheets.length)}});if(counter)counter.textContent=String(current+1).padStart(2,'0')}
+ function turnPage(){if(turning)return;turning=true;const old=sheets[current];old.classList.remove('active','archived');old.classList.add('turning');setTimeout(()=>{current=(current+1)%sheets.length;paint();turning=false},1250)}
  paint();
- if(!matchMedia('(prefers-reduced-motion: reduce)').matches){let timer=setInterval(()=>{current=(current+1)%cards.length;paint()},6200);document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInterval(timer)}else{clearInterval(timer);timer=setInterval(()=>{current=(current+1)%cards.length;paint()},6200)}})}
-})();
+ if(!matchMedia('(prefers-reduced-motion: reduce)').matches){let timer=setInterval(turnPage,6200);document.addEventListener('visibilitychange',()=>{clearInterval(timer);if(!document.hidden)timer=setInterval(turnPage,6200)})}
+})();;
 
 </script>
 <script type="module">
