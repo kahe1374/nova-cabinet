@@ -316,6 +316,25 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
  .hero-index{bottom:5px!important}
 }
 
+
+/* NOVA mobile fix: larger centered active photo; diagonal thumbnails remain unchanged */
+@media(max-width:680px){
+ .hero-motion-stage .motion-gallery-card.is-active{
+  top:32%!important;
+  left:50%!important;
+  width:calc(100vw - 20px)!important;
+  height:min(40svh,300px)!important;
+  max-width:calc(100vw - 20px)!important;
+  max-height:40svh!important;
+  transform:translate(-50%,-50%)!important;
+ }
+ .hero-motion-stage .motion-gallery-card.is-active img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+ }
+}
 </style>
 </head>
 <body>
@@ -419,26 +438,3 @@ if(!reduce){
 }else document.querySelectorAll('.reveal').forEach(el=>{el.style.opacity=1;el.style.transform='none'});
 </script>
 </body></html>
-
-/* NOVA: enlarge only the expanded desktop photo; keep the diagonal thumbnails unchanged */
-@media(min-width:951px){
- .hero-motion-stage .motion-gallery-card.is-active{
-  top:40%!important;
-  width:min(144vw,1800px)!important;
-  height:min(96svh,880px)!important;
-  max-width:calc(100vw - 48px)!important;
-  max-height:calc(100svh - 140px)!important;
- }
-}
-
-
-/* NOVA: larger near-fullscreen expanded photo on desktop only */
-@media(min-width:951px){
- .hero-motion-stage .motion-gallery-card.is-active{
-  top:44%!important;
-  width:calc(100vw - 20px)!important;
-  height:calc(100svh - 90px)!important;
-  max-width:calc(100vw - 20px)!important;
-  max-height:calc(100svh - 90px)!important;
- }
-}
