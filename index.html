@@ -419,3 +419,14 @@ if(!reduce){
 }else document.querySelectorAll('.reveal').forEach(el=>{el.style.opacity=1;el.style.transform='none'});
 </script>
 </body></html>
+
+/* NOVA: enlarge only the expanded desktop photo; keep the diagonal thumbnails unchanged */
+@media(min-width:951px){
+ .hero-motion-stage .motion-gallery-card.is-active{
+  top:40%!important;
+  width:min(144vw,1800px)!important;
+  height:min(96svh,880px)!important;
+  max-width:calc(100vw - 48px)!important;
+  max-height:calc(100svh - 140px)!important;
+ }
+}
