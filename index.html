@@ -5,7 +5,6 @@
 <meta name="theme-color" content="#171916">
 <title>NOVA | کابینت‌هایی با امضای شما</title>
 <meta name="description" content="طراحی و ساخت کابینت آشپزخانه سفارشی نوا؛ از ایده و انتخاب متریال تا ساخت و نصب دقیق.">
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js"}}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://images.unsplash.com"><link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -26,11 +25,48 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 @media(max-width:950px){nav{gap:15px}.collection-grid{grid-template-columns:repeat(2,1fr)}.showcase-grid{gap:25px}.gallery{grid-template-rows:200px 200px}.contact-grid{gap:30px}}
 @media(max-width:680px){.nav{height:70px}.menu{display:block}nav{display:none;position:absolute;top:70px;right:0;left:0;background:#1c1e19;padding:18px 5%;border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch}nav.open{display:flex}.nav-action{padding:8px 11px;font-size:10px}.brand-name{font-size:21px}.hero{min-height:690px;height:92svh}.hero-bg{background-position:58% center}.hero:after{inset:90px 4% 20px}.hero-content{padding-top:70px}.hero-copy{font-size:13px}.hero-index{bottom:28px}.scroll-cue{display:none}.section{padding:72px 0}.section-head{display:block;margin-bottom:28px}.section-head .section-desc{margin-top:10px}.intro-grid,.showcase-grid,.contact-grid{grid-template-columns:1fr;gap:35px}.intro-visual{height:340px;order:2}.intro-visual img{width:88%}.metrics{gap:22px}.metric strong{font-size:25px}.collection-grid{grid-template-columns:1fr 1fr;gap:9px}.collection{min-height:270px}.collection-info{right:13px;bottom:13px}.collection-info h3{font-size:17px}.collection-info p{font-size:10px}.collection-no{top:10px;right:12px}.model-wrap{min-height:350px}.model-wrap canvas{height:350px}.detail-grid{grid-template-columns:1fr 1fr;gap:10px}.detail-card img{height:160px}.detail-card div{padding:13px}.detail-card h3{font-size:14px}.detail-card p{font-size:10px}.gallery{grid-template-columns:1fr 1fr;grid-template-rows:220px 145px 145px;gap:9px}.gallery figure:first-child{grid-column:span 2;grid-row:auto}.steps{grid-template-columns:1fr 1fr;gap:28px 15px}.contact-info h2{font-size:31px}.contact-form{padding:22px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.footer-inner{flex-direction:column;text-align:center}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1!important;transform:none!important}}
+
+/* NOVA visual depth system: dimensional typography, image planes and cinematic perspective */
+.brand-symbol{position:relative;background:linear-gradient(135deg,#f4dfb2 0%,#9b7545 34%,#e8c98f 55%,#604326 100%);color:#21180f;border:1px solid #f2d7a0;box-shadow:inset 2px 2px 3px #fff8, inset -3px -3px 5px #302010aa, 0 7px 18px #0009,0 0 22px #c1a16d35;text-shadow:1px 1px 0 #fff5,2px 3px 0 #6e4b26,4px 5px 8px #000b}
+.brand-symbol:after{content:"";position:absolute;inset:4px;border:1px solid #fff7;pointer-events:none}
+.brand-name{color:#f4e5c5;text-shadow:0 1px 0 #a78b5c,0 2px 0 #6c5436,0 5px 12px #000,0 0 24px #c1a16d50}
+.hero-content h1{text-shadow:0 2px 0 #0008,0 8px 26px #000b}
+.hero-content h1 em{display:inline-block;color:#e4c58f;text-shadow:0 1px 0 #fff5,0 2px 0 #9c7849,0 4px 0 #5e4328,0 9px 18px #000b}
+.hero-bg{filter:saturate(.88) contrast(1.08)}
+.hero:before{content:"";position:absolute;z-index:1;inset:0;background:radial-gradient(ellipse at 72% 42%,transparent 5%,#10120f35 65%,#10120f99 100%);pointer-events:none}
+.collection-grid,.detail-grid,.gallery{perspective:1400px}
+.collection,.detail-card,.gallery figure,.depth-photo{transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0);transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.7,.2,1),box-shadow .55s;box-shadow:0 18px 38px #0005,0 3px 0 #ffffff12}
+.collection:hover,.detail-card:hover,.gallery figure:hover,.depth-photo:hover{box-shadow:0 30px 60px #0009,0 0 0 1px #c1a16d66}
+.collection img,.detail-card img,.gallery img,.intro-visual img{filter:saturate(.9) contrast(1.04);transform:translateZ(22px) scale(1.015);transition:transform .9s cubic-bezier(.2,.7,.2,1),filter .7s}
+.collection:hover img,.detail-card:hover img,.gallery figure:hover img{transform:translateZ(42px) scale(1.07);filter:saturate(1.08) contrast(1.06)}
+.intro-visual{perspective:1200px}
+.intro-visual img{position:relative;z-index:1;transform:perspective(1000px) rotateY(-5deg) rotateX(2deg) translateZ(22px);box-shadow:20px 25px 55px #0008}
+.intro-visual:before{transform:perspective(1000px) rotateY(-5deg) rotateX(2deg) translate(28px,-24px) translateZ(-20px);box-shadow:0 0 35px #c1a16d20}
+.intro-stamp{z-index:2;transform:translateZ(65px);box-shadow:0 18px 35px #0008,inset 0 1px #fff8}
+.section-title{text-shadow:0 3px 18px #0007}
+.btn{box-shadow:0 8px 20px #0005,inset 0 1px #fff6;transform:translateZ(15px)}
+.depth-stage{position:relative;min-height:570px;display:grid;grid-template-columns:.78fr 1.22fr;align-items:center;gap:25px;perspective:1500px;isolation:isolate;--depth-shift:0px}
+.depth-copy{position:relative;z-index:4;padding:35px 0}
+.depth-number{font:10px Georgia;letter-spacing:2px;color:var(--gold2)}
+.depth-copy h3{font-size:clamp(34px,4vw,55px);font-weight:400;line-height:1.45;margin:20px 0}
+.depth-copy h3 em{font-style:normal;color:var(--gold2);text-shadow:0 2px 0 #88683f,0 5px 0 #4c3824,0 12px 25px #000}
+.depth-copy p{color:var(--muted);font-size:13px;max-width:350px;line-height:2.2;margin-bottom:28px}
+.depth-photo{position:relative;overflow:hidden;background:#292b24;border:1px solid #c1a16d55;backface-visibility:hidden}
+.depth-photo img{width:100%;height:100%;object-fit:cover}
+.depth-photo-main{height:450px;grid-column:2;grid-row:1;transform:perspective(1200px) rotateY(-8deg) rotateX(2deg) translate3d(0,var(--depth-shift),35px);box-shadow:28px 30px 65px #000b,0 0 0 1px #e3c38b55}
+.depth-photo-main:after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,#fff2,transparent 32%,transparent 70%,#0005);pointer-events:none}
+.depth-photo-main span{position:absolute;bottom:20px;right:22px;font:10px Georgia;letter-spacing:3px;color:#fff;text-shadow:0 2px 8px #000}
+.depth-photo-small{position:absolute;width:36%;height:205px;left:0;bottom:14px;z-index:3;transform:perspective(1000px) rotateY(9deg) rotateX(3deg) translateZ(85px);box-shadow:0 25px 50px #000b,0 0 0 6px #171916,0 0 0 7px #c1a16d88}
+.depth-orbit{position:absolute;z-index:-1;width:390px;height:390px;border:1px solid #c1a16d35;border-radius:50%;left:3%;top:12%;box-shadow:0 0 70px #c1a16d12,inset 0 0 70px #c1a16d10;transform:rotateX(68deg) rotateZ(-18deg)}
+.reveal{transform-style:preserve-3d;will-change:transform,opacity}
+@media(max-width:680px){.depth-stage{display:flex;flex-direction:column;align-items:stretch;min-height:0;gap:20px}.depth-copy{padding:0}.depth-photo-main{height:290px;transform:perspective(900px) rotateY(-3deg) translateZ(20px)}.depth-photo-small{position:relative;left:auto;bottom:auto;width:62%;height:140px;margin:-55px 0 0 auto;transform:perspective(900px) rotateY(5deg) translateZ(45px)}.depth-orbit{width:230px;height:230px;top:48%;left:-15%}.intro-visual img{transform:perspective(800px) rotateY(-3deg) translateZ(12px)}}
+@media(prefers-reduced-motion:reduce){.collection,.detail-card,.gallery figure,.depth-photo,.intro-visual img{transform:none!important}}
+
 </style>
 </head>
 <body>
 <div class="progress" id="progress"></div><div class="grain"></div>
-<header><div class="wrap nav"><a class="brand" href="#home"><span class="brand-symbol"><span>N</span></span><span class="brand-name">NOVA<small>DESIGN · CRAFT · DETAIL</small></span></a><button class="menu" id="menuBtn" aria-label="منو">☰</button><nav id="nav"><a href="#about">داستان نوا</a><a href="#collections">مدل کابینت</a><a href="#showcase">سه‌بعدی</a><a href="#details">جزئیات ساخت</a><a href="#gallery">گالری</a><a href="#contact">تماس</a></nav><a class="nav-action" href="#contact">مشاوره اختصاصی ↗</a></div></header>
+<header><div class="wrap nav"><a class="brand" href="#home"><span class="brand-symbol"><span>N</span></span><span class="brand-name">NOVA<small>DESIGN · CRAFT · DETAIL</small></span></a><button class="menu" id="menuBtn" aria-label="منو">☰</button><nav id="nav"><a href="#about">داستان نوا</a><a href="#collections">مدل کابینت</a><a href="#showcase">تجربه بصری</a><a href="#details">جزئیات ساخت</a><a href="#gallery">گالری</a><a href="#contact">تماس</a></nav><a class="nav-action" href="#contact">مشاوره اختصاصی ↗</a></div></header>
 <main id="home">
 <section class="hero"><div class="hero-bg" id="heroBg"></div><div class="wrap"><div class="hero-content"><div class="eyebrow">NOVA · BESPOKE KITCHEN STUDIO</div><h1>آشپزخانه‌ای<br>با <em>امضای شما.</em></h1><p class="hero-copy">طراحی و ساخت کابینت سفارشی؛ جایی که بافت چوب، سنگ، نور و جزئیات دقیق، شخصیت خانه شما را می‌سازند.</p><div class="hero-buttons"><a class="btn" href="#gallery">تماشای گالری <span>↗</span></a><a class="btn ghost" href="#showcase">تجربه سه‌بعدی</a></div></div></div><div class="hero-index">NOVA / 2026 — MADE TO MEASURE</div><div class="scroll-cue">SCROLL TO DISCOVER</div></section>
 <section class="section wrap" id="about"><div class="intro-grid"><div class="intro-visual reveal"><img src="https://goldenhome.sg/cdn/shop/articles/high-end-kitchen-cabinets.png?v=1768012373" alt="آشپزخانه مدرن با کابینت و جزیره" loading="lazy"><div class="intro-stamp"><strong>NOVA</strong><span>ساخت سفارشی، با دقت</span></div></div><div class="intro-copy reveal"><div class="section-kicker">BEYOND THE ORDINARY</div><h2 class="section-title">زیبایی از انتخاب درست شروع می‌شود.</h2><p>ما در نوا کابینت را فقط مجموعه‌ای از درها و کشوها نمی‌بینیم؛ آن را قلب فضای خانه می‌دانیم. به همین دلیل، طراحی از نیازهای واقعی شما شروع می‌شود و با انتخاب متریال، ساخت دقیق و نصب اصولی به پایان می‌رسد.</p><p>هر پروژه با توجه به ابعاد فضا، نور طبیعی، سبک دکوراسیون و سلیقه شما شکل می‌گیرد.</p><div class="metrics"><div class="metric"><strong>01</strong><span>طراحی اختصاصی</span></div><div class="metric"><strong>02</strong><span>ساخت دقیق</span></div><div class="metric"><strong>03</strong><span>اجرای اصولی</span></div></div></div></div></section>
@@ -40,7 +76,7 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 <article class="collection reveal"><img src="https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803" alt="آشپزخانه با متریال چوبی گرم" loading="lazy"><span class="collection-no">03</span><div class="collection-info"><small>WOOD / WARM</small><h3>طرح چوب</h3><p>گرمای رگه‌ها و حس طبیعی متریال.</p></div></article>
 <article class="collection reveal"><img src="https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg" alt="کابینت سفارشی با جزیره سنگی" loading="lazy"><span class="collection-no">04</span><div class="collection-info"><small>PAINTED / LUXURY</small><h3>رنگ پولیشی و لوکس</h3><p>رنگ عمیق، سطح یکدست و جزئیات خاص.</p></div></article>
 </div></div></section>
-<section class="section showcase" id="showcase"><div class="wrap showcase-grid"><div class="showcase-copy reveal"><div class="section-kicker">INTERACTIVE 3D PREVIEW</div><h2 class="section-title">فرم کابینت را<br>از نزدیک ببینید.</h2><p class="section-desc">مدل سه‌بعدی نمایشی را بچرخانید و رنگ درها را تغییر دهید. این پیش‌نمایش برای نمایش فرم و ترکیب‌بندی است؛ طرح نهایی هر پروژه پس از اندازه‌گیری و طراحی اختصاصی آماده می‌شود.</p><div class="swatches" aria-label="انتخاب رنگ"><button class="swatch active" data-color="walnut" aria-label="گردویی"></button><button class="swatch" data-color="ivory" aria-label="کرم"></button><button class="swatch" data-color="olive" aria-label="زیتونی"></button><button class="swatch" data-color="black" aria-label="ذغالی"></button></div><div class="model-controls"><button id="reset3d">نمای روبه‌رو</button><button id="spin3d">چرخش خودکار</button></div></div><div class="model-wrap reveal"><span class="model-label">NOVA / 3D CABINET STUDY</span><canvas id="kitchen3d" aria-label="مدل سه بعدی تعاملی کابینت"></canvas><span class="model-hint">برای چرخاندن، لمس کنید و بکشید</span></div></div></section>
+<section class="section showcase" id="showcase"><div class="wrap"><div class="section-head reveal"><div><div class="section-kicker">DEPTH · LIGHT · MATERIAL</div><h2 class="section-title">تصویر را فقط نبینید؛<br>عمقش را حس کنید.</h2></div><p class="section-desc">در طراحی NOVA، عکس‌ها مثل قاب‌های تخت باقی نمی‌مانند؛ با پرسپکتیو، نور، سایه و حرکت‌های ظریف، بخشی از فضای صفحه می‌شوند.</p></div><div class="depth-stage"><div class="depth-copy reveal"><span class="depth-number">Nº 01 — MATERIAL STUDY</span><h3>بافت‌هایی که<br><em>جان می‌گیرند.</em></h3><p>حرکت نرم تصویر، لایه‌های عمق و انعکاس نور؛ جزئیات کابینت در هر نگاه جلوه تازه‌ای پیدا می‌کند.</p><a class="btn" href="#gallery">دیدن جزئیات <span>↗</span></a></div><div class="depth-photo depth-photo-main reveal"><img src="https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803" alt="آشپزخانه لوکس با کابینت و جزیره" loading="lazy"><span>THE ART OF KITCHEN</span></div><div class="depth-photo depth-photo-small reveal"><img src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="جزئیات طراحی کابینت آشپزخانه" loading="lazy"></div><div class="depth-orbit" aria-hidden="true"></div></div></div></section>
 <section class="section detail-band" id="details"><div class="wrap"><div class="section-head reveal"><div><div class="section-kicker">BUILT TO LAST</div><h2 class="section-title">کیفیت در جزئیات پنهان است.</h2></div><p class="section-desc">زیبایی باید در استفاده روزمره هم دوام بیاورد؛ از لبه‌کاری تا رگلاژ نهایی درها و کشوها.</p></div><div class="detail-grid"><article class="detail-card reveal"><img src="https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg" alt="جزئیات کابینت و صفحه سنگی" loading="lazy"><div><small>01 / MATERIAL</small><h3>متریال و بافت</h3><p>هماهنگی رنگ، روکش، صفحه و دستگیره با سبک کلی فضا.</p></div></article><article class="detail-card reveal"><img src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="کابینت و فضای ذخیره سازی آشپزخانه" loading="lazy"><div><small>02 / FUNCTION</small><h3>کارایی هوشمند</h3><p>تقسیم‌بندی کاربردی برای استفاده بهتر از فضا و دسترسی راحت.</p></div></article><article class="detail-card reveal"><img src="https://www.housecustomize.com/wp-content/uploads/2023/09/07-premium-italian-wood-kitchen-cabinets-natural-beauty-and-functionality-2-64d9d26de5de5.webp" alt="جزئیات اجرای آشپزخانه" loading="lazy"><div><small>03 / FINISH</small><h3>اجرای تمیز</h3><p>توجه به خطوط، فاصله‌ها، اتصالات و تنظیم نهایی درها.</p></div></article></div></div></section>
 <section class="section wrap" id="gallery"><div class="section-head reveal"><div><div class="section-kicker">VISUAL INSPIRATION</div><h2 class="section-title">فضاهایی برای الهام گرفتن</h2></div><p class="section-desc">نمونه‌های تصویری برای انتخاب سبک، رنگ و ترکیب متریال. تصاویر این بخش الهام‌بخش‌اند و لزوماً پروژه اجراشده نوا نیستند.</p></div><div class="gallery reveal"><figure><img src="https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg" alt="آشپزخانه مدرن با کابینت و جزیره" loading="lazy"><figcaption>ترکیب سنگ طبیعی و چوب</figcaption></figure><figure><img src="https://goldenhome.sg/cdn/shop/articles/high-end-kitchen-cabinets.png?v=1768012373" alt="کابینت آشپزخانه روشن" loading="lazy"><figcaption>مینیمال و روشن</figcaption></figure><figure><img src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="آشپزخانه با کابینت کلاسیک" loading="lazy"><figcaption>قاب‌بندی ظریف</figcaption></figure><figure><img src="https://www.housecustomize.com/wp-content/uploads/2023/09/07-premium-italian-wood-kitchen-cabinets-natural-beauty-and-functionality-2-64d9d26de5de5.webp" alt="آشپزخانه با چوب گرم" loading="lazy"><figcaption>گرمای چوب</figcaption></figure><figure><img src="https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803" alt="جزیره و کابینت سفارشی" loading="lazy"><figcaption>جزیره مرکزی</figcaption></figure></div></section>
 <section class="section process"><div class="wrap"><div class="section-head reveal"><div><div class="section-kicker">HOW WE WORK</div><h2 class="section-title">از ایده تا نصب نهایی</h2></div></div><div class="steps"><article class="step reveal"><b>01</b><h3>مشاوره و شناخت</h3><p>بررسی نیازها، سبک زندگی و سلیقه شما.</p></article><article class="step reveal"><b>02</b><h3>اندازه‌گیری و طراحی</h3><p>اندازه‌گیری فضا و آماده‌سازی طرح اختصاصی.</p></article><article class="step reveal"><b>03</b><h3>ساخت و آماده‌سازی</h3><p>انتخاب متریال و اجرای دقیق اجزای کابینت.</p></article><article class="step reveal"><b>04</b><h3>نصب و تحویل</h3><p>نصب، رگلاژ و بررسی جزئیات نهایی.</p></article></div></div></section>
@@ -53,129 +89,25 @@ document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefau
 </script>
 <script type="module">
 import {animate,inView} from 'https://cdn.jsdelivr.net/npm/motion@latest/+esm';
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/controls/OrbitControls.js';
-import {GLTFLoader} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/loaders/GLTFLoader.js';
-
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(!reduce){
-  inView('.reveal',el=>animate(el,{opacity:[0,1],y:[42,0]},{duration:1.05,ease:[.18,.78,.22,1]}),{amount:.12});
+  inView('.reveal',el=>animate(el,{opacity:[0,1],y:[42,0],rotateX:[3,0]},{duration:1.05,ease:[.18,.78,.22,1]}),{amount:.12});
   animate('.hero-content',{opacity:[0,1],y:[38,0]},{duration:1.4,delay:.2,ease:[.2,.8,.2,1]});
-  document.querySelectorAll('.collection,.detail-card,.gallery figure').forEach(el=>{
-    el.addEventListener('pointerenter',()=>animate(el,{y:-5},{duration:.28}));
-    el.addEventListener('pointerleave',()=>animate(el,{y:0},{duration:.35}));
+  const hero=document.querySelector('.hero-bg');
+  const depth=document.querySelector('.depth-stage');
+  window.addEventListener('scroll',()=>{
+    const y=window.scrollY;
+    if(hero && y<innerHeight) hero.style.transform='scale(1.12) translate3d(0,'+(y*.12)+'px,0)';
+    if(depth){const r=depth.getBoundingClientRect();if(r.top<innerHeight&&r.bottom>0){const p=(innerHeight-r.top)/(innerHeight+r.height);depth.style.setProperty('--depth-shift',(p*24-12)+'px');}}
+  },{passive:true});
+  document.querySelectorAll('.collection,.detail-card,.gallery figure,.depth-photo').forEach(el=>{
+    el.addEventListener('pointermove',e=>{
+      if(e.pointerType==='touch')return;
+      const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+      el.style.setProperty('--rx',(-y*5)+'deg');el.style.setProperty('--ry',(x*7)+'deg');
+    });
+    el.addEventListener('pointerleave',()=>{el.style.setProperty('--rx','0deg');el.style.setProperty('--ry','0deg');});
   });
 }else document.querySelectorAll('.reveal').forEach(el=>{el.style.opacity=1;el.style.transform='none'});
-
-const canvas=document.querySelector('#kitchen3d');
-const label=document.querySelector('.model-label');
-const colors={walnut:'#805638',ivory:'#c9bda8',olive:'#65705a',black:'#343631'};
-try{
-  const scene=new THREE.Scene();
-  scene.background=new THREE.Color('#252720');
-  const camera=new THREE.PerspectiveCamera(34,1,.05,250);
-  camera.position.set(7,5.2,8);
-  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));
-  renderer.shadowMap.enabled=true;
-  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  renderer.outputColorSpace=THREE.SRGBColorSpace;
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.15;
-  const controls=new OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=true;controls.dampingFactor=.065;controls.minDistance=2.5;controls.maxDistance=30;controls.maxPolarAngle=Math.PI*.49;
-  scene.add(new THREE.HemisphereLight(0xf4e8d2,0x28271f,2.2));
-  const key=new THREE.DirectionalLight(0xffdfb1,3.3);key.position.set(5,9,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);scene.add(key);
-  const fill=new THREE.DirectionalLight(0xc4d4dc,1.5);fill.position.set(-6,5,-4);scene.add(fill);
-  const rim=new THREE.PointLight(0xc59a5c,32,18);rim.position.set(0,5,-5);scene.add(rim);
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:'#34352e',roughness:.82,metalness:.04}));
-  floor.rotation.x=-Math.PI/2;floor.position.y=-.02;floor.receiveShadow=true;scene.add(floor);
-  const root=new THREE.Group();scene.add(root);
-  let mixer=null,clock=new THREE.Clock(),model=null,spin=false,baseCamera=null;
-  const loader=new GLTFLoader();
-  label.textContent='LOADING REAL 3D KITCHEN · GLB';
-  loader.load('https://cdn.3dassets.dev/assets/17931/v1/model.glb',gltf=>{
-    model=gltf.scene;
-    const bounds=new THREE.Box3().setFromObject(model);
-    const size=bounds.getSize(new THREE.Vector3());
-    const center=bounds.getCenter(new THREE.Vector3());
-    model.position.sub(center);
-    const maxDim=Math.max(size.x,size.y,size.z);
-    const scale=6.2/maxDim;
-    model.scale.setScalar(scale);
-    const scaledBounds=new THREE.Box3().setFromObject(model);
-    model.position.y-=scaledBounds.min.y;
-    model.traverse(obj=>{
-      if(obj.isMesh){
-        obj.castShadow=true;obj.receiveShadow=true;
-        if(obj.material){obj.material=obj.material.clone();obj.material.needsUpdate=true;}
-      }
-    });
-    root.add(model);
-    const finalBounds=new THREE.Box3().setFromObject(model);
-    const finalSize=finalBounds.getSize(new THREE.Vector3());
-    controls.target.set(0,finalSize.y*.43,0);
-    const radius=Math.max(finalSize.x,finalSize.y,finalSize.z);
-    camera.position.set(radius*1.12,radius*.78,radius*1.38);
-    camera.near=Math.max(.01,radius/100);camera.far=radius*30;camera.updateProjectionMatrix();
-    baseCamera={position:camera.position.clone(),target:controls.target.clone()};
-    if(gltf.animations&&gltf.animations.length){mixer=new THREE.AnimationMixer(model);gltf.animations.forEach(clip=>mixer.clipAction(clip).play());}
-    label.textContent='INTERACTIVE 3D KITCHEN · GLB';
-    document.querySelector('.model-hint').textContent='مدل سه‌بعدی واقعی · برای چرخش لمس کنید و بکشید';
-  },xhr=>{
-    if(xhr.total)label.textContent='LOADING 3D · '+Math.round(xhr.loaded/xhr.total*100)+'%';
-  },error=>{
-    console.error('3D kitchen GLB failed to load',error);
-    label.textContent='3D PREVIEW UNAVAILABLE';
-    document.querySelector('.model-hint').textContent='بارگذاری مدل سه‌بعدی ممکن نشد؛ اتصال اینترنت را بررسی کنید.';
-  });
-
-  function recolor(hex){
-    if(!model)return;
-    const targetNames=['cabinet','door','drawer','front','panel','unit','shaker','oak','wood'];
-    const chosen=new THREE.Color(hex);
-    model.traverse(obj=>{
-      if(!obj.isMesh||!obj.material)return;
-      const mats=Array.isArray(obj.material)?obj.material:[obj.material];
-      mats.forEach(m=>{
-        const name=((obj.name||'')+' '+(m.name||'')).toLowerCase();
-        const isTarget=targetNames.some(term=>name.includes(term));
-        if(isTarget&&m.color){
-          if(!m.userData.novaOriginalColor)m.userData.novaOriginalColor=m.color.clone();
-          const original=m.userData.novaOriginalColor;
-          m.color.copy(original).lerp(chosen,.72);
-          m.needsUpdate=true;
-        }
-      });
-    });
-  }
-  document.querySelectorAll('.swatch').forEach(btn=>btn.addEventListener('click',()=>{
-    document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
-    btn.classList.add('active');recolor(colors[btn.dataset.color]);
-  }));
-  document.getElementById('spin3d').addEventListener('click',e=>{spin=!spin;e.currentTarget.textContent=spin?'توقف چرخش':'چرخش خودکار'});
-  document.getElementById('reset3d').addEventListener('click',()=>{
-    if(!baseCamera)return;
-    camera.position.copy(baseCamera.position);controls.target.copy(baseCamera.target);controls.update();
-  });
-  function resize(){
-    const w=canvas.clientWidth,h=canvas.clientHeight;
-    if(!w||!h)return;
-    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
-  }
-  new ResizeObserver(resize).observe(canvas);resize();
-  function render(){
-    requestAnimationFrame(render);
-    const delta=clock.getDelta();
-    if(mixer)mixer.update(delta);
-    if(spin&&model&&!reduce)root.rotation.y+=delta*.22;
-    controls.update();renderer.render(scene,camera);
-  }
-  render();
-}catch(err){
-  console.error('3D preview initialization failed',err);
-  label.textContent='3D PREVIEW UNAVAILABLE';
-  document.querySelector('.model-hint').textContent='پیش‌نمایش سه‌بعدی در این مرورگر بارگذاری نشد.';
-}
 </script>
 </body></html>
