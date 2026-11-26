@@ -335,6 +335,30 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
   }
 }
 
+
+/* FINAL USER-SPECIFIC ADJUSTMENT: smaller fan cards, active photo fills the viewport */
+.hero{height:100svh!important;min-height:100svh!important;max-height:100svh!important}
+.hero-motion-stage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+.hero-motion-stage .motion-gallery-card:nth-child(n){
+  width:clamp(48px,5.2vw,76px)!important;
+  height:clamp(38px,4.1vw,60px)!important;
+  transform:translate(-50%,-50%) rotate(var(--fan-angle)) scale(.9)!important;
+}
+.hero-motion-stage .motion-gallery-card.is-active{
+  position:absolute!important;left:50%!important;top:50%!important;
+  width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+  border:0!important;border-radius:0!important;
+  transform:translate(-50%,-50%) scale(1)!important;
+  box-shadow:none!important;
+}
+.hero-motion-stage .motion-gallery-card.is-active img{width:100%!important;height:100%!important;object-fit:cover!important}
+@media(max-width:680px){
+  .hero{height:100svh!important;min-height:100svh!important;max-height:100svh!important}
+  .hero-motion-stage{inset:0!important;width:100%!important;height:100%!important}
+  .hero-motion-stage .motion-gallery-card:nth-child(n){width:16vw!important;height:12.5vw!important}
+  .hero-motion-stage .motion-gallery-card.is-active{left:50%!important;top:50%!important;width:100%!important;height:100%!important;max-height:none!important}
+}
+
 </style>
 </head>
 <body>
