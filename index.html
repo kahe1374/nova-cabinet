@@ -517,6 +517,38 @@ nav{
  .brand-letters i{opacity:1!important;transform:none!important;filter:none!important;animation:none!important}
 }
 
+
+/* NOVA OPTION 05 — refined 3D motion, ambient reflections and scroll depth */
+.collection,.detail-card,.gallery figure,.depth-photo{
+  position:relative;
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:transform .55s cubic-bezier(.2,.75,.2,1),box-shadow .55s,filter .55s;
+}
+.collection:before,.detail-card:before,.gallery figure:before,.depth-photo:before{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at var(--shine-x,50%) var(--shine-y,50%),#fff5 0%,#fff1 16%,transparent 48%);
+  transition:opacity .35s ease;
+}
+.collection:hover:before,.detail-card:hover:before,.gallery figure:hover:before,.depth-photo:hover:before{opacity:1}
+.collection:hover,.detail-card:hover,.gallery figure:hover,.depth-photo:hover{
+  transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translate3d(0,-5px,12px);
+  filter:brightness(1.035);
+}
+.collection-info,.detail-card>div,.gallery figcaption{position:relative;z-index:3}
+.collection:after{pointer-events:none}
+.detail-card img,.gallery img,.collection img{backface-visibility:hidden}
+.section:not(.hero){transform-style:preserve-3d}
+.section-head.reveal{transform-origin:50% 100%}
+@media(max-width:680px){
+ .collection:hover,.detail-card:hover,.gallery figure:hover,.depth-photo:hover{transform:none;filter:none}
+ .collection:before,.detail-card:before,.gallery figure:before,.depth-photo:before{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .collection,.detail-card,.gallery figure,.depth-photo{will-change:auto}
+ .collection:before,.detail-card:before,.gallery figure:before,.depth-photo:before{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -614,6 +646,7 @@ if(!reduce){
       if(e.pointerType==='touch')return;
       const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
       el.style.setProperty('--rx',(-y*5)+'deg');el.style.setProperty('--ry',(x*7)+'deg');
+      el.style.setProperty('--shine-x',(x*100+50)+'%');el.style.setProperty('--shine-y',(y*100+50)+'%');
     });
     el.addEventListener('pointerleave',()=>{el.style.setProperty('--rx','0deg');el.style.setProperty('--ry','0deg');});
   });
