@@ -255,6 +255,67 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
  .hero-index{bottom:2px!important}
 }
 
+/* NOVA: final responsive hero spacing and larger desktop photographs */
+@media(min-width:681px){
+ .hero-motion-stage .motion-gallery-card:nth-child(n){
+  width:clamp(112px,12vw,168px)!important;
+  height:clamp(84px,9vw,126px)!important;
+ }
+ .hero-motion-stage .motion-gallery-card.is-active{
+  top:37%!important;
+  width:min(72vw,900px)!important;
+  height:min(48svh,440px)!important;
+ }
+}
+@media(max-width:680px){
+ .hero-motion-stage .motion-gallery-card:nth-child(n){
+  top:47%!important;
+  width:clamp(68px,17vw,94px)!important;
+  height:clamp(52px,13vw,72px)!important;
+ }
+ .hero-motion-stage .motion-gallery-card.is-active{
+  top:25%!important;
+  width:calc(100vw - 32px)!important;
+  height:min(26svh,190px)!important;
+  max-height:26svh!important;
+ }
+ .hero-content{
+  bottom:48px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  gap:0!important;
+ }
+ .hero-content .eyebrow{
+  line-height:1.7!important;
+  margin:0 0 7px!important;
+ }
+ .hero-content h1{
+  display:block!important;
+  line-height:1.55!important;
+  margin:0 0 9px!important;
+  padding:0!important;
+ }
+ .hero-content .hero-copy{
+  display:block!important;
+  line-height:2.15!important;
+  margin:0!important;
+  padding:0!important;
+ }
+ .hero-content .hero-buttons{
+  display:flex!important;
+  position:relative!important;
+  flex-wrap:wrap!important;
+  gap:9px!important;
+  margin:13px 0 0!important;
+ }
+ .hero-content .btn{
+  line-height:1.8!important;
+  padding:9px 14px!important;
+ }
+ .hero-index{bottom:5px!important}
+}
+
 </style>
 </head>
 <body>
