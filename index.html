@@ -340,6 +340,50 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
   object-position:center!important;
  }
 }
+
+/* NOVA glass atmosphere: slow living color behind translucent surfaces */
+html,body{background:transparent!important}
+body{position:relative;isolation:isolate}
+body:before{
+ content:"";position:fixed;inset:-18%;z-index:-1;pointer-events:none;
+ background:
+  radial-gradient(ellipse at 18% 24%,rgba(151,111,67,.34),transparent 38%),
+  radial-gradient(ellipse at 82% 30%,rgba(82,105,91,.28),transparent 40%),
+  radial-gradient(ellipse at 54% 82%,rgba(115,91,130,.23),transparent 42%),
+  linear-gradient(125deg,#111713,#20251f 42%,#191b22 72%,#211b16);
+ background-size:150% 150%,160% 160%,150% 150%,220% 220%;
+ background-position:0% 20%,100% 10%,50% 100%,0% 50%;
+ animation:novaAmbientDrift 34s ease-in-out infinite alternate;
+}
+@keyframes novaAmbientDrift{
+ 0%{background-position:0% 20%,100% 10%,50% 100%,0% 50%;filter:hue-rotate(-8deg) saturate(.9)}
+ 50%{background-position:75% 65%,15% 80%,90% 15%,100% 50%;filter:hue-rotate(8deg) saturate(1.12)}
+ 100%{background-position:30% 100%,70% 0%,10% 55%,20% 50%;filter:hue-rotate(-3deg) saturate(1)}
+}
+header,.collections,.showcase,.detail-band,.process,.contact,footer{
+ background:rgba(22,25,22,.38)!important;
+ -webkit-backdrop-filter:blur(22px) saturate(135%)!important;
+ backdrop-filter:blur(22px) saturate(135%)!important;
+}
+.hero{background:transparent!important}
+.hero-motion-stage{background:rgba(19,22,19,.18)!important;-webkit-backdrop-filter:blur(2px) saturate(120%);backdrop-filter:blur(2px) saturate(120%)}
+.collection,.detail-card,.model-wrap,.depth-photo,.gallery figure,.step,.contact-form{
+ background:rgba(31,35,30,.38)!important;
+ border:1px solid rgba(231,211,174,.17)!important;
+ -webkit-backdrop-filter:blur(16px) saturate(130%)!important;
+ backdrop-filter:blur(16px) saturate(130%)!important;
+}
+.contact-form{color:var(--cream)!important;box-shadow:0 20px 55px #0005,inset 0 1px #ffffff18!important}
+.contact-form h3,.field label{color:var(--cream)!important}
+.field input,.field select,.field textarea{
+ color:var(--cream)!important;background:rgba(245,239,226,.09)!important;
+ border:1px solid rgba(238,222,190,.24)!important;
+ -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)
+}
+.field input::placeholder,.field textarea::placeholder{color:#c5bba8}
+.model-wrap{background:rgba(31,35,30,.3)!important}
+.motion-gallery-card{background:rgba(31,35,30,.4)!important;backdrop-filter:blur(8px)}
+@media(prefers-reduced-motion:reduce){body:before{animation:none!important}}
 </style>
 </head>
 <body>
