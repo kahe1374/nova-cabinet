@@ -397,6 +397,30 @@ header,.collections,.showcase,.detail-band,.process,.contact,footer{
  }
 }
 @media(prefers-reduced-motion:reduce){body:before{animation:none!important}}
+
+/* NOVA wordmark: letters gently fall into place one by one */
+.brand-letters{display:inline-flex;direction:ltr;perspective:500px}
+.brand-letters i{
+ display:inline-block;
+ font-style:normal;
+ opacity:0;
+ transform:translate3d(0,-30px,0) rotateX(-32deg);
+ transform-origin:50% 0;
+ animation:novaLetterFall 1.25s cubic-bezier(.2,.72,.24,1) forwards;
+}
+.brand-letters i:nth-child(1){animation-delay:.25s}
+.brand-letters i:nth-child(2){animation-delay:.62s}
+.brand-letters i:nth-child(3){animation-delay:.99s}
+.brand-letters i:nth-child(4){animation-delay:1.36s}
+@keyframes novaLetterFall{
+ 0%{opacity:0;transform:translate3d(0,-30px,0) rotateX(-32deg);filter:blur(3px)}
+ 68%{opacity:1;transform:translate3d(0,3px,0) rotateX(5deg);filter:blur(0)}
+ 84%{transform:translate3d(0,-2px,0) rotateX(-2deg)}
+ 100%{opacity:1;transform:translate3d(0,0,0) rotateX(0);filter:blur(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .brand-letters i{opacity:1;filter:none;animation:none;transform:none}
+}
 </style>
 </head>
 <body>
