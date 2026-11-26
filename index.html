@@ -55,49 +55,127 @@ document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefau
 import {animate,inView} from 'https://cdn.jsdelivr.net/npm/motion@latest/+esm';
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js';
 import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/controls/OrbitControls.js';
+import {GLTFLoader} from 'https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/loaders/GLTFLoader.js';
+
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(!reduce){inView('.reveal',el=>{animate(el,{opacity:[0,1],y:[38,0]},{duration:.9,ease:[.22,1,.36,1]});},{amount:.12});animate('.hero-content',{opacity:[0,1],y:[30,0]},{duration:1.2,delay:.2,ease:[.2,.8,.2,1]});}
-else document.querySelectorAll('.reveal').forEach(el=>{el.style.opacity=1;el.style.transform='none'});
+if(!reduce){
+  inView('.reveal',el=>animate(el,{opacity:[0,1],y:[42,0]},{duration:1.05,ease:[.18,.78,.22,1]}),{amount:.12});
+  animate('.hero-content',{opacity:[0,1],y:[38,0]},{duration:1.4,delay:.2,ease:[.2,.8,.2,1]});
+  document.querySelectorAll('.collection,.detail-card,.gallery figure').forEach(el=>{
+    el.addEventListener('pointerenter',()=>animate(el,{y:-5},{duration:.28}));
+    el.addEventListener('pointerleave',()=>animate(el,{y:0},{duration:.35}));
+  });
+}else document.querySelectorAll('.reveal').forEach(el=>{el.style.opacity=1;el.style.transform='none'});
+
 const canvas=document.querySelector('#kitchen3d');
+const label=document.querySelector('.model-label');
+const colors={walnut:'#805638',ivory:'#c9bda8',olive:'#65705a',black:'#343631'};
 try{
- const scene=new THREE.Scene();scene.background=new THREE.Color('#252720');
- const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(7,5.2,8);
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
- const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=5;controls.maxDistance=14;controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.25,0);
- scene.add(new THREE.HemisphereLight(0xf7e8ce,0x29251d,2.1));const key=new THREE.DirectionalLight(0xffe1b2,3.2);key.position.set(4,8,6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);scene.add(key);const fill=new THREE.PointLight(0xc6d1bd,45);fill.position.set(-4,4,-3);scene.add(fill);
- const mat=(color,rough=.55,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
- const floor= new THREE.Mesh(new THREE.PlaneGeometry(18,18),mat('#37382f',.9));floor.rotation.x=-Math.PI/2;floor.position.y=-.03;floor.receiveShadow=true;scene.add(floor);
- const wall=new THREE.Mesh(new THREE.PlaneGeometry(12,6),mat('#303129',.95));wall.position.set(0,3,-2.3);wall.receiveShadow=true;scene.add(wall);
- const group=new THREE.Group();scene.add(group);
- const wood=mat('#805638',.43),dark=mat('#332d24',.62),stone=mat('#d0c7b6',.28),metal=mat('#b79a69',.25,.8),inside=mat('#59432f',.7);
- function box(w,h,d,x,y,z,m,parent=group){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
- // Long lower cabinet run, individual carcasses and framed fronts
- const runW=5.8,baseY=.48,depth=.72;box(runW,.88,depth,0,.48,-.75,dark);box(runW,.09,.82,0,.94,-.75,stone);
- for(let i=0;i<6;i++){const x=-2.4+i*.96;box(.9,.76,.055,x,.49,-.365,wood);box(.82,.67,.025,x,.49,-.326,wood);box(.018,.62,.012,x,.49,-.308,inside);box(.045,.12,.035,x+.31,.5,-.27,metal)}
- // Upper cupboards
- for(let i=0;i<5;i++){const x=-2.28+i*1.14;box(1.08,1.05,.58,x,2.12,-1.02,dark);box(1.02,.98,.045,x,2.12,-.71,wood);box(.94,.9,.025,x,2.12,-.678,wood);box(.035,.22,.035,x+.38,2.12,-.64,metal)}
- // tall pantry at right
- box(.92,2.55,.7,3.35,1.28,-.8,dark);box(.84,2.43,.05,3.35,1.28,-.42,wood);box(.76,2.34,.025,3.35,1.28,-.385,wood);box(.04,.35,.04,3.67,1.25,-.34,metal);
- // backsplash
- box(5.8,.78,.055,0,1.42,-1.13,mat('#766c5a',.75));
- // Island
- box(2.65,.88,1.35,.15,.48,1.05,dark);box(2.78,.10,1.48,.15,.97,1.05,stone);
- for(let i=0;i<3;i++){const x=-.7+i*.85;box(.78,.72,.045,x,.48,1.735,wood);box(.68,.62,.02,x,.48,1.77,wood);box(.04,.12,.035,x+.27,.5,1.8,metal)}
- // island waterfall end panels
- box(.06,.9,1.38,-1.22,.48,1.05,stone);box(.06,.9,1.38,1.52,.48,1.05,stone);
- // hob + sink accents
- box(.72,.025,.46,-1.75,1.01,-.72,mat('#171817',.2,.65));box(.62,.018,.36,.95,1.03,-.72,mat('#343a3b',.2,.7));
- // floor toe kicks
- box(5.65,.12,.12,0,.06,-.42,mat('#24251f'));box(2.55,.12,.12,.15,.06,1.7,mat('#24251f'));
- const colors={walnut:'#805638',ivory:'#c7bba4',olive:'#59614a',black:'#30322e'};
- function setCabinetColor(c){const m=mat(c,.43);group.children.forEach((o,i)=>{if(o.material&&o.material.color&&o.material.color.getHexString()==='805638')o.material=m;});}
- // Track door meshes for clean material swaps
- const doorMeshes=[];group.children.forEach(o=>{if(o.geometry&&o.geometry.type==='BoxGeometry'&&o.material===wood)doorMeshes.push(o)});
- function recolor(c){doorMeshes.forEach(o=>o.material=mat(c,.43));}
- document.querySelectorAll('.swatch').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));b.classList.add('active');recolor(colors[b.dataset.color]);}));
- let spinning=false;document.getElementById('spin3d').addEventListener('click',e=>{spinning=!spinning;e.currentTarget.textContent=spinning?'توقف چرخش':'چرخش خودکار'});document.getElementById('reset3d').addEventListener('click',()=>{camera.position.set(7,5.2,8);controls.target.set(0,1.25,0);controls.update()});
- function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(canvas);resize();
- function render(){requestAnimationFrame(render);if(spinning&&!reduce)group.rotation.y+=.003;controls.update();renderer.render(scene,camera)}render();
-}catch(err){console.error('3D preview unavailable',err);canvas.insertAdjacentHTML('afterend','<p style="padding:20px;color:#d6c8ac">پیش‌نمایش سه‌بعدی در این مرورگر بارگذاری نشد؛ لطفاً صفحه را با مرورگر به‌روز باز کنید.</p>')}
+  const scene=new THREE.Scene();
+  scene.background=new THREE.Color('#252720');
+  const camera=new THREE.PerspectiveCamera(34,1,.05,250);
+  camera.position.set(7,5.2,8);
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.15;
+  const controls=new OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;controls.dampingFactor=.065;controls.minDistance=2.5;controls.maxDistance=30;controls.maxPolarAngle=Math.PI*.49;
+  scene.add(new THREE.HemisphereLight(0xf4e8d2,0x28271f,2.2));
+  const key=new THREE.DirectionalLight(0xffdfb1,3.3);key.position.set(5,9,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);scene.add(key);
+  const fill=new THREE.DirectionalLight(0xc4d4dc,1.5);fill.position.set(-6,5,-4);scene.add(fill);
+  const rim=new THREE.PointLight(0xc59a5c,32,18);rim.position.set(0,5,-5);scene.add(rim);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:'#34352e',roughness:.82,metalness:.04}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=-.02;floor.receiveShadow=true;scene.add(floor);
+  const root=new THREE.Group();scene.add(root);
+  let mixer=null,clock=new THREE.Clock(),model=null,spin=false,baseCamera=null;
+  const loader=new GLTFLoader();
+  label.textContent='LOADING REAL 3D KITCHEN · GLB';
+  loader.load('https://cdn.3dassets.dev/assets/17931/v1/model.glb',gltf=>{
+    model=gltf.scene;
+    const bounds=new THREE.Box3().setFromObject(model);
+    const size=bounds.getSize(new THREE.Vector3());
+    const center=bounds.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+    const maxDim=Math.max(size.x,size.y,size.z);
+    const scale=6.2/maxDim;
+    model.scale.setScalar(scale);
+    const scaledBounds=new THREE.Box3().setFromObject(model);
+    model.position.y-=scaledBounds.min.y;
+    model.traverse(obj=>{
+      if(obj.isMesh){
+        obj.castShadow=true;obj.receiveShadow=true;
+        if(obj.material){obj.material=obj.material.clone();obj.material.needsUpdate=true;}
+      }
+    });
+    root.add(model);
+    const finalBounds=new THREE.Box3().setFromObject(model);
+    const finalSize=finalBounds.getSize(new THREE.Vector3());
+    controls.target.set(0,finalSize.y*.43,0);
+    const radius=Math.max(finalSize.x,finalSize.y,finalSize.z);
+    camera.position.set(radius*1.12,radius*.78,radius*1.38);
+    camera.near=Math.max(.01,radius/100);camera.far=radius*30;camera.updateProjectionMatrix();
+    baseCamera={position:camera.position.clone(),target:controls.target.clone()};
+    if(gltf.animations&&gltf.animations.length){mixer=new THREE.AnimationMixer(model);gltf.animations.forEach(clip=>mixer.clipAction(clip).play());}
+    label.textContent='INTERACTIVE 3D KITCHEN · GLB';
+    document.querySelector('.model-hint').textContent='مدل سه‌بعدی واقعی · برای چرخش لمس کنید و بکشید';
+  },xhr=>{
+    if(xhr.total)label.textContent='LOADING 3D · '+Math.round(xhr.loaded/xhr.total*100)+'%';
+  },error=>{
+    console.error('3D kitchen GLB failed to load',error);
+    label.textContent='3D PREVIEW UNAVAILABLE';
+    document.querySelector('.model-hint').textContent='بارگذاری مدل سه‌بعدی ممکن نشد؛ اتصال اینترنت را بررسی کنید.';
+  });
+
+  function recolor(hex){
+    if(!model)return;
+    const targetNames=['cabinet','door','drawer','front','panel','unit','shaker','oak','wood'];
+    const chosen=new THREE.Color(hex);
+    model.traverse(obj=>{
+      if(!obj.isMesh||!obj.material)return;
+      const mats=Array.isArray(obj.material)?obj.material:[obj.material];
+      mats.forEach(m=>{
+        const name=((obj.name||'')+' '+(m.name||'')).toLowerCase();
+        const isTarget=targetNames.some(term=>name.includes(term));
+        if(isTarget&&m.color){
+          if(!m.userData.novaOriginalColor)m.userData.novaOriginalColor=m.color.clone();
+          const original=m.userData.novaOriginalColor;
+          m.color.copy(original).lerp(chosen,.72);
+          m.needsUpdate=true;
+        }
+      });
+    });
+  }
+  document.querySelectorAll('.swatch').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');recolor(colors[btn.dataset.color]);
+  }));
+  document.getElementById('spin3d').addEventListener('click',e=>{spin=!spin;e.currentTarget.textContent=spin?'توقف چرخش':'چرخش خودکار'});
+  document.getElementById('reset3d').addEventListener('click',()=>{
+    if(!baseCamera)return;
+    camera.position.copy(baseCamera.position);controls.target.copy(baseCamera.target);controls.update();
+  });
+  function resize(){
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    if(!w||!h)return;
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(canvas);resize();
+  function render(){
+    requestAnimationFrame(render);
+    const delta=clock.getDelta();
+    if(mixer)mixer.update(delta);
+    if(spin&&model&&!reduce)root.rotation.y+=delta*.22;
+    controls.update();renderer.render(scene,camera);
+  }
+  render();
+}catch(err){
+  console.error('3D preview initialization failed',err);
+  label.textContent='3D PREVIEW UNAVAILABLE';
+  document.querySelector('.model-hint').textContent='پیش‌نمایش سه‌بعدی در این مرورگر بارگذاری نشد.';
+}
 </script>
 </body></html>
