@@ -361,28 +361,41 @@ body:before{
  100%{background-position:30% 100%,70% 0%,10% 55%,20% 50%;filter:hue-rotate(-3deg) saturate(1)}
 }
 header,.collections,.showcase,.detail-band,.process,.contact,footer{
- background:rgba(22,25,22,.38)!important;
- -webkit-backdrop-filter:blur(22px) saturate(135%)!important;
- backdrop-filter:blur(22px) saturate(135%)!important;
+ background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.025) 42%,rgba(255,255,255,.07)),rgba(22,25,22,.16)!important;
+ border-color:rgba(255,255,255,.22)!important;
+ -webkit-backdrop-filter:blur(30px) saturate(175%)!important;
+ backdrop-filter:blur(30px) saturate(175%)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 0 -1px 0 rgba(255,255,255,.08),0 12px 42px rgba(0,0,0,.12)!important;
 }
 .hero{background:transparent!important}
-.hero-motion-stage{background:rgba(19,22,19,.18)!important;-webkit-backdrop-filter:blur(2px) saturate(120%);backdrop-filter:blur(2px) saturate(120%)}
+.hero-motion-stage{background:rgba(255,255,255,.035)!important;-webkit-backdrop-filter:blur(3px) saturate(145%);backdrop-filter:blur(3px) saturate(145%)}
 .collection,.detail-card,.model-wrap,.depth-photo,.gallery figure,.step,.contact-form{
- background:rgba(31,35,30,.38)!important;
- border:1px solid rgba(231,211,174,.17)!important;
- -webkit-backdrop-filter:blur(16px) saturate(130%)!important;
- backdrop-filter:blur(16px) saturate(130%)!important;
+ background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(255,255,255,.035) 48%,rgba(255,255,255,.09)),rgba(31,35,30,.15)!important;
+ border:1px solid rgba(255,255,255,.28)!important;
+ -webkit-backdrop-filter:blur(24px) saturate(170%)!important;
+ backdrop-filter:blur(24px) saturate(170%)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(255,255,255,.1),0 18px 48px rgba(0,0,0,.16)!important;
 }
-.contact-form{color:var(--cream)!important;box-shadow:0 20px 55px #0005,inset 0 1px #ffffff18!important}
+.contact-form{color:var(--cream)!important}
 .contact-form h3,.field label{color:var(--cream)!important}
 .field input,.field select,.field textarea{
- color:var(--cream)!important;background:rgba(245,239,226,.09)!important;
- border:1px solid rgba(238,222,190,.24)!important;
- -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)
+ color:var(--cream)!important;background:rgba(255,255,255,.12)!important;
+ border:1px solid rgba(255,255,255,.32)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 5px 18px rgba(0,0,0,.08)!important;
+ -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)
 }
 .field input::placeholder,.field textarea::placeholder{color:#c5bba8}
-.model-wrap{background:rgba(31,35,30,.3)!important}
-.motion-gallery-card{background:rgba(31,35,30,.4)!important;backdrop-filter:blur(8px)}
+.model-wrap{background:rgba(255,255,255,.09)!important}
+.motion-gallery-card{background:rgba(255,255,255,.12)!important;border:1px solid rgba(255,255,255,.3)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 12px 34px rgba(0,0,0,.22)!important;backdrop-filter:blur(12px) saturate(160%)}
+.collection,.detail-card,.model-wrap,.depth-photo,.gallery figure,.step,.contact-form,header{
+ transition:background .7s ease,border-color .7s ease,box-shadow .7s ease;
+}
+@media(hover:hover){
+ .collection:hover,.detail-card:hover,.step:hover,.gallery figure:hover{
+  border-color:rgba(255,255,255,.48)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 22px 55px rgba(0,0,0,.2),0 0 24px rgba(255,255,255,.07)!important;
+ }
+}
 @media(prefers-reduced-motion:reduce){body:before{animation:none!important}}
 </style>
 </head>
