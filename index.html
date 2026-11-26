@@ -336,27 +336,47 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 }
 
 
-/* FINAL USER-SPECIFIC ADJUSTMENT: smaller fan cards, active photo fills the viewport */
-.hero{height:100svh!important;min-height:100svh!important;max-height:100svh!important}
-.hero-motion-stage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+/* FIX: keep all 20 fan cards visible; active photo expands edge-to-edge */
+.hero{height:100svh!important;min-height:100svh!important;max-height:100svh!important;overflow:hidden!important}
+.hero-motion-stage{
+  position:absolute!important;z-index:1!important;inset:0!important;
+  width:100%!important;height:100%!important;left:0!important;top:0!important;bottom:0!important;
+  overflow:hidden!important;border:0!important;background:transparent!important;perspective:1700px!important;
+}
+.hero-motion-stage .motion-gallery-stack{position:absolute!important;inset:0!important;overflow:visible!important}
 .hero-motion-stage .motion-gallery-card:nth-child(n){
-  width:clamp(48px,5.2vw,76px)!important;
-  height:clamp(38px,4.1vw,60px)!important;
-  transform:translate(-50%,-50%) rotate(var(--fan-angle)) scale(.9)!important;
+  position:absolute!important;left:var(--fan-left)!important;top:var(--fan-top)!important;
+  width:clamp(92px,10vw,142px)!important;height:clamp(68px,7.4vw,104px)!important;
+  max-width:none!important;max-height:none!important;
+  opacity:1!important;visibility:visible!important;pointer-events:auto!important;
+  border:1px solid #d1b17b!important;border-radius:3px!important;
+  transform:translate(-50%,-50%) rotate(var(--fan-angle)) scale(1)!important;
+  box-shadow:0 14px 30px #000b!important;
+  transition:transform 1s cubic-bezier(.16,.78,.2,1),opacity .8s,width 1s,height 1s,left 1s,top 1s!important;
+}
+.hero-motion-stage .motion-gallery-card:nth-child(n) img{
+  display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;
 }
 .hero-motion-stage .motion-gallery-card.is-active{
+  z-index:100!important;opacity:1!important;visibility:visible!important;
   position:absolute!important;left:50%!important;top:50%!important;
-  width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
-  border:0!important;border-radius:0!important;
-  transform:translate(-50%,-50%) scale(1)!important;
-  box-shadow:none!important;
+  width:100vw!important;height:100svh!important;max-width:none!important;max-height:none!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  transform:translate(-50%,-50%) rotate(0deg) scale(1)!important;
 }
-.hero-motion-stage .motion-gallery-card.is-active img{width:100%!important;height:100%!important;object-fit:cover!important}
+.hero-motion-stage .motion-gallery-card.is-active img{
+  width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+}
+.hero-motion-stage .motion-gallery-caption{z-index:110!important;bottom:18px!important;right:22px!important;left:22px!important}
 @media(max-width:680px){
   .hero{height:100svh!important;min-height:100svh!important;max-height:100svh!important}
   .hero-motion-stage{inset:0!important;width:100%!important;height:100%!important}
-  .hero-motion-stage .motion-gallery-card:nth-child(n){width:16vw!important;height:12.5vw!important}
-  .hero-motion-stage .motion-gallery-card.is-active{left:50%!important;top:50%!important;width:100%!important;height:100%!important;max-height:none!important}
+  .hero-motion-stage .motion-gallery-card:nth-child(n){
+    width:clamp(66px,17vw,92px)!important;height:clamp(50px,13vw,70px)!important;
+  }
+  .hero-motion-stage .motion-gallery-card.is-active{
+    left:50%!important;top:50%!important;width:100vw!important;height:100svh!important;
+  }
 }
 
 </style>
@@ -434,8 +454,8 @@ photos.forEach((src,i)=>{
    setTimeout(()=>{cards.forEach((c,i)=>{if(i!==index)c.style.zIndex=String(40-i)})},1100);
  }
  cards[0].classList.add('is-active');if(count)count.textContent='01 / 20';
- let timer=setInterval(showNext,7000);
- document.addEventListener('visibilitychange',()=>{paused=document.hidden;clearInterval(timer);if(!paused)timer=setInterval(showNext,7000)});
+ let timer=setInterval(showNext,6000);
+ document.addEventListener('visibilitychange',()=>{paused=document.hidden;clearInterval(timer);if(!paused)timer=setInterval(showNext,6000)});
 })();
 </script>
 <script type="module">
