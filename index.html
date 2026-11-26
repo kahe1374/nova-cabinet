@@ -233,6 +233,28 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 }
 @media(prefers-reduced-motion:reduce){.motion-gallery-card{transition:none!important}}
 
+/* NOVA final spacing correction: separate gallery from hero copy */
+@media(min-width:681px){
+ .hero-motion-stage .motion-gallery-card.is-active{
+  top:36%!important;
+  height:min(38svh,330px)!important;
+ }
+}
+@media(max-width:680px){
+ .hero-motion-stage .motion-gallery-card:nth-child(n){
+  top:56%!important;
+ }
+ .hero-motion-stage .motion-gallery-card.is-active{
+  top:33%!important;
+  height:min(29svh,220px)!important;
+  max-height:29svh!important;
+ }
+ .hero-content{
+  bottom:8px!important;
+ }
+ .hero-index{bottom:2px!important}
+}
+
 </style>
 </head>
 <body>
