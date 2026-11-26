@@ -266,6 +266,35 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
  .hero-content{z-index:3}
 }
 
+
+/* IMAGE FRAME SIZE FIX: enlarge every stacked photo and make the image fill its frame */
+.hero-motion-stage .motion-gallery-card:nth-child(n){
+  width:clamp(132px,16vw,218px)!important;
+  height:clamp(102px,12.5vw,170px)!important;
+  padding:0!important;
+  background:#24251f!important;
+  overflow:hidden!important;
+}
+.hero-motion-stage .motion-gallery-card img{
+  display:block!important;width:100%!important;height:100%!important;
+  min-width:100%!important;min-height:100%!important;
+  object-fit:cover!important;object-position:center!important;
+}
+@media(max-width:950px) and (min-width:681px){
+  .hero-motion-stage .motion-gallery-card:nth-child(n){
+    width:clamp(112px,17vw,170px)!important;
+    height:clamp(88px,13vw,132px)!important;
+  }
+}
+@media(max-width:680px){
+  .hero-motion-stage .motion-gallery-card:nth-child(n){
+    width:34vw!important;height:26vw!important;
+  }
+  .hero-motion-stage .motion-gallery-card img{
+    width:100%!important;height:100%!important;object-fit:cover!important;
+  }
+}
+
 </style>
 </head>
 <body>
