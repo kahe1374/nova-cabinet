@@ -75,7 +75,7 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 .hero-card{position:absolute;inset:0;border:1px solid #d8b77b99;padding:6px;background:#1b1b17;box-shadow:0 20px 48px #000b,0 0 0 1px #ffffff18;overflow:hidden;transform-origin:center center;opacity:.55;transition:transform 1.55s cubic-bezier(.2,.75,.18,1),opacity 1.35s,filter 1.2s;filter:brightness(.42) saturate(.75)}
 .hero-card img{width:100%;height:100%;object-fit:cover;transform:scale(1.04);transition:transform 5s cubic-bezier(.2,.7,.2,1);}
 .hero-card:after{content:"";position:absolute;inset:7px;background:linear-gradient(130deg,#fff3,transparent 26%,transparent 70%,#0005);border:1px solid #ffffff35;pointer-events:none}
-.hero-card.active{opacity:1;transform:translate3d(calc(50vw - 50% - 5vw),calc(-50vh + 50% + 55vh),140px) rotateY(-3deg) rotateX(1deg) scale(1.16);filter:brightness(1) saturate(1.03);z-index:8}
+.hero-card.active{opacity:1;transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 55vh - 50%),140px) rotateY(-3deg) rotateX(1deg) scale(1.16);filter:brightness(1) saturate(1.03);z-index:8}
 .hero-card.active img{transform:scale(1.07)}
 .hero-card.returning{opacity:.48;transform:translate3d(0,0,-100px) rotateY(8deg) rotateZ(-5deg) scale(.24);z-index:2;filter:brightness(.38)}
 .hero-card.next{opacity:.7;transform:translate3d(-13px,10px,-35px) rotateY(-7deg) rotateZ(-5deg) scale(.31);z-index:5;filter:brightness(.52)}
@@ -88,7 +88,7 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 @media(max-width:680px){
  .hero{height:850px;min-height:850px;align-items:stretch}
  .hero-stack{left:5%;top:47%;width:58%;height:27%;transform:none}
- .hero-card.active{transform:translate3d(calc(50vw - 50% - 5vw),calc(-47vh + 50% + 47vh),90px) rotateY(-2deg) scale(1.08)}
+ .hero-card.active{transform:translate3d(calc(50vw - 50% - 5vw),calc(50vh - 47vh - 50%),90px) rotateY(-2deg) scale(1.08)}
  .hero-card.returning{transform:translate3d(0,0,-70px) rotateY(5deg) rotateZ(-4deg) scale(.22)}
  .hero-card.next{transform:translate3d(-9px,7px,-25px) rotateY(-4deg) rotateZ(-3deg) scale(.28)}
  .hero-card.back{transform:translate3d(10px,-7px,-50px) rotateY(6deg) rotateZ(3deg) scale(.22)}
