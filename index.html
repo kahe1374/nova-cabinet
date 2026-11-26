@@ -317,15 +317,20 @@ footer{background:#11130f;border-top:1px solid var(--line);padding:26px 0}.foote
 }
 
 
-/* NOVA mobile fix: larger centered active photo; diagonal thumbnails remain unchanged */
+/* NOVA mobile gallery correction: separate fan thumbnails from the enlarged active photo */
 @media(max-width:680px){
+ .hero-motion-stage .motion-gallery-card:nth-child(n):not(.is-active){
+  top:62%!important;
+  z-index:2!important;
+ }
  .hero-motion-stage .motion-gallery-card.is-active{
-  top:32%!important;
+  top:29%!important;
   left:50%!important;
-  width:calc(100vw - 20px)!important;
+  width:calc(100vw - 32px)!important;
   height:min(40svh,300px)!important;
-  max-width:calc(100vw - 20px)!important;
+  max-width:calc(100vw - 32px)!important;
   max-height:40svh!important;
+  z-index:100!important;
   transform:translate(-50%,-50%)!important;
  }
  .hero-motion-stage .motion-gallery-card.is-active img{
