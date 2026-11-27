@@ -1904,6 +1904,41 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{right:14px!important;left:14px!important;font-size:8px!important}
 }
 @media(prefers-reduced-motion:reduce){.hero.hero-v3 .hero-motion-stage .motion-gallery-card{animation:none!important;transition:none!important}.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{transform:translate(-50%,-50%)!important}}
+
+/* NOVA hotfix: isolate the active viewfinder from the previous mosaic grid */
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+ display:block!important;
+ grid-template-columns:none!important;grid-template-rows:none!important;
+ grid-auto-flow:initial!important;grid-auto-rows:auto!important;
+ inset:16px 18px 54px!important;overflow:hidden!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ position:absolute!important;display:block!important;
+ grid-column:auto!important;grid-row:auto!important;
+ left:50%!important;top:47%!important;
+ width:min(74vw,920px)!important;height:min(51svh,450px)!important;
+ max-width:calc(100% - 24px)!important;max-height:calc(100% - 20px)!important;
+ margin:0!important;padding:0!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ left:50%!important;top:47%!important;
+ opacity:1!important;visibility:visible!important;
+ transform:translate(-50%,-50%) rotateX(var(--nova-tilt-y,0deg)) rotateY(var(--nova-tilt-x,0deg)) scale(1)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+ opacity:0!important;visibility:visible!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-stack{display:block!important;inset:20px 10px 54px!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  left:50%!important;top:43%!important;width:calc(100% - 12px)!important;
+  height:min(34svh,270px)!important;max-width:100%!important;max-height:calc(100% - 18px)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{left:50%!important;top:43%!important}
+}
+
 </style>
 </head>
 <body>
