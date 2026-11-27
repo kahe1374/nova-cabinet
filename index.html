@@ -2038,6 +2038,61 @@ nav{
   max-height:38svh!important;
  }
 }
+
+/* NOVA — HORIZONTAL SHOWROOM RUNWAY: centered project with neighboring previews */
+.hero.hero-v3 .hero-motion-stage{overflow:hidden!important;isolation:isolate!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{inset:0!important;overflow:hidden!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ left:calc(50% + var(--nova-distance,0) * clamp(190px,24vw,300px))!important;
+ top:51%!important;width:clamp(150px,19vw,245px)!important;height:min(37svh,310px)!important;
+ max-width:calc(100vw - 30px)!important;max-height:calc(100svh - 180px)!important;
+ opacity:.42!important;visibility:visible!important;pointer-events:auto!important;
+ transform:translate(-50%,-50%) scale(.88)!important;
+ border:1px solid #c5a16b88!important;border-radius:2px!important;
+ filter:saturate(.78) brightness(.7)!important;
+ transition:left .95s cubic-bezier(.2,.75,.2,1),top .85s,width .85s,height .85s,opacity .7s,filter .7s,transform .85s!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ left:50%!important;top:51%!important;width:min(54vw,690px)!important;height:min(55svh,460px)!important;
+ max-width:calc(100vw - 36px)!important;max-height:calc(100svh - 190px)!important;
+ opacity:1!important;z-index:12!important;filter:none!important;
+ transform:translate(-50%,-50%) scale(1)!important;
+ box-shadow:0 24px 65px #000a!important;border:1px solid #d0ae78!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active img{
+ width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{opacity:.7!important;filter:saturate(.88) brightness(.86)!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{opacity:.35!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{z-index:15!important}
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  left:calc(50% + var(--nova-distance,0) * 190px)!important;width:170px!important;height:30svh!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{left:50%!important;width:min(58vw,570px)!important;height:42svh!important}
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  left:calc(50% + var(--nova-distance,0) * 112px)!important;top:36%!important;
+  width:108px!important;height:19svh!important;max-width:calc(100vw - 24px)!important;
+  transform:translate(-50%,-50%) scale(.86)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  left:50%!important;top:36%!important;width:calc(100vw - 36px)!important;
+  height:min(30svh,235px)!important;max-width:calc(100vw - 36px)!important;
+  transform:translate(-50%,-50%) scale(1)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{opacity:.5!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{right:16px!important;left:16px!important;bottom:46%!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
+}
 </style>
 </head>
 <body>
@@ -2108,7 +2163,15 @@ photos.forEach((src,i)=>{
  }
  layoutFan();window.addEventListener('resize',layoutFan,{passive:true});
  function setTriptych(){
-   cards.forEach(c=>c.classList.remove('is-prev','is-next'));
+   cards.forEach((c,j)=>{
+     c.classList.remove('is-prev','is-next');
+     let d=j-index;
+     if(d>cards.length/2)d-=cards.length;
+     if(d< -cards.length/2)d+=cards.length;
+     c.style.setProperty('--nova-distance',String(d));
+     if(d===-1)c.classList.add('is-prev');
+     if(d===1)c.classList.add('is-next');
+   });
  }
  function focusCard(i){
    index=i;
