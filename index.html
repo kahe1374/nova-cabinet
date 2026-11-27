@@ -1939,6 +1939,19 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{left:50%!important;top:43%!important}
 }
 
+
+/* NOVA gallery position correction — move the full image frame down inside its stage */
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){top:55%!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{top:55%!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{top:55%!important}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){top:51%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{top:51%!important}
+}
+
 </style>
 </head>
 <body>
