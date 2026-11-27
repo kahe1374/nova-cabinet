@@ -2372,14 +2372,20 @@ nav{
 <style id="nova-dual-frame-reveal">
 .hero.hero-v3 .hero-motion-stage{inset:4% 7% 36%!important;overflow:hidden!important;background:#171916!important;border:1px solid #c9ad7b99!important;box-shadow:0 24px 70px #0009!important;padding:clamp(10px,1.6vw,22px)!important}
 .hero.hero-v3 .motion-gallery-stack{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));grid-auto-rows:clamp(120px,15vw,190px);grid-auto-flow:dense;gap:clamp(7px,1vw,13px);width:100%;height:100%;overflow:auto;align-content:start;scrollbar-width:thin;scrollbar-color:#b99a6b66 transparent}
-.hero.hero-v3 .nova-auto-photo{position:relative;display:block;min-width:0;min-height:0;overflow:hidden;border:1px solid #c9ad7b66;background:#20211c;box-shadow:0 8px 24px #0005;isolation:isolate;animation:novaSpotlightEnter .8s cubic-bezier(.18,.78,.22,1) both;animation-delay:var(--nova-delay,0ms)}
+.hero.hero-v3 .nova-auto-photo{position:relative;display:block;min-width:0;min-height:0;overflow:hidden;border:1px solid #c9ad7b66;background:#20211c;box-shadow:0 8px 24px #0005;isolation:isolate;animation:novaPrismaRise .8s cubic-bezier(.18,.78,.22,1) both;animation-delay:var(--nova-delay,0ms)}
 .hero.hero-v3 .nova-auto-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 .hero.hero-v3 .nova-auto-photo .nova-photo-base{filter:saturate(.62) contrast(.96);transition:filter .5s}
 .hero.hero-v3 .nova-auto-photo .nova-photo-reveal{position:absolute;inset:0;clip-path:circle(0% at var(--spot-x,50%) var(--spot-y,50%));transition:clip-path .38s cubic-bezier(.2,.75,.2,1);pointer-events:none}
 .hero.hero-v3 .nova-auto-photo:hover{border-color:#e5c58f!important;box-shadow:0 16px 36px #0009,0 0 0 1px #e5c58f44!important}
 .hero.hero-v3 .nova-auto-photo.is-spotlit .nova-photo-reveal{clip-path:circle(42% at var(--spot-x,50%) var(--spot-y,50%))}
 .hero.hero-v3 .nova-auto-photo.is-spotlit .nova-photo-base{filter:saturate(.48) brightness(.82)}
-@keyframes novaSpotlightEnter{from{opacity:0;transform:translateY(22px) scale(.975);filter:blur(4px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes novaPrismaRise{from{opacity:0;transform:translateY(22px) scale(.975);filter:blur(4px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+.hero.hero-v3 .hero-content h1 .nova-word{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.08em;margin-bottom:-.08em}
+.hero.hero-v3 .hero-content h1 .nova-word>span{display:inline-block;animation:novaWordLift .85s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--word-index,0)*85ms)}
+.hero.hero-v3 .hero-copy,.hero.hero-v3 .hero-buttons{animation:novaCopyLift .9s cubic-bezier(.16,1,.3,1) both;animation-delay:850ms}
+.hero.hero-v3 .hero-buttons{animation-delay:1.05s}
+@keyframes novaWordLift{from{transform:translateY(115%);opacity:0;filter:blur(5px)}to{transform:translateY(0);opacity:1;filter:blur(0)}}
+@keyframes novaCopyLift{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
 .hero.hero-v3 .nova-auto-photo:after{content:"";position:absolute;inset:0;border:1px solid #e5c58f22;pointer-events:none}
 .hero.hero-v3 .motion-gallery-caption{position:absolute!important;z-index:5;left:12px!important;right:auto!important;bottom:12px!important;color:#f1d7a8!important;background:#171916cc;padding:6px 10px;border:1px solid #c9ad7b66;font:10px Georgia;letter-spacing:2px}
 .hero.hero-v3 .hero-content{right:7%!important;left:7%!important;bottom:3%!important;width:86%!important;max-width:850px!important;margin:0 auto!important;text-align:center!important}
@@ -2396,7 +2402,7 @@ nav{
  .hero.hero-v3 .hero-copy{font-size:10px!important;line-height:1.65!important}
  .hero.hero-v3 .hero-buttons{margin-top:7px!important}
 }
-@media(prefers-reduced-motion:reduce){.hero.hero-v3 .nova-auto-photo,.hero.hero-v3 .nova-auto-photo img{transition:none!important;animation:none!important;transform:none!important;filter:none!important}}
+@media(prefers-reduced-motion:reduce){.hero.hero-v3 .nova-auto-photo,.hero.hero-v3 .nova-auto-photo img,.hero.hero-v3 .hero-content h1 .nova-word>span,.hero.hero-v3 .hero-copy,.hero.hero-v3 .hero-buttons{transition:none!important;animation:none!important;transform:none!important;filter:none!important;opacity:1!important}}
 </style>
 </head>
 <body>
@@ -2424,7 +2430,24 @@ document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefau
 
 /* NOVA magnetic gallery — staggered entrance and pointer attraction */
 (()=>{
- const root=document.getElementById('motionGalleryStack');if(!root)return;
+ const headline=document.querySelector('.hero.hero-v3 .hero-content h1');
+if(headline&&!headline.dataset.novaWords){
+ headline.dataset.novaWords='1';
+ const walker=document.createTreeWalker(headline,NodeFilter.SHOW_TEXT);
+ const nodes=[];while(walker.nextNode())if(walker.currentNode.nodeValue.trim())nodes.push(walker.currentNode);
+ let wordIndex=0;
+ nodes.forEach(node=>{
+  const frag=document.createDocumentFragment();
+  node.nodeValue.split(/(\\s+)/).forEach(part=>{
+   if(!part)return;
+   if(/^\\s+$/.test(part)){frag.append(document.createTextNode(part));return;}
+   const outer=document.createElement('span');outer.className='nova-word';outer.style.setProperty('--word-index',wordIndex++);
+   const inner=document.createElement('span');inner.textContent=part;outer.appendChild(inner);frag.appendChild(outer);
+  });
+  node.parentNode.replaceChild(frag,node);
+ });
+}
+const root=document.getElementById('motionGalleryStack');if(!root)return;
  const photos=[
  'https://images.pexels.com/photos/14614482/pexels-photo-14614482.jpeg?auto=compress&cs=tinysrgb&w=1600',
  'https://images.pexels.com/photos/36777553/pexels-photo-36777553.jpeg?auto=compress&cs=tinysrgb&w=1600',
