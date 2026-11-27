@@ -640,6 +640,58 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{bottom:auto;top:10px}
 }
 
+
+/* NOVA HERO GALLERY — 3D ORBITING PHOTO RING */
+.hero.hero-v3 .hero-motion-stage{
+ opacity:1!important;transform:none!important;perspective:1900px!important;
+ background:radial-gradient(ellipse at 50% 46%,#8c70452b 0%,#171916 68%)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{inset:0!important;transform-style:preserve-3d!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ left:var(--orbit-x)!important;top:var(--orbit-y)!important;
+ width:var(--orbit-w)!important;height:var(--orbit-h)!important;
+ border:1px solid #d8bd8b!important;border-radius:12px!important;
+ opacity:.82!important;overflow:hidden!important;
+ transform:translate(-50%,-50%) rotateY(var(--orbit-ry)) rotateZ(var(--orbit-rz)) translateZ(var(--orbit-z))!important;
+ box-shadow:0 18px 45px #000b!important;
+ transition:all 1s cubic-bezier(.2,.8,.2,1)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(1){--orbit-x:8%;--orbit-y:29%;--orbit-w:16vw;--orbit-h:22vh;--orbit-ry:34deg;--orbit-rz:-9deg;--orbit-z:0px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(2){--orbit-x:25%;--orbit-y:17%;--orbit-w:14vw;--orbit-h:19vh;--orbit-ry:24deg;--orbit-rz:-5deg;--orbit-z:45px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(3){--orbit-x:43%;--orbit-y:12%;--orbit-w:13vw;--orbit-h:18vh;--orbit-ry:10deg;--orbit-rz:-2deg;--orbit-z:80px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(4){--orbit-x:61%;--orbit-y:12%;--orbit-w:13vw;--orbit-h:18vh;--orbit-ry:-10deg;--orbit-rz:2deg;--orbit-z:80px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5){--orbit-x:79%;--orbit-y:17%;--orbit-w:14vw;--orbit-h:19vh;--orbit-ry:-24deg;--orbit-rz:5deg;--orbit-z:45px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(6){--orbit-x:92%;--orbit-y:29%;--orbit-w:16vw;--orbit-h:22vh;--orbit-ry:-34deg;--orbit-rz:9deg;--orbit-z:0px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(7){--orbit-x:88%;--orbit-y:75%;--orbit-w:16vw;--orbit-h:21vh;--orbit-ry:-30deg;--orbit-rz:-8deg;--orbit-z:5px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(8){--orbit-x:68%;--orbit-y:87%;--orbit-w:14vw;--orbit-h:18vh;--orbit-ry:-15deg;--orbit-rz:-3deg;--orbit-z:45px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(9){--orbit-x:32%;--orbit-y:87%;--orbit-w:14vw;--orbit-h:18vh;--orbit-ry:15deg;--orbit-rz:3deg;--orbit-z:45px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(10){--orbit-x:12%;--orbit-y:75%;--orbit-w:16vw;--orbit-h:21vh;--orbit-ry:30deg;--orbit-rz:8deg;--orbit-z:5px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n+11){opacity:0!important;pointer-events:none!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ z-index:90!important;opacity:1!important;
+ transform:translate(-50%,-50%) rotateY(0deg) rotateZ(0deg) translateZ(150px) scale(1.22)!important;
+ border:2px solid #f0d49d!important;
+ box-shadow:0 30px 75px #000e,0 0 38px #d7b47777!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active img{object-fit:cover!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card img{border-radius:10px}
+.hero.hero-v3 .hero-content{z-index:4!important}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{opacity:1!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){width:var(--orbit-w)!important;height:var(--orbit-h)!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(1){--orbit-x:12%;--orbit-y:20%;--orbit-w:25vw;--orbit-h:12vh;--orbit-ry:24deg;--orbit-rz:-8deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(2){--orbit-x:36%;--orbit-y:14%;--orbit-w:23vw;--orbit-h:11vh;--orbit-ry:12deg;--orbit-rz:-3deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(3){--orbit-x:64%;--orbit-y:14%;--orbit-w:23vw;--orbit-h:11vh;--orbit-ry:-12deg;--orbit-rz:3deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(4){--orbit-x:88%;--orbit-y:20%;--orbit-w:25vw;--orbit-h:12vh;--orbit-ry:-24deg;--orbit-rz:8deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5){--orbit-x:88%;--orbit-y:60%;--orbit-w:24vw;--orbit-h:12vh;--orbit-ry:-20deg;--orbit-rz:-7deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(6){--orbit-x:65%;--orbit-y:69%;--orbit-w:22vw;--orbit-h:11vh;--orbit-ry:-10deg;--orbit-rz:3deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(7){--orbit-x:35%;--orbit-y:69%;--orbit-w:22vw;--orbit-h:11vh;--orbit-ry:10deg;--orbit-rz:-3deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(8){--orbit-x:12%;--orbit-y:60%;--orbit-w:24vw;--orbit-h:12vh;--orbit-ry:20deg;--orbit-rz:7deg}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n+9){display:none!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{transform:translate(-50%,-50%) rotateY(0) scale(1.16)!important}
+ .hero.hero-v3 .hero-content{bottom:24px!important;transform:none!important}
+}
+
 </style>
 </head>
 <body>
