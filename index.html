@@ -2178,6 +2178,62 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{height:min(40svh,320px)!important}
 }
 
+
+/* NOVA — ASYMMETRIC EDITORIAL DUO / DESKTOP ONLY */
+@media(min-width:681px){
+ .hero.hero-v3 .hero-motion-stage{
+  overflow:hidden!important;isolation:isolate!important;
+  background:
+   radial-gradient(ellipse at 26% 72%,#b18b5630,transparent 42%),
+   linear-gradient(115deg,#171916 0%,#20211c 58%,#171916 100%)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-stack{inset:0!important;overflow:hidden!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  left:36%!important;top:68%!important;
+  width:min(48vw,650px)!important;height:min(38svh,330px)!important;
+  max-width:calc(100% - 36px)!important;max-height:calc(100% - 24px)!important;
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+  transform:translate(-50%,-50%) scale(.97)!important;
+  border:1px solid #c9a873!important;border-radius:2px!important;
+  box-shadow:0 24px 64px #0009!important;filter:none!important;
+  transition:left .85s cubic-bezier(.2,.75,.2,1),top .85s,width .85s,height .85s,opacity .6s,transform .85s!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  left:36%!important;top:68%!important;
+  width:min(48vw,650px)!important;height:min(38svh,330px)!important;
+  opacity:1!important;visibility:visible!important;z-index:12!important;
+  transform:translate(-50%,-50%) scale(1)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+  left:79%!important;width:min(17vw,220px)!important;height:min(21svh,180px)!important;
+  opacity:.78!important;visibility:visible!important;pointer-events:auto!important;
+  z-index:8!important;transform:translate(-50%,-50%) scale(1)!important;
+  box-shadow:0 14px 36px #0009!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev{top:45%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{top:82%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active img,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev img,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next img{
+  display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{visibility:visible!important;opacity:0!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+  right:7%!important;left:7%!important;bottom:5%!important;z-index:20!important;
+  padding-top:12px!important;border-top:1px solid #c9a87366!important;
+ }
+}
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  left:34%!important;width:min(45vw,500px)!important;height:min(34svh,280px)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{left:78%!important;width:19vw!important;height:18svh!important}
+}
+
 </style>
 </head>
 <body>
