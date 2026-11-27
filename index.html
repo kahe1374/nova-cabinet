@@ -2593,5 +2593,60 @@ if(!reduce){
  filter:brightness(.62) saturate(.82)!important;
 }
 .hero.hero-v3 .motion-gallery-stack .nova-auto-photo:not(:first-child){display:none!important}
+
+/* NOVA next hero concept — architectural editorial split layout */
+.hero.hero-v3{
+ background:#e9e3d8!important;color:#24231f!important;overflow:hidden!important;
+}
+.hero.hero-v3:after{
+ inset:24px!important;border:1px solid #8e795b55!important;z-index:4!important;
+}
+.hero.hero-v3 .hero-motion-stage{
+ position:absolute!important;left:4.5%!important;right:auto!important;top:8%!important;
+ bottom:8%!important;width:57%!important;height:auto!important;overflow:hidden!important;
+ border:0!important;background:#d3c9b9!important;perspective:none!important;
+}
+.hero.hero-v3 .motion-gallery-stack{
+ position:absolute!important;inset:0!important;display:block!important;overflow:hidden!important;
+}
+.hero.hero-v3 .motion-gallery-stack .nova-auto-photo:first-child{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ min-width:0!important;min-height:0!important;display:block!important;z-index:1!important;
+ border:0!important;box-shadow:none!important;animation:none!important;
+}
+.hero.hero-v3 .motion-gallery-stack .nova-auto-photo:first-child img{
+ width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+ filter:none!important;
+}
+.hero.hero-v3 .motion-gallery-stack .nova-auto-photo:not(:first-child){display:none!important}
+.hero.hero-v3 .hero-content{
+ position:absolute!important;left:67%!important;right:7%!important;top:50%!important;bottom:auto!important;
+ width:26%!important;max-width:none!important;transform:translateY(-50%)!important;
+ text-align:right!important;color:#29271f!important;padding:0!important;z-index:3!important;
+}
+.hero.hero-v3 .hero-content .eyebrow,.hero.hero-v3 .hero-buttons{justify-content:flex-start!important}
+.hero.hero-v3 .hero-content .eyebrow{color:#8c704b!important;letter-spacing:2px!important}
+.hero.hero-v3 .hero-content .eyebrow:before{background:#9d8058!important}
+.hero.hero-v3 .hero-content h1{color:#28261f!important;font-size:clamp(38px,4.4vw,68px)!important;line-height:1.45!important}
+.hero.hero-v3 .hero-content h1 em{color:#9a7950!important}
+.hero.hero-v3 .hero-copy{color:#625c50!important;font-size:14px!important;line-height:2.1!important}
+.hero.hero-v3 .hero-buttons{gap:10px!important}
+.hero.hero-v3 .hero-buttons .btn{background:#29271f!important;color:#f2ecdf!important;border:1px solid #29271f!important}
+.hero.hero-v3 .hero-buttons .btn.ghost{background:transparent!important;color:#29271f!important;border-color:#9c896d!important}
+.hero.hero-v3 .hero-index{color:#5d5549!important;left:67%!important;bottom:9%!important}
+.hero.hero-v3 .hero-index:before{background:#9a7950!important}
+.hero.hero-v3 .scroll-cue{color:#655c50!important;right:2%!important}
+.hero.hero-v3 .scroll-cue:after{background:#9a7950!important}
+.hero.hero-v3 .motion-gallery-caption{left:20px!important;right:auto!important;bottom:18px!important;color:#f2ecdf!important}
+@media(max-width:680px){
+ .hero.hero-v3{min-height:760px!important;height:100svh!important}
+ .hero.hero-v3 .hero-motion-stage{left:5%!important;right:5%!important;top:7%!important;bottom:auto!important;width:90%!important;height:47%!important}
+ .hero.hero-v3 .hero-content{left:8%!important;right:8%!important;top:auto!important;bottom:9%!important;width:84%!important;transform:none!important;text-align:right!important}
+ .hero.hero-v3 .hero-content h1{font-size:clamp(34px,9vw,48px)!important;margin:10px 0!important}
+ .hero.hero-v3 .hero-copy{font-size:12px!important;line-height:1.9!important}
+ .hero.hero-v3 .hero-index{display:none!important}
+ .hero.hero-v3 .scroll-cue{display:none!important}
+ .hero.hero-v3:after{inset:12px!important}
+}
 </style>
 </body></html>
