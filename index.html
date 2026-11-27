@@ -1683,6 +1683,41 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
 }
 
+
+/* Fit conveyor cards strictly inside the gallery frame */
+.hero.hero-v3 .hero-motion-stage{overflow:hidden!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{overflow:hidden!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ width:clamp(130px,20vw,260px)!important;
+ transform:translate(-50%,-50%) translateX(var(--conveyor-x,0px))
+   translateZ(calc(var(--conveyor-step,0)*-70px))
+   rotateY(calc(var(--conveyor-step,0)*-18deg))!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ width:min(52vw,650px)!important;max-width:calc(100% - 28px)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+ width:clamp(125px,19vw,245px)!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  width:30vw!important;max-width:30vw!important;
+  transform:translate(-50%,-50%) translateX(var(--conveyor-x,0px))
+   translateZ(calc(var(--conveyor-step,0)*-42px))
+   rotateY(calc(var(--conveyor-step,0)*-18deg))!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  width:76vw!important;max-width:calc(100% - 24px)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+  width:29vw!important;max-width:29vw!important;
+ }
+}
+
 </style>
 </head>
 <body>
@@ -1759,6 +1794,9 @@ photos.forEach((src,i)=>{
      if(step>cards.length/2)step-=cards.length;
      if(step<-cards.length/2)step+=cards.length;
      c.style.setProperty('--conveyor-step',step);
+     const stageWidth=root.parentElement.clientWidth;
+     const spacing=stageWidth*(window.matchMedia('(max-width:680px)').matches?.31:.32);
+     c.style.setProperty('--conveyor-x',(step*spacing)+'px');
      if(step===-1)c.classList.add('is-prev');
      if(step===1)c.classList.add('is-next');
    });
