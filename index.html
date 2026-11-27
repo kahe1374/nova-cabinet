@@ -1060,6 +1060,50 @@ nav{
  .hero.hero-v3 .hero-motion-stage .nova-door{animation:none!important;clip-path:none!important}
 }
 
+/* NOVA HERO GALLERY — HALFTONE PROJECT SHEETS
+   Reference: free Halftone architecture template; projects slide over one another. */
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card{
+ transition:none!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card>img{
+ opacity:1!important;z-index:1!important;
+ object-fit:contain!important;object-position:center!important;
+}
+.hero.hero-v3 .hero-motion-stage .nova-door{display:none!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+ display:block!important;visibility:visible!important;z-index:3!important;
+ animation:novaSheetOut 1.25s cubic-bezier(.2,.7,.2,1) both!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ display:block!important;visibility:visible!important;z-index:4!important;
+ animation:novaSheetIn 1.25s cubic-bezier(.2,.7,.2,1) both!important;
+}
+@keyframes novaSheetIn{
+ from{transform:translate3d(0,105%,0) scale(.985);opacity:.9}
+ to{transform:translate3d(0,0,0) scale(1);opacity:1}
+}
+@keyframes novaSheetOut{
+ from{transform:translate3d(0,0,0) scale(1);opacity:1}
+ to{transform:translate3d(0,-2.5%,0) scale(.975);opacity:.72}
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active:after{
+ content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+ background-image:radial-gradient(rgba(236,222,194,.17) .65px,transparent .85px),linear-gradient(0deg,rgba(12,14,11,.52),transparent 42%);
+ background-size:5px 5px,100% 100%;
+ opacity:.34;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+ z-index:7!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card>img{
+  object-fit:contain!important;object-position:center!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -1131,11 +1175,12 @@ photos.forEach((src,i)=>{
  layoutFan();window.addEventListener('resize',layoutFan,{passive:true});
  function showNext(){
    if(paused)return;
-   cards[index].classList.remove('is-active');
+   const previous=cards[index];
+   previous.classList.remove('is-active');previous.classList.add('is-leaving');
    index=(index+1)%cards.length;
-   const next=cards[index];next.classList.add('is-active');next.style.zIndex='80';
+   const next=cards[index];next.classList.remove('is-leaving');next.classList.add('is-active');next.style.zIndex='80';
    if(count)count.textContent=String(index+1).padStart(2,'0')+' / 20';
-   setTimeout(()=>{cards.forEach((c,i)=>{if(i!==index)c.style.zIndex=String(40-i)})},1100);
+   setTimeout(()=>{previous.classList.remove('is-leaving');cards.forEach((c,i)=>{if(i!==index)c.style.zIndex=String(40-i)})},1350);
  }
  cards[0].classList.add('is-active');if(count)count.textContent='01 / 20';
  let timer=setInterval(showNext,6000);
