@@ -1851,6 +1851,30 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card img{transition:none!important}
 }
 
+
+/* Frame safety correction — keep every mosaic tile below the gallery top edge */
+.hero.hero-v3 .hero-motion-stage{
+ overflow:hidden!important;clip-path:inset(0)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+ top:38px!important;right:18px!important;bottom:68px!important;left:18px!important;
+ height:auto!important;max-height:calc(100% - 106px)!important;
+ padding:0!important;margin:0!important;align-content:stretch!important;
+ grid-auto-rows:minmax(0,1fr)!important;min-height:0!important;
+ overflow:hidden!important;box-sizing:border-box!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ min-height:0!important;max-height:100%!important;align-self:stretch!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+  top:32px!important;right:10px!important;bottom:62px!important;left:10px!important;
+  max-height:calc(100% - 94px)!important;
+  grid-auto-rows:minmax(0,1fr)!important;
+ }
+}
+
 </style>
 </head>
 <body>
