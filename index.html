@@ -1875,6 +1875,64 @@ nav{
  }
 }
 
+
+
+/* NOVA gallery concept: cinematic light-scan image reveal */
+.hero-motion-stage .motion-gallery-stack{
+ position:absolute!important;inset:0!important;overflow:hidden!important;
+}
+.hero-motion-stage .motion-gallery-card:nth-child(n){
+ left:50%!important;top:37%!important;
+ width:min(72vw,900px)!important;height:min(48svh,440px)!important;
+ max-width:calc(100vw - 40px)!important;max-height:calc(100svh - 180px)!important;
+ opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+ transform:translate(-50%,-50%)!important;overflow:hidden!important;
+ border:1px solid rgba(211,177,119,.62)!important;border-radius:2px!important;
+ box-shadow:0 28px 70px rgba(0,0,0,.48)!important;
+}
+.hero-motion-stage .motion-gallery-card.is-active,
+.hero-motion-stage .motion-gallery-card.is-leaving{
+ visibility:visible!important;pointer-events:auto!important;
+}
+.hero-motion-stage .motion-gallery-card.is-active{
+ z-index:80!important;opacity:1!important;
+}
+.hero-motion-stage .motion-gallery-card.is-active img{
+ width:100%!important;height:100%!important;object-fit:contain!important;
+ clip-path:inset(0 100% 0 0);
+ animation:novaLightScanReveal 1.25s cubic-bezier(.22,.72,.18,1) forwards!important;
+}
+.hero-motion-stage .motion-gallery-card.is-active:after{
+ content:"";position:absolute;z-index:4;top:0;bottom:0;left:0;width:2px;
+ background:linear-gradient(180deg,transparent,#f4d6a0 18%,#fff2d7 50%,#c49b61 82%,transparent);
+ box-shadow:0 0 18px 5px rgba(224,184,119,.34);
+ pointer-events:none;
+ animation:novaLightScanBeam 1.25s cubic-bezier(.22,.72,.18,1) forwards;
+}
+.hero-motion-stage .motion-gallery-card.is-leaving{
+ z-index:70!important;opacity:0!important;
+ transition:opacity .55s ease!important;
+}
+@keyframes novaLightScanReveal{
+ from{clip-path:inset(0 100% 0 0);filter:brightness(1.28)}
+ to{clip-path:inset(0 0 0 0);filter:brightness(1)}
+}
+@keyframes novaLightScanBeam{
+ from{left:0;opacity:1}
+ to{left:100%;opacity:0}
+}
+@media(max-width:680px){
+ .hero-motion-stage .motion-gallery-card:nth-child(n){
+  top:29%!important;left:50%!important;
+  width:calc(100vw - 32px)!important;height:min(36svh,260px)!important;
+  max-width:calc(100vw - 32px)!important;max-height:36svh!important;
+ }
+ .hero-motion-stage .motion-gallery-card.is-active img{object-fit:contain!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero-motion-stage .motion-gallery-card.is-active img{animation:none!important;clip-path:none!important}
+ .hero-motion-stage .motion-gallery-card.is-active:after{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -2006,61 +2064,3 @@ if(!reduce){
 </script>
 
 </body></html>
-
-
-/* NOVA gallery concept: cinematic light-scan image reveal */
-.hero-motion-stage .motion-gallery-stack{
- position:absolute!important;inset:0!important;overflow:hidden!important;
-}
-.hero-motion-stage .motion-gallery-card:nth-child(n){
- left:50%!important;top:37%!important;
- width:min(72vw,900px)!important;height:min(48svh,440px)!important;
- max-width:calc(100vw - 40px)!important;max-height:calc(100svh - 180px)!important;
- opacity:0!important;visibility:hidden!important;pointer-events:none!important;
- transform:translate(-50%,-50%)!important;overflow:hidden!important;
- border:1px solid rgba(211,177,119,.62)!important;border-radius:2px!important;
- box-shadow:0 28px 70px rgba(0,0,0,.48)!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active,
-.hero-motion-stage .motion-gallery-card.is-leaving{
- visibility:visible!important;pointer-events:auto!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active{
- z-index:80!important;opacity:1!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active img{
- width:100%!important;height:100%!important;object-fit:contain!important;
- clip-path:inset(0 100% 0 0);
- animation:novaLightScanReveal 1.25s cubic-bezier(.22,.72,.18,1) forwards!important;
-}
-.hero-motion-stage .motion-gallery-card.is-active:after{
- content:"";position:absolute;z-index:4;top:0;bottom:0;left:0;width:2px;
- background:linear-gradient(180deg,transparent,#f4d6a0 18%,#fff2d7 50%,#c49b61 82%,transparent);
- box-shadow:0 0 18px 5px rgba(224,184,119,.34);
- pointer-events:none;
- animation:novaLightScanBeam 1.25s cubic-bezier(.22,.72,.18,1) forwards;
-}
-.hero-motion-stage .motion-gallery-card.is-leaving{
- z-index:70!important;opacity:0!important;
- transition:opacity .55s ease!important;
-}
-@keyframes novaLightScanReveal{
- from{clip-path:inset(0 100% 0 0);filter:brightness(1.28)}
- to{clip-path:inset(0 0 0 0);filter:brightness(1)}
-}
-@keyframes novaLightScanBeam{
- from{left:0;opacity:1}
- to{left:100%;opacity:0}
-}
-@media(max-width:680px){
- .hero-motion-stage .motion-gallery-card:nth-child(n){
-  top:29%!important;left:50%!important;
-  width:calc(100vw - 32px)!important;height:min(36svh,260px)!important;
-  max-width:calc(100vw - 32px)!important;max-height:36svh!important;
- }
- .hero-motion-stage .motion-gallery-card.is-active img{object-fit:contain!important}
-}
-@media(prefers-reduced-motion:reduce){
- .hero-motion-stage .motion-gallery-card.is-active img{animation:none!important;clip-path:none!important}
- .hero-motion-stage .motion-gallery-card.is-active:after{display:none!important}
-}
