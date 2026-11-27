@@ -2581,5 +2581,17 @@ if(!reduce){
 @media(max-width:950px) and (min-width:681px){.hero.hero-v3 .hero-motion-stage{inset:7% 4% 36%!important}.hero.hero-v3 .hero-content{bottom:4%!important}}
 @media(max-width:680px){.hero.hero-v3{min-height:680px!important;height:100svh!important}.hero.hero-v3 .hero-motion-stage{inset:5% 3% 42%!important;padding:7px!important}.hero.hero-v3 .motion-gallery-stack{grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(5,minmax(0,1fr))!important;gap:6px!important}.hero.hero-v3 .nova-cabinet-door{box-shadow:inset 0 0 0 3px #211b15,inset 0 0 0 4px #c5a16d66,3px 4px 9px #0008}.hero.hero-v3 .nova-cabinet-door:before{inset:9%}.hero.hero-v3 .nova-cabinet-door:after{width:2px;min-height:9px}.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{bottom:calc(42% + 7px)!important;font-size:9px!important}.hero.hero-v3 .hero-content{right:5%!important;left:5%!important;bottom:2%!important;width:90%!important}.hero.hero-v3 .hero-content h1{font-size:28px!important}.hero.hero-v3 .hero-copy{font-size:10px!important;line-height:1.65!important}.hero.hero-v3 .hero-buttons{margin-top:7px!important}}
 @media(prefers-reduced-motion:reduce){.hero.hero-v3 .nova-auto-photo,.hero.hero-v3 .nova-cabinet-door{animation:none!important;transition:none!important}.hero.hero-v3 .nova-auto-photo .nova-cabinet-door{transform:none!important}}
+
+/* Ensure the selected first hero photo is the visible full-screen lead image */
+.hero.hero-v3 .motion-gallery-stack .nova-auto-photo:first-child{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ min-width:0!important;min-height:0!important;z-index:1!important;display:block!important;
+ border:0!important;box-shadow:none!important;
+}
+.hero.hero-v3 .motion-gallery-stack .nova-auto-photo:first-child img{
+ width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+ filter:brightness(.62) saturate(.82)!important;
+}
+.hero.hero-v3 .motion-gallery-stack .nova-auto-photo:not(:first-child){display:none!important}
 </style>
 </body></html>
