@@ -1243,6 +1243,93 @@ nav{
   .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
  }
 
+
+/* NOVA HERO GALLERY — ARCHITECTURAL SHUTTER
+   A clean architectural aperture with a three-slat reveal; hero gallery only. */
+.hero.hero-v3 .hero-motion-stage{
+  inset:0!important;width:100%!important;height:100%!important;
+  overflow:hidden!important;perspective:none!important;
+  border:0!important;border-radius:0!important;
+  background:linear-gradient(145deg,#171a16,#29251e 58%,#11140f)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+  position:absolute!important;inset:0!important;display:block!important;
+  overflow:hidden!important;transform:none!important;transform-style:flat!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  position:absolute!important;inset:clamp(92px,12vh,132px) 5% clamp(190px,23vh,238px)!important;
+  display:block!important;width:auto!important;height:auto!important;
+  min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;
+  margin:0!important;padding:clamp(8px,1.2vw,16px)!important;overflow:hidden!important;
+  visibility:hidden!important;opacity:0!important;z-index:1!important;
+  background:linear-gradient(145deg,#d9c9a9,#776b57)!important;
+  border:1px solid rgba(226,202,157,.72)!important;border-radius:2px!important;
+  box-shadow:0 28px 70px #0009,inset 0 1px 0 #fff9!important;
+  transform:none!important;animation:none!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card>img{
+  display:block!important;width:100%!important;height:100%!important;
+  max-width:100%!important;max-height:100%!important;
+  object-fit:contain!important;object-position:center!important;
+  background:#171916!important;
+}
+.hero.hero-v3 .hero-motion-stage .nova-door{display:none!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  visibility:visible!important;opacity:1!important;z-index:4!important;
+  animation:novaShutterReveal 1.25s cubic-bezier(.18,.76,.2,1) both!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+  visibility:visible!important;opacity:1!important;z-index:3!important;
+  animation:novaShutterLeave .8s ease both!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active:after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+  border:1px solid rgba(242,220,181,.42);
+  background:linear-gradient(90deg,transparent 49.8%,rgba(239,219,181,.22) 50%,transparent 50.2%),
+             linear-gradient(0deg,rgba(10,12,10,.22),transparent 22%,transparent 78%,rgba(10,12,10,.16));
+}
+@keyframes novaShutterReveal{
+  0%{clip-path:inset(0 50% 0 50%);filter:brightness(.72)}
+  38%{clip-path:inset(0 25% 0 25%);filter:brightness(.9)}
+  72%{clip-path:inset(0 0 0 0);filter:brightness(1.04)}
+  100%{clip-path:inset(0 0 0 0);filter:brightness(1)}
+}
+@keyframes novaShutterLeave{
+  0%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(.985)}
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+  z-index:8!important;right:5%!important;left:5%!important;
+  bottom:clamp(150px,18vh,188px)!important;top:auto!important;
+  display:flex!important;justify-content:space-between!important;align-items:center!important;
+  color:#f0dfbf!important;font:10px Georgia,serif!important;letter-spacing:2px!important;
+  text-shadow:0 2px 10px #000!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption span:first-child{
+  color:#d9bb83!important;font-size:17px!important;
+  font-variant-numeric:tabular-nums!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  inset:88px 4% 250px!important;padding:6px!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card>img{
+  object-fit:contain!important;object-position:center!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+  right:6%!important;left:6%!important;bottom:238px!important;
+  font-size:8px!important;letter-spacing:1.3px!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption span:first-child{font-size:14px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{animation:none!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{clip-path:none!important}
+}
+
 </style>
 </head>
 <body>
