@@ -2273,15 +2273,17 @@ nav{
 .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n).is-next{
  display:block!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;
 }
-/* NOVA HERO — sequential architectural shutter reveal */
+/* NOVA HERO — interactive material lens reveal */
 .hero.hero-v3 .hero-motion-stage{
  inset:clamp(96px,12vh,126px) 5% clamp(178px,21vh,218px)!important;
  overflow:hidden!important;perspective:none!important;border:1px solid #c4a36b66!important;
  border-radius:2px!important;background:#151711!important;
+ --nova-lens-x:50%;--nova-lens-y:50%;
 }
 .hero.hero-v3 .hero-motion-stage:before{
- content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
- background:linear-gradient(90deg,#10120ed9 0%,transparent 13%,transparent 87%,#10120ed9 100%);
+ content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
+ border:1px solid #d8c39e33;
+ background:linear-gradient(90deg,#10120e66,transparent 12%,transparent 88%,#10120e66);
 }
 .hero.hero-v3 .hero-motion-stage .motion-gallery-stack{position:absolute!important;inset:0!important;overflow:hidden!important}
 .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
@@ -2290,32 +2292,36 @@ nav{
  width:86%!important;height:78%!important;margin:0!important;padding:0!important;
  border:0!important;border-radius:0!important;overflow:hidden!important;
  opacity:0!important;visibility:hidden!important;pointer-events:none!important;
- transform:translate(-50%,-50%) scale(1.035)!important;filter:none!important;
- transition:opacity .65s ease,transform 1.2s cubic-bezier(.2,.7,.2,1)!important;
+ transform:translate(-50%,-50%) scale(.965)!important;filter:none!important;
+ transition:opacity .65s ease,transform 1s cubic-bezier(.2,.7,.2,1)!important;
 }
-.hero.hero-v3 .hero-motion-stage .motion-gallery-card img{
- width:100%!important;height:100%!important;display:block!important;object-fit:cover!important;object-position:center!important;
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card img:not(.nova-lens-layer){
+ width:100%!important;height:100%!important;display:block!important;object-fit:cover!important;
+ filter:grayscale(1) brightness(.72) contrast(1.08)!important;
+ transition:filter .6s ease!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card .nova-lens-layer{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ object-fit:cover!important;z-index:3!important;pointer-events:none!important;
+ filter:saturate(1.08) contrast(1.04)!important;
+ -webkit-mask-image:radial-gradient(circle 155px at var(--nova-lens-x,50%) var(--nova-lens-y,50%),#000 0 68%,transparent 100%)!important;
+ mask-image:radial-gradient(circle 155px at var(--nova-lens-x,50%) var(--nova-lens-y,50%),#000 0 68%,transparent 100%)!important;
 }
 .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
  z-index:8!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;
  transform:translate(-50%,-50%) scale(1)!important;
  box-shadow:0 28px 80px #000b,0 0 0 1px #d2b47e66!important;
 }
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active:after{
+ content:"";position:absolute;z-index:5;left:var(--nova-lens-x,50%);top:var(--nova-lens-y,50%);
+ width:310px;height:310px;border:1px solid #f1dfbd99;border-radius:50%;
+ transform:translate(-50%,-50%);pointer-events:none;
+ box-shadow:0 0 0 1px #1118,inset 0 0 24px #fff1;
+}
 .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
 .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{opacity:0!important;visibility:hidden!important}
-.hero.hero-v3 .hero-motion-stage .motion-gallery-card .nova-blind{
- position:absolute!important;top:0!important;bottom:0!important;left:calc(var(--blind-index)*12.5%)!important;
- width:12.6%!important;z-index:5!important;display:block!important;
- background-image:var(--blind-image)!important;background-size:800% 100%!important;
- background-position:calc(var(--blind-index)*14.2857%) center!important;
- transform:scaleX(1)!important;transform-origin:left center!important;
- box-shadow:inset -1px 0 #e6d1a455,3px 0 9px #0004!important;
-}
-.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active .nova-blind{
- animation:novaBlindOpen .9s cubic-bezier(.72,0,.24,1) both;
- animation-delay:calc(var(--blind-index)*.075s);
-}
-@keyframes novaBlindOpen{to{transform:scaleX(0)}}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card .nova-door,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card .nova-blind{display:none!important}
 .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
  z-index:15!important;left:24px!important;right:24px!important;bottom:14px!important;
  justify-content:flex-end!important;color:#ead9b8!important;font:11px Georgia,serif!important;letter-spacing:2px!important;
@@ -2330,18 +2336,24 @@ nav{
 .hero.hero-v3 .hero-index{left:6%!important;right:auto!important}
 @media(max-width:950px) and (min-width:681px){
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{width:90%!important;height:68%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card .nova-lens-layer{-webkit-mask-image:radial-gradient(circle 125px at var(--nova-lens-x,50%) var(--nova-lens-y,50%),#000 0 68%,transparent 100%)!important;mask-image:radial-gradient(circle 125px at var(--nova-lens-x,50%) var(--nova-lens-y,50%),#000 0 68%,transparent 100%)!important}
  .hero.hero-v3 .hero-content{width:44%!important}
 }
 @media(max-width:680px){
  .hero.hero-v3{min-height:720px!important}
  .hero.hero-v3 .hero-motion-stage{inset:88px 4% 270px!important}
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{width:92%!important;height:57%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card .nova-lens-layer{-webkit-mask-image:radial-gradient(circle 105px at var(--nova-lens-x,50%) var(--nova-lens-y,50%),#000 0 68%,transparent 100%)!important;mask-image:radial-gradient(circle 105px at var(--nova-lens-x,50%) var(--nova-lens-y,50%),#000 0 68%,transparent 100%)!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active:after{width:210px;height:210px}
  .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{left:12px!important;right:12px!important;bottom:8px!important;font-size:9px!important}
  .hero.hero-v3 .hero-content{left:7%!important;right:7%!important;bottom:48px!important;width:86%!important}
  .hero.hero-v3 .hero-content h1{font-size:32px!important}
  .hero.hero-v3 .hero-index{left:7%!important;right:auto!important;bottom:6px!important}
 }
-@media(prefers-reduced-motion:reduce){.hero.hero-v3 .hero-motion-stage .nova-blind{animation:none!important;display:none!important}}
+@media(prefers-reduced-motion:reduce){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card .nova-lens-layer{-webkit-mask-image:none!important;mask-image:none!important}
+}
 </style>
 </head>
 <body>
@@ -2400,6 +2412,8 @@ photos.forEach((src,i)=>{
   card.style.zIndex=String(40-i);
   const img=document.createElement('img');img.src=src;img.alt='کابینت و آشپزخانه شماره '+(i+1);
   img.loading='eager';img.decoding='async';card.appendChild(img);
+  const lensImage=img.cloneNode(false);lensImage.className='nova-lens-layer';lensImage.alt='';
+  lensImage.setAttribute('aria-hidden','true');card.appendChild(lensImage);
   const leftDoor=document.createElement('span');leftDoor.className='nova-door nova-door-left';leftDoor.style.setProperty('--door-image','url("'+src+'")');
   const rightDoor=document.createElement('span');rightDoor.className='nova-door nova-door-right';rightDoor.style.setProperty('--door-image','url("'+src+'")');
   card.appendChild(leftDoor);card.appendChild(rightDoor);root.appendChild(card);
@@ -2446,12 +2460,16 @@ photos.forEach((src,i)=>{
  });
  stage.addEventListener('pointerleave',()=>{hoverPaused=false;});
  stage.addEventListener('pointermove',e=>{
-  if(e.pointerType==='touch'||!cards[index])return;
-  const r=stage.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
-  cards[index].style.setProperty('--nova-tilt-x',(x*5)+'deg');
-  cards[index].style.setProperty('--nova-tilt-y',(-y*4)+'deg');
+  const r=stage.getBoundingClientRect();
+  const x=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));
+  const y=Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100));
+  stage.style.setProperty('--nova-lens-x',x+'%');
+  stage.style.setProperty('--nova-lens-y',y+'%');
  },{passive:true});
- stage.addEventListener('pointerleave',()=>cards.forEach(c=>{c.style.setProperty('--nova-tilt-x','0deg');c.style.setProperty('--nova-tilt-y','0deg')}));
+ stage.addEventListener('pointerleave',()=>{
+  stage.style.setProperty('--nova-lens-x','50%');
+  stage.style.setProperty('--nova-lens-y','50%');
+ });
 
  function showNext(){
    if(paused||hoverPaused)return;
