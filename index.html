@@ -2026,6 +2026,18 @@ nav{
   height:min(42svh,350px)!important;
  }
 }
+
+/* FINAL DESKTOP FIX — move the complete gallery cards well below the top edge */
+@media(min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n),
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+  top:72%!important;
+  height:min(38svh,340px)!important;
+  max-height:38svh!important;
+ }
+}
 </style>
 </head>
 <body>
