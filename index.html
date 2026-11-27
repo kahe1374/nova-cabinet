@@ -1779,6 +1779,78 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{animation:none!important;transition:none!important}
 }
 
+
+/* NOVA — GSAP-inspired hover-expand mosaic gallery */
+.hero.hero-v3 .hero-motion-stage{
+ height:590px!important;min-height:500px!important;overflow:hidden!important;
+ perspective:none!important;background:
+ radial-gradient(ellipse at 50% 50%,#80674324,transparent 72%)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+ position:absolute!important;inset:18px 18px 58px!important;
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ grid-template-rows:repeat(4,minmax(0,1fr))!important;
+ grid-auto-flow:dense!important;gap:8px!important;overflow:hidden!important;
+ transform:none!important;transform-style:flat!important;
+ transition:grid-template-columns .8s cubic-bezier(.2,.75,.2,1),
+ grid-template-rows .8s cubic-bezier(.2,.75,.2,1)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ position:relative!important;left:auto!important;top:auto!important;
+ grid-column:span 1!important;grid-row:span 1!important;
+ width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;
+ max-width:none!important;padding:0!important;margin:0!important;
+ overflow:hidden!important;opacity:.82!important;pointer-events:auto!important;
+ border:1px solid #c5a36c55!important;border-radius:3px!important;
+ transform:none!important;translate:none!important;rotate:none!important;
+ animation:none!important;z-index:1!important;
+ box-shadow:0 8px 22px #0007!important;
+ transition:grid-column .72s cubic-bezier(.2,.78,.18,1),
+ grid-row .72s cubic-bezier(.2,.78,.18,1),opacity .45s ease,
+ border-color .45s ease,box-shadow .6s ease!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card img{
+ width:100%!important;height:100%!important;object-fit:cover!important;
+ object-position:center!important;transition:transform .9s cubic-bezier(.2,.75,.2,1)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ grid-column:span 2!important;grid-row:span 2!important;
+ width:auto!important;height:auto!important;max-width:none!important;
+ left:auto!important;top:auto!important;opacity:1!important;z-index:5!important;
+ pointer-events:auto!important;transform:none!important;translate:none!important;
+ border:1px solid #dfbd83!important;
+ box-shadow:0 16px 38px #000b,0 0 0 1px #c5a36c66!important;
+ animation:none!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active img{
+ transform:scale(1.035)!important;object-fit:cover!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{opacity:.65!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:hover img{transform:scale(1.07)!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+ left:7%!important;right:7%!important;bottom:15px!important;top:auto!important;z-index:30!important;
+}
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-stack{inset:15px 14px 56px!important;gap:6px!important}
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{height:480px!important;min-height:440px!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+  inset:12px 10px 52px!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  grid-template-rows:repeat(5,minmax(0,1fr))!important;gap:5px!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){border-radius:2px!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{bottom:12px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-stack,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card img{transition:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -1849,19 +1921,26 @@ photos.forEach((src,i)=>{
  }
  layoutFan();window.addEventListener('resize',layoutFan,{passive:true});
  function setTriptych(){
-   cards.forEach((c,i)=>{
-     c.classList.remove('is-prev','is-next');
-     const lane=i%3,row=Math.floor(i/3);
-     const mobile=window.matchMedia('(max-width:680px)').matches;
-     c.style.setProperty('--lane-x',(mobile?[13,50,87][lane]:[12,50,88][lane])+'%');
-     c.style.setProperty('--lane-y',(16+row*(mobile?11:11.3))+'%');
-     c.style.setProperty('--drift-delay',(-((i*1.37)%12))+'s');
-     c.style.setProperty('--drift-duration',(10+(i%5)*1.8)+'s');
-     c.style.setProperty('--drift-distance',(i%2===0?'-18px':'18px'));
-   });
+   cards.forEach(c=>c.classList.remove('is-prev','is-next'));
  }
+ function focusCard(i){
+   index=i;
+   cards.forEach((c,j)=>{c.classList.toggle('is-active',j===i);c.classList.remove('is-leaving')});
+   if(count)count.textContent=String(index+1).padStart(2,'0')+' / 20';
+   root.parentElement.style.setProperty('--nova-progress',((index+1)/cards.length*100)+'%');
+ }
+ const stage=root.parentElement;
+ let hoverPaused=false;
+ cards.forEach((card,i)=>{
+   card.addEventListener('pointerenter',e=>{
+     if(e.pointerType!=='touch'){hoverPaused=true;focusCard(i);}
+   });
+   card.addEventListener('click',()=>focusCard(i));
+ });
+ stage.addEventListener('pointerleave',()=>{hoverPaused=false;});
+
  function showNext(){
-   if(paused)return;
+   if(paused||hoverPaused)return;
    const previous=cards[index];
    previous.classList.remove('is-active');previous.classList.add('is-leaving');
    index=(index+1)%cards.length;
