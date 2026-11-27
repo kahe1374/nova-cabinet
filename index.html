@@ -2080,13 +2080,144 @@ nav{
  .hero.hero-v3 .hero-content h1{font-size:clamp(27px,3.3vw,36px)!important}
 }
 @media(prefers-reduced-motion:reduce){.hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}}
+
+/* NOVA — new architectural gallery composition */
+.hero.hero-v3 .hero-motion-stage{
+  overflow:hidden!important;
+  isolation:isolate!important;
+  perspective:1600px!important;
+  background:
+    radial-gradient(ellipse at 55% 43%,rgba(191,157,108,.19),transparent 48%),
+    linear-gradient(135deg,#171a18 0%,#24241f 52%,#121512 100%)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+  position:absolute!important;
+  inset:0!important;
+  overflow:hidden!important;
+  transform-style:preserve-3d!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:clamp(120px,17vw,245px)!important;
+  height:clamp(120px,25vh,230px)!important;
+  max-width:calc(100% - 24px)!important;
+  max-height:calc(100% - 24px)!important;
+  border:1px solid rgba(218,190,148,.55)!important;
+  border-radius:2px!important;
+  padding:5px!important;
+  background:#27271f!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.32)!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+  transform:translate(-50%,-50%) scale(.92)!important;
+  transition:left .9s cubic-bezier(.2,.75,.2,1),top .9s cubic-bezier(.2,.75,.2,1),width .9s cubic-bezier(.2,.75,.2,1),height .9s cubic-bezier(.2,.75,.2,1),transform .9s cubic-bezier(.2,.75,.2,1),opacity .65s ease,filter .65s ease!important;
+  animation:none!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card>img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:0!important;
+  filter:saturate(.9) contrast(1.04)!important;
+  transform:none!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  z-index:12!important;
+  left:50%!important;
+  top:44%!important;
+  width:min(57vw,790px)!important;
+  height:min(59vh,510px)!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transform:translate(-50%,-50%) rotateY(0deg) scale(1)!important;
+  box-shadow:0 30px 70px rgba(0,0,0,.48),0 0 0 1px rgba(224,196,153,.22)!important;
+  animation:novaGalleryArrival .95s cubic-bezier(.2,.75,.2,1) both!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+  z-index:8!important;
+  width:clamp(105px,15vw,205px)!important;
+  height:clamp(110px,23vh,205px)!important;
+  opacity:.76!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  filter:brightness(.72) saturate(.78)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev{
+  left:13%!important;
+  top:27%!important;
+  transform:translate(-50%,-50%) rotateY(13deg) rotateZ(-3deg) scale(.96)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+  left:87%!important;
+  top:69%!important;
+  transform:translate(-50%,-50%) rotateY(-13deg) rotateZ(3deg) scale(.96)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+  z-index:6!important;
+  opacity:0!important;
+  visibility:visible!important;
+  transform:translate(-50%,-50%) scale(.9)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+  z-index:20!important;
+  right:26px!important;
+  left:26px!important;
+  bottom:18px!important;
+  justify-content:flex-end!important;
+  color:#e4cda9!important;
+  font:11px Georgia,serif!important;
+  letter-spacing:2px!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption:before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  top:-10px!important;
+  height:1px!important;
+  background:linear-gradient(90deg,rgba(211,177,119,.55),rgba(211,177,119,.04))!important;
+}
+@keyframes novaGalleryArrival{
+  from{opacity:.45;filter:blur(5px);transform:translate(-50%,-47%) scale(.965)}
+  to{opacity:1;filter:blur(0);transform:translate(-50%,-50%) scale(1)}
+}
+@media(max-width:680px){
+  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+    left:50%!important;top:39%!important;
+    width:calc(100% - 38px)!important;
+    height:min(34svh,285px)!important;
+    max-height:calc(100% - 100px)!important;
+  }
+  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+    width:clamp(76px,22vw,112px)!important;
+    height:clamp(78px,17svh,135px)!important;
+    opacity:.62!important;
+  }
+  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev{left:12%!important;top:76%!important;transform:translate(-50%,-50%) rotate(-4deg)!important}
+  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{left:88%!important;top:76%!important;transform:translate(-50%,-50%) rotate(4deg)!important}
+  .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{right:14px!important;left:14px!important;bottom:12px!important;font-size:10px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important;animation:none!important}
+}
+
 </style>
 </head>
 <body>
 <div class="progress" id="progress"></div><div class="grain"></div>
 <header><div class="wrap nav"><a class="brand" href="#home" aria-label="NOVA Cabinet"><span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 100 100" role="img" aria-label="NOVA monogram"><defs><linearGradient id="novaGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0c9"/><stop offset=".38" stop-color="#b78a4d"/><stop offset=".68" stop-color="#f4d9a0"/><stop offset="1" stop-color="#75502c"/></linearGradient></defs><path d="M19 78V22h10l42 48V22h10v56H71L29 30v48z" fill="url(#novaGold)" stroke="#f5dfb4" stroke-width=".8" stroke-linejoin="round"/><path d="M12 87h76" stroke="url(#novaGold)" stroke-width="1.4" opacity=".75"/><path d="M19 14h62" stroke="#f5dfb4" stroke-width=".8" opacity=".5"/></svg></span><span class="brand-name"><span class="brand-letters" aria-label="NOVA"><i>N</i><i>O</i><i>V</i><i>A</i></span><small>DESIGN · CRAFT · DETAIL</small></span></a><button class="menu" id="menuBtn" aria-label="منو">☰</button><nav id="nav"><a href="#about">داستان نوا</a><a href="#collections">مدل کابینت</a><a href="#showcase">تجربه بصری</a><a href="#details">جزئیات ساخت</a><a href="#gallery">گالری</a><a href="#contact">تماس</a></nav><a class="nav-action" href="#contact">مشاوره اختصاصی ↗</a></div></header>
 <main id="home">
-<section class="hero hero-v3"><div class="motion-gallery-stage hero-motion-stage" aria-label="گالری بیست تصویر کابینت"><div class="motion-gallery-stack" id="motionGalleryStack"></div><div class="motion-gallery-caption"><span id="motionGalleryCount">01 / 20</span><span>NOVA · KITCHEN STORIES</span></div></div><div class="wrap"><div class="hero-content"><div class="eyebrow">NOVA · BESPOKE KITCHEN STUDIO</div><h1>آشپزخانه‌ای<br>با <em>امضای شما.</em></h1><p class="hero-copy">طراحی و ساخت کابینت سفارشی؛ جایی که بافت چوب، سنگ، نور و جزئیات دقیق، شخصیت خانه شما را می‌سازند.</p><div class="hero-buttons"><a class="btn" href="#gallery">تماشای گالری <span>↗</span></a><a class="btn ghost" href="#showcase">تجربه سه‌بعدی</a></div></div></div><div class="hero-index">NOVA / 2026 — MADE TO MEASURE</div><div class="scroll-cue">SCROLL TO DISCOVER</div></section>
+<section class="hero hero-v3"><div class="motion-gallery-stage hero-motion-stage" aria-label="گالری بیست تصویر کابینت"><div class="motion-gallery-stack" id="motionGalleryStack"></div><div class="motion-gallery-caption"><span id="motionGalleryCount">01 / 20</span></div></div><div class="wrap"><div class="hero-content"><div class="eyebrow">NOVA · BESPOKE KITCHEN STUDIO</div><h1>آشپزخانه‌ای<br>با <em>امضای شما.</em></h1><p class="hero-copy">طراحی و ساخت کابینت سفارشی؛ جایی که بافت چوب، سنگ، نور و جزئیات دقیق، شخصیت خانه شما را می‌سازند.</p><div class="hero-buttons"><a class="btn" href="#gallery">تماشای گالری <span>↗</span></a><a class="btn ghost" href="#showcase">تجربه سه‌بعدی</a></div></div></div><div class="hero-index">NOVA / 2026 — MADE TO MEASURE</div><div class="scroll-cue">SCROLL TO DISCOVER</div></section>
 <section class="section wrap" id="about"><div class="intro-grid"><div class="intro-visual reveal"><img src="https://goldenhome.sg/cdn/shop/articles/high-end-kitchen-cabinets.png?v=1768012373" alt="آشپزخانه مدرن با کابینت و جزیره" loading="lazy"><div class="intro-stamp"><strong>NOVA</strong><span>ساخت سفارشی، با دقت</span></div></div><div class="intro-copy reveal"><div class="section-kicker">BEYOND THE ORDINARY</div><h2 class="section-title">زیبایی از انتخاب درست شروع می‌شود.</h2><p>ما در نوا کابینت را فقط مجموعه‌ای از درها و کشوها نمی‌بینیم؛ آن را قلب فضای خانه می‌دانیم. به همین دلیل، طراحی از نیازهای واقعی شما شروع می‌شود و با انتخاب متریال، ساخت دقیق و نصب اصولی به پایان می‌رسد.</p><p>هر پروژه با توجه به ابعاد فضا، نور طبیعی، سبک دکوراسیون و سلیقه شما شکل می‌گیرد.</p><div class="metrics"><div class="metric"><strong>01</strong><span>طراحی اختصاصی</span></div><div class="metric"><strong>02</strong><span>ساخت دقیق</span></div><div class="metric"><strong>03</strong><span>اجرای اصولی</span></div></div></div></div></section>
 <section class="section collections" id="collections"><div class="wrap"><div class="section-head reveal"><div><div class="section-kicker">THE COLLECTION</div><h2 class="section-title">سبک کابینت، شخصیت خانه</h2></div><p class="section-desc">چه به خطوط مدرن علاقه داشته باشید و چه به قاب‌بندی‌های کلاسیک، طرح نهایی با معماری خانه شما هماهنگ می‌شود.</p></div><div class="collection-grid">
 <article class="collection reveal"><img src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="آشپزخانه مدرن و کابینت مینیمال" loading="lazy"><span class="collection-no">01</span><div class="collection-info"><small>MODERN / MINIMAL</small><h3>مدرن و مینیمال</h3><p>سطوح یکدست، خطوط تمیز و نظم بصری.</p></div></article>
