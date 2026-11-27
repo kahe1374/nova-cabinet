@@ -2093,6 +2093,19 @@ nav{
 @media(prefers-reduced-motion:reduce){
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
 }
+
+/* DESKTOP GALLERY POSITION — lower-align each full image inside the stage */
+@media(min-width:951px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  top:auto!important;bottom:7%!important;
+  transform:translate(-50%,0) scale(.88)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  top:auto!important;bottom:7%!important;
+  transform:translate(-50%,0) scale(1)!important;
+ }
+}
 </style>
 </head>
 <body>
