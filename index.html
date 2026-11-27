@@ -2683,7 +2683,5 @@ if(!reduce){
  .hero.hero-v3:after{inset:8px!important}
 }
 </style>
-<script>
-(()=>{const hero=document.querySelector('.hero.hero-v3');const buttons=document.querySelectorAll('.nova-seed-switcher button[data-seed]');if(!hero||!buttons.length)return;buttons.forEach(button=>button.addEventListener('click',()=>{const seed=button.dataset.seed;hero.classList.remove('seed-preview-ivory','seed-preview-atelier','seed-preview-premiere');hero.classList.add('seed-preview-'+seed);buttons.forEach(item=>item.setAttribute('aria-pressed',String(item===button)));}));})();
-</script>
+
 </body></html>
