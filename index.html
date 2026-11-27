@@ -2428,7 +2428,7 @@ const nav=document.getElementById('nav');document.getElementById('menuBtn').addE
 const progress=document.getElementById('progress');window.addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?scrollY/max*100:0)+'%';const hero=document.getElementById('heroBg')},{passive:true});
 document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.currentTarget);const msg='سلام، برای خدمات کابینت نوا درخواست مشاوره دارم.%0Aنام: '+encodeURIComponent(d.get('name'))+'%0Aتلفن: '+encodeURIComponent(d.get('phone'))+'%0Aنوع درخواست: '+encodeURIComponent(d.get('type'))+'%0Aتوضیحات: '+encodeURIComponent(d.get('message'));window.open('https://wa.me/989105348612?text='+msg,'_blank','noopener')});
 
-/* NOVA magnetic gallery — staggered entrance and pointer attraction */
+/* NOVA hero typography — split Persian headline into animated words */
 (()=>{
  const headline=document.querySelector('.hero.hero-v3 .hero-content h1');
 if(headline&&!headline.dataset.novaWords){
@@ -2438,9 +2438,9 @@ if(headline&&!headline.dataset.novaWords){
  let wordIndex=0;
  nodes.forEach(node=>{
   const frag=document.createDocumentFragment();
-  node.nodeValue.split(/(\\s+)/).forEach(part=>{
+  node.nodeValue.match(/\S+|\s+/g).forEach(part=>{
    if(!part)return;
-   if(/^\\s+$/.test(part)){frag.append(document.createTextNode(part));return;}
+   if(/^\s+$/.test(part)){frag.append(document.createTextNode(part));return;}
    const outer=document.createElement('span');outer.className='nova-word';outer.style.setProperty('--word-index',wordIndex++);
    const inner=document.createElement('span');inner.textContent=part;outer.appendChild(inner);frag.appendChild(outer);
   });
