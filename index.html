@@ -2368,6 +2368,38 @@ nav{
 }
 @media(prefers-reduced-motion:reduce){.hero.hero-v3 .motion-gallery-card,.hero.hero-v3 .motion-gallery-card img{transition:none!important}}
 </style>
+
+<style id="nova-dual-frame-reveal">
+.hero.hero-v3 .hero-motion-stage{inset:4% 7% 36%!important;overflow:visible!important;background:transparent!important;perspective:none!important}
+.hero.hero-v3 .motion-gallery-stack{display:none!important}
+.hero.hero-v3 .nova-compare{position:absolute;inset:0 0 76px;overflow:hidden;border:1px solid #c9ad7b99;background:#20211c;box-shadow:0 24px 70px #0009;isolation:isolate}
+.hero.hero-v3 .nova-compare-base,.hero.hero-v3 .nova-compare-reveal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.hero.hero-v3 .nova-compare-reveal{position:absolute;inset:0;clip-path:inset(0 0 0 50%);z-index:2}
+.hero.hero-v3 .nova-compare-divider{position:absolute;z-index:4;top:0;bottom:0;left:50%;width:1px;background:#f1d7a8;box-shadow:0 0 16px #000;pointer-events:none}
+.hero.hero-v3 .nova-compare-divider span{position:absolute;top:50%;left:50%;display:grid;place-items:center;width:42px;height:42px;border:1px solid #f1d7a8;border-radius:50%;background:#171916;color:#f1d7a8;font-size:22px;transform:translate(-50%,-50%);box-shadow:0 5px 18px #0009}
+.hero.hero-v3 .nova-compare-range{position:absolute;z-index:6;inset:0 0 76px;width:100%;height:calc(100% - 76px);margin:0;opacity:0;cursor:ew-resize;touch-action:pan-y}
+.hero.hero-v3 .nova-compare-labels{position:absolute;z-index:5;left:0;right:0;bottom:88px;display:flex;justify-content:space-between;pointer-events:none;color:#f4e5c9;font:10px Georgia;letter-spacing:2px;text-shadow:0 2px 8px #000}
+.hero.hero-v3 .nova-compare-rail{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:5px 2px 8px;scrollbar-width:thin;scrollbar-color:#b99a6b55 transparent}
+.hero.hero-v3 .nova-compare-thumb{flex:0 0 82px;height:52px;padding:0;border:1px solid #c9ad7b55;border-radius:2px;background:#20211c;opacity:.58;overflow:hidden;cursor:pointer;transition:opacity .25s,border-color .25s,transform .25s}
+.hero.hero-v3 .nova-compare-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.hero.hero-v3 .nova-compare-thumb.is-selected{opacity:1;border-color:#e5c58f;transform:translateY(-3px)}
+.hero.hero-v3 .hero-content{right:7%!important;left:7%!important;bottom:3%!important;width:86%!important;max-width:850px!important;margin:0 auto!important;text-align:center!important}
+.hero.hero-v3 .hero-content .eyebrow,.hero.hero-v3 .hero-buttons{justify-content:center!important}
+.hero.hero-v3 .hero-content h1{font-size:clamp(30px,3.8vw,52px)!important;margin:4px 0!important}
+.hero.hero-v3 .hero-copy{font-size:12px!important;max-width:620px!important;margin:0 auto!important}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{inset:4% 4% 42%!important}
+ .hero.hero-v3 .nova-compare{inset:0 0 68px}
+ .hero.hero-v3 .nova-compare-range{bottom:68px;height:calc(100% - 68px)}
+ .hero.hero-v3 .nova-compare-rail{height:56px;gap:6px}
+ .hero.hero-v3 .nova-compare-thumb{flex-basis:68px;height:46px}
+ .hero.hero-v3 .nova-compare-labels{bottom:78px;font-size:9px}
+ .hero.hero-v3 .hero-content{bottom:2%!important;right:5%!important;left:5%!important;width:90%!important}
+ .hero.hero-v3 .hero-content h1{font-size:28px!important}
+ .hero.hero-v3 .hero-copy{font-size:10px!important;line-height:1.65!important}
+ .hero.hero-v3 .hero-buttons{margin-top:7px!important}
+}
+</style>
 </head>
 <body>
 <div class="progress" id="progress"></div><div class="grain"></div>
@@ -2392,7 +2424,7 @@ const nav=document.getElementById('nav');document.getElementById('menuBtn').addE
 const progress=document.getElementById('progress');window.addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?scrollY/max*100:0)+'%';const hero=document.getElementById('heroBg')},{passive:true});
 document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.currentTarget);const msg='سلام، برای خدمات کابینت نوا درخواست مشاوره دارم.%0Aنام: '+encodeURIComponent(d.get('name'))+'%0Aتلفن: '+encodeURIComponent(d.get('phone'))+'%0Aنوع درخواست: '+encodeURIComponent(d.get('type'))+'%0Aتوضیحات: '+encodeURIComponent(d.get('message'));window.open('https://wa.me/989105348612?text='+msg,'_blank','noopener')});
 
-/* NOVA optical focus field — pointer proximity selects the focal plane */
+/* NOVA dual-frame reveal — tactile comparison slider */
 (()=>{
  const root=document.getElementById('motionGalleryStack');if(!root)return;
  const photos=[
@@ -2417,19 +2449,26 @@ document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefau
  'https://divinewoodworks.ca/assets/images/luxury-kitchen.png',
  'https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg'
  ];
- photos.forEach((src,i)=>{
-  const card=document.createElement('button');card.type='button';card.className='motion-gallery-card';card.setAttribute('aria-label','نمای نزدیک تصویر '+(i+1));
-  const img=document.createElement('img');img.src=src;img.alt='آشپزخانه و کابینت '+(i+1);img.loading='eager';img.decoding='async';card.appendChild(img);root.appendChild(card);
- });
- const cards=[...root.children],stage=root.parentElement,count=document.getElementById('motionGalleryCount');let active=0;
- function focus(i){active=(i+cards.length)%cards.length;cards.forEach((c,j)=>{c.classList.toggle('is-active',j===active);c.setAttribute('aria-pressed',j===active?'true':'false')});if(count)count.textContent=String(active+1).padStart(2,'0')+' / 20';}
- function nearest(x,y){let best=0,dist=Infinity;cards.forEach((c,i)=>{const r=c.getBoundingClientRect(),dx=x-(r.left+r.width/2),dy=y-(r.top+r.height/2),d=dx*dx+dy*dy;if(d<dist){dist=d;best=i}});return best}
- cards.forEach((c,i)=>c.addEventListener('click',()=>focus(i)));
- stage.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')focus(nearest(e.clientX,e.clientY))},{passive:true});
- stage.addEventListener('pointerleave',()=>focus(active));
- stage.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();focus(active+1)}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();focus(active-1)}});
- stage.setAttribute('tabindex','0');focus(0);
-})();
+ const stage=root.parentElement;root.innerHTML='';
+ const compare=document.createElement('div');compare.className='nova-compare';
+ const base=document.createElement('img');base.className='nova-compare-base';base.src=photos[0];base.alt='نمای اول آشپزخانه';
+ const reveal=document.createElement('div');reveal.className='nova-compare-reveal';
+ const top=document.createElement('img');top.src=photos[1];top.alt='نمای دوم آشپزخانه';
+ const divider=document.createElement('div');divider.className='nova-compare-divider';
+ const knob=document.createElement('span');knob.textContent='↔';divider.appendChild(knob);
+ reveal.appendChild(top);compare.append(base,reveal,divider);
+ const range=document.createElement('input');range.className='nova-compare-range';range.type='range';range.min='0';range.max='100';range.value='50';range.setAttribute('aria-label','مقایسه دو تصویر با کشیدن نوار');
+ const labels=document.createElement('div');labels.className='nova-compare-labels';labels.innerHTML='<span>قاب اول</span><span>قاب دوم</span>';
+ const rail=document.createElement('div');rail.className='nova-compare-rail';rail.setAttribute('aria-label','انتخاب تصویر برای مقایسه');
+ const count=document.getElementById('motionGalleryCount');
+ let selected=2;
+ function update(v){const n=Number(v);reveal.style.clipPath='inset(0 0 0 '+n+'%)';divider.style.left=n+'%';}
+ range.addEventListener('input',()=>update(range.value));
+ photos.forEach((src,i)=>{const btn=document.createElement('button');btn.type='button';btn.className='nova-compare-thumb';btn.setAttribute('aria-label','انتخاب تصویر '+(i+1));const im=document.createElement('img');im.src=src;im.alt='';im.loading='lazy';btn.appendChild(im);btn.addEventListener('click',()=>{selected=(i+1)%photos.length;top.src=photos[selected];top.alt='نمای دوم آشپزخانه '+(selected+1);rail.querySelectorAll('button').forEach((x,j)=>x.classList.toggle('is-selected',j===i));if(count)count.textContent=String(i+1).padStart(2,'0')+' / 20';});rail.appendChild(btn)});
+ rail.children[1].classList.add('is-selected');
+ stage.append(compare,range,labels,rail);
+ stage.setAttribute('tabindex','0');update(50);
+})();;
 </script>
 <script type="module">
 import {animate,inView} from 'https://cdn.jsdelivr.net/npm/motion@latest/+esm';
