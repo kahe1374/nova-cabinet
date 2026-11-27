@@ -2343,7 +2343,28 @@ nav{
 }
 @media(prefers-reduced-motion:reduce){
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
-}</style>
+}
+/* NOVA — scroll-led material story */
+#nova-scroll-story{position:relative;padding:clamp(70px,9vw,130px) 0;background:linear-gradient(180deg,#171916 0%,#20231e 48%,#171916 100%);overflow:clip}
+#nova-scroll-story .story-head{max-width:760px;margin:0 auto 58px;text-align:center}
+#nova-scroll-story .story-layout{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr);gap:clamp(28px,6vw,88px);align-items:start}
+#nova-scroll-story .story-visual{position:sticky;top:105px;height:min(66vh,620px);min-height:390px;border:1px solid #c1a16d55;border-radius:5px;overflow:hidden;background:#111;box-shadow:0 28px 80px #0008}
+#nova-scroll-story .story-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.075);transition:opacity .8s ease,transform 1.4s cubic-bezier(.2,.7,.2,1)}
+#nova-scroll-story .story-visual img.is-active{opacity:1;transform:scale(1)}
+#nova-scroll-story .story-visual:after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,#090a08b8);pointer-events:none}
+#nova-scroll-story .story-stamp{position:absolute;z-index:2;bottom:25px;right:28px;left:28px;display:flex;justify-content:space-between;align-items:end;color:#f4ead7;font-size:11px;letter-spacing:.18em}
+#nova-scroll-story .story-stamp strong{font-size:clamp(24px,4vw,42px);font-weight:400;letter-spacing:.08em}
+#nova-scroll-story .story-steps{display:flex;flex-direction:column;gap:0}
+#nova-scroll-story .story-step{min-height:62vh;display:flex;flex-direction:column;justify-content:center;padding:38px 0;border-top:1px solid #ffffff24;opacity:.42;transition:opacity .5s ease}
+#nova-scroll-story .story-step.is-active{opacity:1}
+#nova-scroll-story .story-step small{color:var(--gold2);letter-spacing:.18em;font-size:11px}
+#nova-scroll-story .story-step h3{font-size:clamp(27px,3.3vw,48px);font-weight:500;line-height:1.5;margin:18px 0}
+#nova-scroll-story .story-step p{color:var(--muted);line-height:2.2;max-width:390px}
+#nova-scroll-story .story-step .story-line{height:2px;width:44px;background:var(--gold);margin-top:22px;transition:width .5s ease}
+#nova-scroll-story .story-step.is-active .story-line{width:100px}
+@media(max-width:760px){#nova-scroll-story{padding:65px 0}#nova-scroll-story .story-head{padding:0 20px;margin-bottom:30px}#nova-scroll-story .story-layout{grid-template-columns:1fr;gap:14px}#nova-scroll-story .story-visual{top:76px;height:38vh;min-height:250px;z-index:3}#nova-scroll-story .story-stamp{bottom:15px;right:16px;left:16px}#nova-scroll-story .story-step{min-height:48vh;padding:28px 8px}}
+@media(prefers-reduced-motion:reduce){#nova-scroll-story .story-visual img,#nova-scroll-story .story-step,#nova-scroll-story .story-step .story-line{transition:none}}
+</style>
 
 <style id="nova-optical-focus-field">
 .hero.hero-v3 .hero-motion-stage{perspective:1200px!important;background:radial-gradient(ellipse at 50% 28%,#51453255,transparent 68%),#171916!important;overflow:hidden!important}
@@ -2418,6 +2439,19 @@ nav{
 <article class="collection reveal"><img src="https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg" alt="کابینت سفارشی با جزیره سنگی" loading="lazy"><span class="collection-no">04</span><div class="collection-info"><small>PAINTED / LUXURY</small><h3>رنگ پولیشی و لوکس</h3><p>رنگ عمیق، سطح یکدست و جزئیات خاص.</p></div></article>
 </div></div></section>
 <section class="section showcase" id="showcase"><div class="wrap"><div class="section-head reveal"><div><div class="section-kicker">DEPTH · LIGHT · MATERIAL</div><h2 class="section-title">تصویر را فقط نبینید؛<br>عمقش را حس کنید.</h2></div><p class="section-desc">در طراحی NOVA، عکس‌ها مثل قاب‌های تخت باقی نمی‌مانند؛ با پرسپکتیو، نور، سایه و حرکت‌های ظریف، بخشی از فضای صفحه می‌شوند.</p></div><div class="depth-stage"><div class="depth-copy reveal"><span class="depth-number">Nº 01 — MATERIAL STUDY</span><h3>بافت‌هایی که<br><em>جان می‌گیرند.</em></h3><p>حرکت نرم تصویر، لایه‌های عمق و انعکاس نور؛ جزئیات کابینت در هر نگاه جلوه تازه‌ای پیدا می‌کند.</p><a class="btn" href="#gallery">دیدن جزئیات <span>↗</span></a></div><div class="depth-photo depth-photo-main reveal"><img src="https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803" alt="آشپزخانه لوکس با کابینت و جزیره" loading="lazy"><span>THE ART OF KITCHEN</span></div><div class="depth-photo depth-photo-small reveal"><img src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="جزئیات طراحی کابینت آشپزخانه" loading="lazy"></div><div class="depth-orbit" aria-hidden="true"></div></div></div></section>
+<section id="nova-scroll-story" aria-label="روایت متریال در طراحی کابینت"><div class="wrap">
+<div class="story-head reveal"><div class="section-kicker">A MATERIAL JOURNEY</div><h2 class="section-title">هر انتخاب، یک حس تازه.</h2><p class="section-desc">با حرکت در صفحه، سه نگاه متفاوت به طراحی آشپزخانه را دنبال کنید.</p></div>
+<div class="story-layout">
+<div class="story-visual" aria-label="تصویر متغیر متریال">
+<img class="is-active" data-story-image="0" src="https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803" alt="آشپزخانه لوکس با ترکیب چوب و سنگ" loading="lazy">
+<img data-story-image="1" src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="آشپزخانه مدرن با خطوط مینیمال" loading="lazy">
+<img data-story-image="2" src="https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg" alt="جزئیات چوب طبیعی در آشپزخانه" loading="lazy">
+<div class="story-stamp"><strong>NOVA</strong><span id="novaStoryCount">01 / 03</span></div></div>
+<div class="story-steps">
+<article class="story-step is-active" data-story-step="0"><small>01 — THE ATMOSPHERE</small><h3>شروع با حس فضا</h3><p>نور، تناسبات و ترکیب رنگ‌ها، حال‌وهوای آشپزخانه را شکل می‌دهند؛ پیش از آن‌که جزئیات دیده شوند.</p><span class="story-line"></span></article>
+<article class="story-step" data-story-step="1"><small>02 — THE COMPOSITION</small><h3>نظم در هر خط</h3><p>سطوح ساده و امتدادهای دقیق، فضا را آرام‌تر و استفاده روزمره را روان‌تر می‌کنند.</p><span class="story-line"></span></article>
+<article class="story-step" data-story-step="2"><small>03 — THE MATERIAL</small><h3>لمس اصالت متریال</h3><p>رگه‌های چوب و بافت طبیعی، گرما و شخصیت را به طراحی اضافه می‌کنند.</p><span class="story-line"></span></article>
+</div></div></div></section>
 <section class="section detail-band" id="details"><div class="wrap"><div class="section-head reveal"><div><div class="section-kicker">BUILT TO LAST</div><h2 class="section-title">کیفیت در جزئیات پنهان است.</h2></div><p class="section-desc">زیبایی باید در استفاده روزمره هم دوام بیاورد؛ از لبه‌کاری تا رگلاژ نهایی درها و کشوها.</p></div><div class="detail-grid"><article class="detail-card reveal"><img src="https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg" alt="جزئیات کابینت و صفحه سنگی" loading="lazy"><div><small>01 / MATERIAL</small><h3>متریال و بافت</h3><p>هماهنگی رنگ، روکش، صفحه و دستگیره با سبک کلی فضا.</p></div></article><article class="detail-card reveal"><img src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="کابینت و فضای ذخیره سازی آشپزخانه" loading="lazy"><div><small>02 / FUNCTION</small><h3>کارایی هوشمند</h3><p>تقسیم‌بندی کاربردی برای استفاده بهتر از فضا و دسترسی راحت.</p></div></article><article class="detail-card reveal"><img src="https://www.housecustomize.com/wp-content/uploads/2023/09/07-premium-italian-wood-kitchen-cabinets-natural-beauty-and-functionality-2-64d9d26de5de5.webp" alt="جزئیات اجرای آشپزخانه" loading="lazy"><div><small>03 / FINISH</small><h3>اجرای تمیز</h3><p>توجه به خطوط، فاصله‌ها، اتصالات و تنظیم نهایی درها.</p></div></article></div></div></section>
 <section class="section wrap" id="gallery"><div class="section-head reveal"><div><div class="section-kicker">VISUAL INSPIRATION</div><h2 class="section-title">فضاهایی برای الهام گرفتن</h2></div><p class="section-desc">نمونه‌های تصویری برای انتخاب سبک، رنگ و ترکیب متریال. تصاویر این بخش الهام‌بخش‌اند و لزوماً پروژه اجراشده نوا نیستند.</p></div><div class="gallery reveal"><figure><img src="https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg" alt="آشپزخانه مدرن با کابینت و جزیره" loading="lazy"><figcaption>ترکیب سنگ طبیعی و چوب</figcaption></figure><figure><img src="https://goldenhome.sg/cdn/shop/articles/high-end-kitchen-cabinets.png?v=1768012373" alt="کابینت آشپزخانه روشن" loading="lazy"><figcaption>مینیمال و روشن</figcaption></figure><figure><img src="https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg" alt="آشپزخانه با کابینت کلاسیک" loading="lazy"><figcaption>قاب‌بندی ظریف</figcaption></figure><figure><img src="https://www.housecustomize.com/wp-content/uploads/2023/09/07-premium-italian-wood-kitchen-cabinets-natural-beauty-and-functionality-2-64d9d26de5de5.webp" alt="آشپزخانه با چوب گرم" loading="lazy"><figcaption>گرمای چوب</figcaption></figure><figure><img src="https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803" alt="جزیره و کابینت سفارشی" loading="lazy"><figcaption>جزیره مرکزی</figcaption></figure></div></section>
 <section class="section process"><div class="wrap"><div class="section-head reveal"><div><div class="section-kicker">HOW WE WORK</div><h2 class="section-title">از ایده تا نصب نهایی</h2></div></div><div class="steps"><article class="step reveal"><b>01</b><h3>مشاوره و شناخت</h3><p>بررسی نیازها، سبک زندگی و سلیقه شما.</p></article><article class="step reveal"><b>02</b><h3>اندازه‌گیری و طراحی</h3><p>اندازه‌گیری فضا و آماده‌سازی طرح اختصاصی.</p></article><article class="step reveal"><b>03</b><h3>ساخت و آماده‌سازی</h3><p>انتخاب متریال و اجرای دقیق اجزای کابینت.</p></article><article class="step reveal"><b>04</b><h3>نصب و تحویل</h3><p>نصب، رگلاژ و بررسی جزئیات نهایی.</p></article></div></div></section>
@@ -2488,6 +2522,15 @@ const root=document.getElementById('motionGalleryStack');if(!root)return;
   frame.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setDoor(!frame.classList.contains('is-open'));}});
  });
  const count=document.getElementById('motionGalleryCount');if(count)count.textContent='20 / 20';
+})();
+
+/* Scroll story: sync the sticky image with the step in view */
+(()=>{
+ const root=document.getElementById('nova-scroll-story');if(!root)return;
+ const steps=[...root.querySelectorAll('[data-story-step]')],images=[...root.querySelectorAll('[data-story-image]')],count=root.querySelector('#novaStoryCount');let active=-1;
+ const activate=index=>{if(index===active||index<0||index>=steps.length)return;active=index;steps.forEach((el,i)=>el.classList.toggle('is-active',i===index));images.forEach((el,i)=>el.classList.toggle('is-active',i===index));if(count)count.textContent=String(index+1).padStart(2,'0')+' / 03';};
+ if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio);if(visible.length)activate(Number(visible[0].target.dataset.storyStep));},{root:null,rootMargin:'-30% 0px -30% 0px',threshold:[0,.2,.45,.7]});steps.forEach(el=>observer.observe(el));}
+ else{const onScroll=()=>{const target=steps.reduce((best,el)=>Math.abs(el.getBoundingClientRect().top-innerHeight*.5)<Math.abs(best.getBoundingClientRect().top-innerHeight*.5)?el:best,steps[0]);activate(Number(target.dataset.storyStep));};window.addEventListener('scroll',onScroll,{passive:true});onScroll();}
 })();
 </script>
 <script type="module">
