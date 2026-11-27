@@ -1,4 +1,5 @@
 name: Optimize NOVA opening video
+# one-time run
 
 on:
   push:
