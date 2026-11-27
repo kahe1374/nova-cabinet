@@ -2344,6 +2344,30 @@ nav{
 @media(prefers-reduced-motion:reduce){
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
 }</style>
+
+<style id="nova-optical-focus-field">
+.hero.hero-v3 .hero-motion-stage{perspective:1200px!important;background:radial-gradient(ellipse at 50% 28%,#51453255,transparent 68%),#171916!important;overflow:hidden!important}
+.hero.hero-v3 .motion-gallery-stack{position:absolute!important;inset:4% 7% 35%!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;gap:clamp(7px,1.2vw,18px)!important;overflow:visible!important;transform-style:preserve-3d!important}
+.hero.hero-v3 .motion-gallery-card{position:relative!important;inset:auto!important;left:auto!important;top:auto!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;padding:0!important;overflow:hidden!important;border:1px solid #c9ad7b55!important;border-radius:2px!important;background:#25251f!important;opacity:.48!important;filter:blur(1.3px) saturate(.68)!important;transform:translateZ(0) scale(.96)!important;transition:transform .48s cubic-bezier(.2,.75,.2,1),filter .4s,opacity .4s,box-shadow .4s!important;cursor:pointer!important;box-shadow:0 5px 18px #0005!important}
+.hero.hero-v3 .motion-gallery-card img{width:100%!important;height:100%!important;display:block!important;object-fit:cover!important;filter:none!important;transition:transform .65s cubic-bezier(.2,.75,.2,1)!important}
+.hero.hero-v3 .motion-gallery-card.is-active{z-index:12!important;opacity:1!important;filter:blur(0) saturate(1.08)!important;transform:translateZ(55px) scale(1.34)!important;border:1px solid #e2c18b!important;box-shadow:0 18px 48px #000c,0 0 0 1px #e2c18b88!important}
+.hero.hero-v3 .motion-gallery-card.is-active img{transform:scale(1.07)!important}
+.hero.hero-v3 .motion-gallery-caption{z-index:15!important;left:50%!important;right:auto!important;bottom:31%!important;transform:translateX(-50%)!important;color:#e2c18b!important;font:11px Georgia!important;letter-spacing:3px!important}
+.hero.hero-v3 .hero-content{right:7%!important;left:7%!important;top:auto!important;bottom:5%!important;transform:none!important;width:86%!important;max-width:850px!important;margin:0 auto!important;text-align:center!important}
+.hero.hero-v3 .hero-content .eyebrow,.hero.hero-v3 .hero-buttons{justify-content:center!important}
+.hero.hero-v3 .hero-content h1{font-size:clamp(34px,4.2vw,58px)!important;margin:5px 0!important}
+.hero.hero-v3 .hero-copy{max-width:620px!important;margin:0 auto!important;font-size:13px!important}
+@media(max-width:680px){
+ .hero.hero-v3 .motion-gallery-stack{inset:5% 4% 43%!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-template-rows:repeat(5,minmax(0,1fr))!important;gap:7px!important}
+ .hero.hero-v3 .motion-gallery-card.is-active{transform:translateZ(24px) scale(1.22)!important}
+ .hero.hero-v3 .motion-gallery-caption{bottom:39%!important;font-size:10px!important}
+ .hero.hero-v3 .hero-content{bottom:3%!important;right:6%!important;left:6%!important;width:88%!important}
+ .hero.hero-v3 .hero-content h1{font-size:32px!important;line-height:1.25!important}
+ .hero.hero-v3 .hero-copy{font-size:10px!important;line-height:1.7!important}
+ .hero.hero-v3 .hero-buttons{margin-top:8px!important}
+}
+@media(prefers-reduced-motion:reduce){.hero.hero-v3 .motion-gallery-card,.hero.hero-v3 .motion-gallery-card img{transition:none!important}}
+</style>
 </head>
 <body>
 <div class="progress" id="progress"></div><div class="grain"></div>
@@ -2368,119 +2392,44 @@ const nav=document.getElementById('nav');document.getElementById('menuBtn').addE
 const progress=document.getElementById('progress');window.addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?scrollY/max*100:0)+'%';const hero=document.getElementById('heroBg')},{passive:true});
 document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.currentTarget);const msg='سلام، برای خدمات کابینت نوا درخواست مشاوره دارم.%0Aنام: '+encodeURIComponent(d.get('name'))+'%0Aتلفن: '+encodeURIComponent(d.get('phone'))+'%0Aنوع درخواست: '+encodeURIComponent(d.get('type'))+'%0Aتوضیحات: '+encodeURIComponent(d.get('message'));window.open('https://wa.me/989105348612?text='+msg,'_blank','noopener')});
 
-/* Twenty real kitchen/cabinet photographs: fan stack -> cinematic center -> return */
-(()=>{const root=document.getElementById('motionGalleryStack');if(!root)return;
-const photos=[
-'https://images.pexels.com/photos/14614482/pexels-photo-14614482.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/36777553/pexels-photo-36777553.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/30673264/pexels-photo-30673264.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/31238723/pexels-photo-31238723.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/18285887/pexels-photo-18285887.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/36777854/pexels-photo-36777854.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/36777558/pexels-photo-36777558.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/19846357/pexels-photo-19846357.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/19980197/pexels-photo-19980197.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/19899084/pexels-photo-19899084.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/31238726/pexels-photo-31238726.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/31238725/pexels-photo-31238725.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.pexels.com/photos/31267700/pexels-photo-31267700.jpeg?auto=compress&cs=tinysrgb&w=1600',
-'https://images.squarespace-cdn.com/content/v1/5c4234f0266c079c2053f1cb/1736018640981-T4XQ3AGG00ZXAR46VLHZ/2024-09-04%2B16.12.33.jpg',
-'https://www.dross-schaffer-kuechen.com/fileadmin/_processed_/4/6/csm_leicht-kueche-walnuss-blue-roma-2-cr-maximilian-gottwald_8e4ef20753.jpg',
-'https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803',
-'https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg',
-'https://cdn.shopify.com/s/files/1/0602/9544/6594/files/luxury-kitchen-cabinets_7d95b94d-4bdb-498d-9592-618eb6079e71.png?v=1766990993',
-'https://divinewoodworks.ca/assets/images/luxury-kitchen.png',
-'https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg'
-];
-photos.forEach((src,i)=>{
-  const card=document.createElement('div');card.className='motion-gallery-card';
-  const desktopLeft=9+(i*82/19),mobileLeft=12+(i*76/19);
-  card.style.setProperty('--fan-left',desktopLeft+'%');
-  card.style.setProperty('--fan-top',(i%2===0?67:70)+'%');
-  card.style.setProperty('--fan-angle',((i-9.5)*1.05)+'deg');
-  card.style.zIndex=String(40-i);
-  const img=document.createElement('img');img.src=src;img.alt='کابینت و آشپزخانه شماره '+(i+1);
-  img.loading='eager';img.decoding='async';card.appendChild(img);
-  root.appendChild(card);
-  card.dataset.mobileLeft=mobileLeft+'%';
+/* NOVA optical focus field — pointer proximity selects the focal plane */
+(()=>{
+ const root=document.getElementById('motionGalleryStack');if(!root)return;
+ const photos=[
+ 'https://images.pexels.com/photos/14614482/pexels-photo-14614482.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/36777553/pexels-photo-36777553.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/30673264/pexels-photo-30673264.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/31238723/pexels-photo-31238723.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/18285887/pexels-photo-18285887.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/36777854/pexels-photo-36777854.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/36777558/pexels-photo-36777558.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/19846357/pexels-photo-19846357.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/19980197/pexels-photo-19980197.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/19899084/pexels-photo-19899084.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/31238726/pexels-photo-31238726.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/31238725/pexels-photo-31238725.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.pexels.com/photos/31267700/pexels-photo-31267700.jpeg?auto=compress&cs=tinysrgb&w=1600',
+ 'https://images.squarespace-cdn.com/content/v1/5c4234f0266c079c2053f1cb/1736018640981-T4XQ3AGG00ZXAR46VLHZ/2024-09-04%2B16.12.33.jpg',
+ 'https://www.dross-schaffer-kuechen.com/fileadmin/_processed_/4/6/csm_leicht-kueche-walnuss-blue-roma-2-cr-maximilian-gottwald_8e4ef20753.jpg',
+ 'https://goldenhome.sg/cdn/shop/articles/luxury-kitchen-cabinetry.png?v=1766108803',
+ 'https://www.fcilondon.co.uk/site-assets/blog/content/77556/solid-timber-the-enduring-investment.jpg',
+ 'https://cdn.shopify.com/s/files/1/0602/9544/6594/files/luxury-kitchen-cabinets_7d95b94d-4bdb-498d-9592-618eb6079e71.png?v=1766990993',
+ 'https://divinewoodworks.ca/assets/images/luxury-kitchen.png',
+ 'https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg'
+ ];
+ photos.forEach((src,i)=>{
+  const card=document.createElement('button');card.type='button';card.className='motion-gallery-card';card.setAttribute('aria-label','نمای نزدیک تصویر '+(i+1));
+  const img=document.createElement('img');img.src=src;img.alt='آشپزخانه و کابینت '+(i+1);img.loading='eager';img.decoding='async';card.appendChild(img);root.appendChild(card);
  });
- const cards=[...root.children],count=document.getElementById('motionGalleryCount');let index=0;
- function layoutFan(){
-   const mobile=window.matchMedia('(max-width:680px)').matches;
-   cards.forEach((card,i)=>card.style.setProperty('--fan-left',mobile?card.dataset.mobileLeft:(9+i*82/19)+'%'));
- }
- layoutFan();window.addEventListener('resize',layoutFan,{passive:true});
- function setTriptych(){
-   cards.forEach((c,j)=>{
-     c.classList.remove('is-prev','is-next');
-     let d=j-index;
-     if(d>cards.length/2)d-=cards.length;
-     if(d< -cards.length/2)d+=cards.length;
-     c.style.setProperty('--nova-distance',String(d));
-     if(d===-1)c.classList.add('is-prev');
-     if(d===1)c.classList.add('is-next');
-   });
- }
- function focusCard(i){
-   index=i;
-   cards.forEach((c,j)=>{c.classList.toggle('is-active',j===i);c.classList.remove('is-leaving')});
-   if(count)count.textContent=String(index+1).padStart(2,'0')+' / 20';
-   root.parentElement.style.setProperty('--nova-progress',((index+1)/cards.length*100)+'%');
- }
- const stage=root.parentElement;
- let dragging=false,startX=0,lastX=0,lastTime=0,velocity=0,dragIndex=0;
- function focusCard(i,direction=1){
-   const next=(i+cards.length)%cards.length;
-   if(next===index)return;
-   const previous=cards[index],incoming=cards[next];
-   previous.classList.remove('is-active');previous.classList.add('is-leaving');
-   previous.style.setProperty('--exit-x',String(-direction*150)+'px');
-   previous.style.setProperty('--exit-rot',String(-direction*9)+'deg');
-   incoming.style.setProperty('--drag-x',String(direction*110)+'px');
-   incoming.style.setProperty('--drag-rot',String(direction*7)+'deg');
-   incoming.classList.add('is-active');incoming.classList.remove('is-leaving');
-   requestAnimationFrame(()=>{incoming.style.setProperty('--drag-x','0px');incoming.style.setProperty('--drag-rot','0deg')});
-   index=next;setTriptych();
-   if(count)count.textContent=String(index+1).padStart(2,'0')+' / 20';
-   root.parentElement.style.setProperty('--nova-progress',((index+1)/cards.length*100)+'%');
-   setTimeout(()=>{previous.classList.remove('is-leaving');previous.style.removeProperty('--exit-x');previous.style.removeProperty('--exit-rot')},760);
- }
- stage.addEventListener('pointerdown',e=>{
-   if(e.pointerType==='mouse'&&e.button!==0)return;
-   dragging=true;startX=e.clientX;lastX=e.clientX;lastTime=performance.now();velocity=0;dragIndex=index;
-   stage.classList.add('is-dragging');stage.setPointerCapture(e.pointerId);
-   cards[index].style.transition='none';
- });
- stage.addEventListener('pointermove',e=>{
-   if(!dragging)return;
-   const now=performance.now(),dx=e.clientX-startX,dt=Math.max(1,now-lastTime);
-   velocity=(e.clientX-lastX)/dt;lastX=e.clientX;lastTime=now;
-   const limited=Math.max(-stage.clientWidth*.42,Math.min(stage.clientWidth*.42,dx));
-   cards[dragIndex].style.setProperty('--drag-x',limited+'px');
-   cards[dragIndex].style.setProperty('--drag-rot',(limited/stage.clientWidth*12)+'deg');
- });
- function finishDrag(){
-   if(!dragging)return;dragging=false;stage.classList.remove('is-dragging');
-   const card=cards[dragIndex],dx=lastX-startX,threshold=Math.max(48,stage.clientWidth*.12);
-   card.style.transition='';
-   card.style.setProperty('--drag-x','0px');card.style.setProperty('--drag-rot','0deg');
-   if(Math.abs(dx)>threshold||Math.abs(velocity)>.48){
-     const direction=(Math.abs(dx)>threshold?Math.sign(dx):Math.sign(velocity));
-     focusCard(index+(direction<0?1:-1),direction<0?1:-1);
-   }
- }
- stage.addEventListener('pointerup',finishDrag);
- stage.addEventListener('pointercancel',finishDrag);
- stage.addEventListener('lostpointercapture',finishDrag);
- stage.addEventListener('keydown',e=>{
-   if(e.key==='ArrowRight'){e.preventDefault();focusCard(index-1,-1)}
-   if(e.key==='ArrowLeft'){e.preventDefault();focusCard(index+1,1)}
- });
- stage.setAttribute('tabindex','0');
- cards[0].classList.add('is-active');setTriptych();
- root.parentElement.style.setProperty('--nova-progress',(1/cards.length*100)+'%');
- if(count)count.textContent='01 / 20';
-})();
+ const cards=[...root.children],stage=root.parentElement,count=document.getElementById('motionGalleryCount');let active=0;
+ function focus(i){active=(i+cards.length)%cards.length;cards.forEach((c,j)=>{c.classList.toggle('is-active',j===active);c.setAttribute('aria-pressed',j===active?'true':'false')});if(count)count.textContent=String(active+1).padStart(2,'0')+' / 20';}
+ function nearest(x,y){let best=0,dist=Infinity;cards.forEach((c,i)=>{const r=c.getBoundingClientRect(),dx=x-(r.left+r.width/2),dy=y-(r.top+r.height/2),d=dx*dx+dy*dy;if(d<dist){dist=d;best=i}});return best}
+ cards.forEach((c,i)=>c.addEventListener('click',()=>focus(i)));
+ stage.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')focus(nearest(e.clientX,e.clientY))},{passive:true});
+ stage.addEventListener('pointerleave',()=>focus(active));
+ stage.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();focus(active+1)}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();focus(active-1)}});
+ stage.setAttribute('tabindex','0');focus(0);
+})();;
 </script>
 <script type="module">
 import {animate,inView} from 'https://cdn.jsdelivr.net/npm/motion@latest/+esm';
