@@ -2580,12 +2580,14 @@ const root=document.getElementById('motionGalleryStack');if(!root)return;
    image.alt=source.alt;
    overlay.appendChild(image);
    stage.querySelectorAll('.nova-photo-overlay').forEach(el=>el.remove());
+   stage.classList.add('nova-focus-active');
    stage.appendChild(overlay);
    requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('is-visible')));
    window.setTimeout(()=>{
     overlay.classList.remove('is-visible');
     window.setTimeout(()=>{
      overlay.remove();
+     stage.classList.remove('nova-focus-active');
      activePhoto=(activePhoto+1)%frames.length;
      window.setTimeout(showNextPhoto,350);
     },1150);
@@ -2941,6 +2943,28 @@ if(!reduce){
 @media(max-width:680px){
  .hero.hero-v3 .hero-motion-stage{margin:88px auto 0!important}
  .hero.hero-v3 .hero-motion-stage #motionGalleryStack{inset:8px!important}
+}
+
+
+/* FINAL HERO POSITION + FOCUS DIMMING */
+.hero.hero-v3 .hero-motion-stage{top:calc(5% + 112px)!important}
+.hero.hero-v3 .hero-motion-stage.nova-focus-active #motionGalleryStack>.nova-auto-photo{
+ filter:blur(3px) brightness(.48) saturate(.62)!important;
+ opacity:.62!important;
+ transition:filter 1.15s cubic-bezier(.22,.72,.2,1),opacity 1.15s cubic-bezier(.22,.72,.2,1)!important;
+}
+.hero.hero-v3 .hero-motion-stage.nova-focus-active #motionGalleryStack>.nova-auto-photo>img{
+ filter:blur(2.5px) brightness(.58)!important;
+ transition:filter 1.15s cubic-bezier(.22,.72,.2,1)!important;
+}
+.hero.hero-v3 .hero-motion-stage .nova-photo-overlay{top:54%!important}
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage{top:calc(5% + 88px)!important}
+ .hero.hero-v3 .hero-motion-stage .nova-photo-overlay{top:54%!important}
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{margin:124px auto 0!important}
+ .hero.hero-v3 .hero-motion-stage .nova-photo-overlay{top:54%!important}
 }
 
 </style>
