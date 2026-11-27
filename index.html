@@ -2372,9 +2372,13 @@ nav{
 <style id="nova-dual-frame-reveal">
 .hero.hero-v3 .hero-motion-stage{inset:4% 7% 36%!important;overflow:hidden!important;background:#171916!important;border:1px solid #c9ad7b99!important;box-shadow:0 24px 70px #0009!important;padding:clamp(10px,1.6vw,22px)!important}
 .hero.hero-v3 .motion-gallery-stack{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));grid-auto-rows:clamp(120px,15vw,190px);grid-auto-flow:dense;gap:clamp(7px,1vw,13px);width:100%;height:100%;overflow:auto;align-content:start;scrollbar-width:thin;scrollbar-color:#b99a6b66 transparent}
-.hero.hero-v3 .nova-auto-photo{position:relative;display:block;min-width:0;min-height:0;overflow:hidden;border:1px solid #c9ad7b66;background:#20211c;box-shadow:0 8px 24px #0005;isolation:isolate}
+.hero.hero-v3 .nova-auto-photo{position:relative;display:block;min-width:0;min-height:0;overflow:hidden;border:1px solid #c9ad7b66;background:#20211c;box-shadow:0 8px 24px #0005;isolation:isolate;transform:translate3d(var(--nova-mx,0px),var(--nova-my,0px),0);transition:transform .42s cubic-bezier(.18,.78,.22,1),border-color .4s,box-shadow .4s;animation:novaMagneticEnter .8s cubic-bezier(.18,.78,.22,1) both;animation-delay:var(--nova-delay,0ms);will-change:transform}
 .hero.hero-v3 .nova-auto-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .8s cubic-bezier(.2,.75,.2,1),filter .8s}
+.hero.hero-v3 .nova-auto-photo:hover{border-color:#e5c58f!important;box-shadow:0 16px 36px #0009,0 0 0 1px #e5c58f44!important}
 .hero.hero-v3 .nova-auto-photo:hover img{transform:scale(1.055);filter:saturate(1.08)}
+@keyframes novaMagneticEnter{from{opacity:0;transform:translate3d(var(--nova-mx,0px),28px,0) scale(.965);filter:blur(5px)}to{opacity:1;transform:translate3d(var(--nova-mx,0px),var(--nova-my,0px),0) scale(1);filter:blur(0)}}
+@media(hover:none),(pointer:coarse){.hero.hero-v3 .nova-auto-photo{transform:none!important;animation:novaMagneticEnter .65s ease both}}
+
 .hero.hero-v3 .nova-auto-photo:after{content:"";position:absolute;inset:0;border:1px solid #e5c58f22;pointer-events:none}
 .hero.hero-v3 .motion-gallery-caption{position:absolute!important;z-index:5;left:12px!important;right:auto!important;bottom:12px!important;color:#f1d7a8!important;background:#171916cc;padding:6px 10px;border:1px solid #c9ad7b66;font:10px Georgia;letter-spacing:2px}
 .hero.hero-v3 .hero-content{right:7%!important;left:7%!important;bottom:3%!important;width:86%!important;max-width:850px!important;margin:0 auto!important;text-align:center!important}
@@ -2390,7 +2394,7 @@ nav{
  .hero.hero-v3 .hero-copy{font-size:10px!important;line-height:1.65!important}
  .hero.hero-v3 .hero-buttons{margin-top:7px!important}
 }
-@media(prefers-reduced-motion:reduce){.hero.hero-v3 .nova-auto-photo img{transition:none!important}}
+@media(prefers-reduced-motion:reduce){.hero.hero-v3 .nova-auto-photo,.hero.hero-v3 .nova-auto-photo img{transition:none!important;animation:none!important;transform:none!important;filter:none!important}}
 </style>
 </head>
 <body>
@@ -2416,7 +2420,7 @@ const nav=document.getElementById('nav');document.getElementById('menuBtn').addE
 const progress=document.getElementById('progress');window.addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?scrollY/max*100:0)+'%';const hero=document.getElementById('heroBg')},{passive:true});
 document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.currentTarget);const msg='سلام، برای خدمات کابینت نوا درخواست مشاوره دارم.%0Aنام: '+encodeURIComponent(d.get('name'))+'%0Aتلفن: '+encodeURIComponent(d.get('phone'))+'%0Aنوع درخواست: '+encodeURIComponent(d.get('type'))+'%0Aتوضیحات: '+encodeURIComponent(d.get('message'));window.open('https://wa.me/989105348612?text='+msg,'_blank','noopener')});
 
-/* NOVA automatic image placement — responsive CSS grid */
+/* NOVA magnetic gallery — staggered entrance and pointer attraction */
 (()=>{
  const root=document.getElementById('motionGalleryStack');if(!root)return;
  const photos=[
@@ -2442,10 +2446,22 @@ document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefau
  'https://www.italkraft.com/hubfs/Imported_Blog_Media/b2ap3_large_111-Leroy-Kitchen-One-Point.jpg'
  ];
  root.replaceChildren();
+ const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
  photos.forEach((src,i)=>{
-  const frame=document.createElement('figure');frame.className='nova-auto-photo';
+  const frame=document.createElement('figure');frame.className='nova-auto-photo';frame.style.setProperty('--nova-delay',(i*55)+'ms');
   const img=document.createElement('img');img.src=src;img.alt='تصویر '+(i+1)+' از نمونه آشپزخانه و کابینت';img.loading=i<4?'eager':'lazy';img.decoding='async';
   frame.appendChild(img);root.appendChild(frame);
+  if(fine&&!reduced){
+   frame.addEventListener('pointermove',e=>{
+    const r=frame.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    frame.style.setProperty('--nova-mx',(x*12).toFixed(1)+'px');
+    frame.style.setProperty('--nova-my',(y*9).toFixed(1)+'px');
+   });
+   frame.addEventListener('pointerleave',()=>{
+    frame.style.setProperty('--nova-mx','0px');frame.style.setProperty('--nova-my','0px');
+   });
+  }
  });
  const count=document.getElementById('motionGalleryCount');if(count)count.textContent='20 / 20';
 })();
