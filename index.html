@@ -692,6 +692,42 @@ nav{
  .hero.hero-v3 .hero-content{bottom:24px!important;transform:none!important}
 }
 
+
+/* NOVA HERO GALLERY — CINEMATIC CONVEYOR BELT */
+.hero.hero-v3 .hero-motion-stage{perspective:1800px!important;background:radial-gradient(ellipse at 50% 48%,#66543a45 0%,#171916 67%)!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{transform-style:preserve-3d!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ left:var(--belt-x)!important;top:var(--belt-y)!important;
+ width:clamp(110px,15vw,205px)!important;height:clamp(145px,25vh,250px)!important;
+ border:1px solid #d9bd8c!important;border-radius:5px!important;
+ transform:translate(-50%,-50%) rotateY(var(--belt-ry)) rotateZ(var(--belt-rz)) translateZ(var(--belt-z))!important;
+ opacity:.88!important;filter:saturate(.86)!important;
+ box-shadow:0 22px 48px #000b, inset 0 0 0 5px #17191655!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+1){--belt-x:8%;--belt-y:28%;--belt-ry:42deg;--belt-rz:-5deg;--belt-z:-100px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+2){--belt-x:29%;--belt-y:20%;--belt-ry:25deg;--belt-rz:-3deg;--belt-z:-35px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+3){--belt-x:50%;--belt-y:76%;--belt-ry:0deg;--belt-rz:0deg;--belt-z:-120px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+4){--belt-x:71%;--belt-y:20%;--belt-ry:-25deg;--belt-rz:3deg;--belt-z:-35px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n){--belt-x:92%;--belt-y:28%;--belt-ry:-42deg;--belt-rz:5deg;--belt-z:-100px}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ left:50%!important;top:47%!important;width:min(43vw,650px)!important;height:min(53vh,440px)!important;
+ max-width:calc(100vw - 36px)!important;max-height:calc(100svh - 190px)!important;
+ transform:translate(-50%,-50%) rotateY(0deg) rotateZ(0deg) translateZ(180px)!important;
+ opacity:1!important;filter:none!important;z-index:12!important;
+ border:2px solid #e2c99b!important;border-radius:7px!important;
+ box-shadow:0 38px 85px #000e,0 0 0 10px #c1a16d18!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active img{object-fit:cover!important}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){width:clamp(76px,23vw,116px)!important;height:clamp(105px,19vh,160px)!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+1){--belt-x:7%;--belt-y:27%;--belt-ry:35deg;--belt-rz:-4deg;--belt-z:-70px}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+2){--belt-x:28%;--belt-y:18%;--belt-ry:20deg;--belt-rz:-2deg;--belt-z:-25px}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+3){--belt-x:50%;--belt-y:79%;--belt-ry:0deg;--belt-rz:0deg;--belt-z:-100px}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n+4){--belt-x:72%;--belt-y:18%;--belt-ry:-20deg;--belt-rz:2deg;--belt-z:-25px}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(5n){--belt-x:93%;--belt-y:27%;--belt-ry:-35deg;--belt-rz:4deg;--belt-z:-70px}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{width:min(76vw,440px)!important;height:min(36vh,300px)!important;top:46%!important;transform:translate(-50%,-50%) translateZ(120px)!important}
+}
+
 </style>
 </head>
 <body>
