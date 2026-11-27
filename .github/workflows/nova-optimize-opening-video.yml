@@ -17,6 +17,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
       - name: Convert opening video for mobile playback
         run: |
           ffmpeg -y -i "kling_20261128_VIDEO_Create_a_b_121_0.mp4.mov" \
