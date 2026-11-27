@@ -2002,6 +2002,30 @@ nav{
 @media(prefers-reduced-motion:reduce){
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{animation:none!important;clip-path:inset(0)!important}
 }
+
+/* Desktop framing correction: lower the cinematic image well inside the hero */
+@media(min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  top:59%!important;
+  height:min(48svh,430px)!important;
+  max-height:calc(100svh - 210px)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+  top:59%!important;
+  height:min(48svh,430px)!important;
+  max-height:calc(100svh - 210px)!important;
+ }
+}
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+  top:56%!important;
+  height:min(42svh,350px)!important;
+ }
+}
 </style>
 </head>
 <body>
