@@ -1854,7 +1854,7 @@ photos.forEach((src,i)=>{
      const lane=i%3,row=Math.floor(i/3);
      const mobile=window.matchMedia('(max-width:680px)').matches;
      c.style.setProperty('--lane-x',(mobile?[13,50,87][lane]:[12,50,88][lane])+'%');
-     c.style.setProperty('--lane-y',(-18+row*(mobile?25:23))+'%');
+     c.style.setProperty('--lane-y',(16+row*(mobile?11:11.3))+'%');
      c.style.setProperty('--drift-delay',(-((i*1.37)%12))+'s');
      c.style.setProperty('--drift-duration',(10+(i%5)*1.8)+'s');
      c.style.setProperty('--drift-distance',(i%2===0?'-18px':'18px'));
