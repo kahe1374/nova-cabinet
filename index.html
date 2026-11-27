@@ -1616,6 +1616,73 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
 }
 
+
+/* NOVA opening gallery — 3D perspective conveyor */
+.hero.hero-v3 .hero-motion-stage{
+  height:590px!important;overflow:hidden!important;perspective:1550px!important;
+  perspective-origin:50% 48%!important;background:
+  radial-gradient(ellipse at 50% 48%,#8a70412b 0%,#29261f10 42%,transparent 72%)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+  position:absolute!important;inset:0!important;overflow:hidden!important;
+  transform-style:preserve-3d!important;display:block!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  position:absolute!important;left:50%!important;top:47%!important;
+  width:clamp(180px,29vw,390px)!important;height:clamp(150px,37vh,310px)!important;
+  padding:0!important;overflow:hidden!important;border:1px solid #c8a66e88!important;
+  border-radius:5px!important;opacity:0!important;pointer-events:none!important;
+  transform:translate(-50%,-50%) translateX(calc(var(--conveyor-step,0)*clamp(105px,22vw,285px)))
+    translateZ(calc(var(--conveyor-step,0)*-105px))
+    rotateY(calc(var(--conveyor-step,0)*-23deg))!important;
+  transition:transform 1.05s cubic-bezier(.2,.72,.18,1),opacity .65s ease,width .8s,height .8s!important;
+  box-shadow:0 24px 48px #0009!important;z-index:1!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card img{
+  width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  opacity:1!important;pointer-events:auto!important;z-index:8!important;
+  width:min(54vw,690px)!important;height:min(47vh,370px)!important;
+  transform:translate(-50%,-50%) translateX(0) translateZ(90px) rotateY(0deg)!important;
+  border:1px solid #e0c18a!important;box-shadow:0 30px 70px #000b,0 0 0 1px #c6a46d55!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+  opacity:.88!important;z-index:5!important;pointer-events:auto!important;
+  width:clamp(150px,24vw,320px)!important;height:clamp(130px,31vh,270px)!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:not(.is-active):not(.is-prev):not(.is-next){
+  opacity:0!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active img{object-fit:cover!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+  bottom:22px!important;left:7%!important;right:7%!important;top:auto!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{height:510px!important;perspective:1050px!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+   top:43%!important;width:58vw!important;height:clamp(160px,27vh,230px)!important;
+   transform:translate(-50%,-50%) translateX(calc(var(--conveyor-step,0)*42vw))
+     translateZ(calc(var(--conveyor-step,0)*-65px))
+     rotateY(calc(var(--conveyor-step,0)*-25deg))!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+   width:78vw!important;height:clamp(190px,34vh,280px)!important;
+   transform:translate(-50%,-50%) translateX(0) translateZ(45px) rotateY(0deg)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+   width:48vw!important;height:clamp(145px,24vh,205px)!important;opacity:.78!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{bottom:24px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -1686,9 +1753,15 @@ photos.forEach((src,i)=>{
  }
  layoutFan();window.addEventListener('resize',layoutFan,{passive:true});
  function setTriptych(){
-   cards.forEach(c=>c.classList.remove('is-prev','is-next'));
-   cards[(index-1+cards.length)%cards.length].classList.add('is-prev');
-   cards[(index+1)%cards.length].classList.add('is-next');
+   cards.forEach((c,i)=>{
+     c.classList.remove('is-prev','is-next');
+     let step=i-index;
+     if(step>cards.length/2)step-=cards.length;
+     if(step<-cards.length/2)step+=cards.length;
+     c.style.setProperty('--conveyor-step',step);
+     if(step===-1)c.classList.add('is-prev');
+     if(step===1)c.classList.add('is-next');
+   });
  }
  function showNext(){
    if(paused)return;
