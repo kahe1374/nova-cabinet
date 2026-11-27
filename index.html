@@ -2266,6 +2266,13 @@ nav{
 }
 @media(prefers-reduced-motion:reduce){.hero.hero-v3 .hero-motion-stage .motion-gallery-card{transition:none!important}}
 
+
+/* Fix visibility: match the nth-child selector's specificity for active cards */
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n).is-active,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n).is-prev,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n).is-next{
+ display:block!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;
+}
 /* NOVA — Material Atelier: asymmetrical gallery composition */
 .hero.hero-v3 .hero-motion-stage{background:radial-gradient(ellipse at 29% 43%,#55452f55 0,transparent 42%),linear-gradient(115deg,#11130f 0%,#1d201a 58%,#141611 100%)!important}
 .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){display:none!important;opacity:0!important;pointer-events:none!important}
