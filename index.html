@@ -2787,6 +2787,34 @@ if(!reduce){
  .hero.hero-v3 .hero-buttons{margin-top:13px!important;flex-wrap:wrap!important}
  .hero.hero-v3:after{inset:8px!important}
 }
+
+/* FINAL FIX — force the homepage photo grid and its images to render */
+.hero.hero-v3 .hero-motion-stage{display:block!important;visibility:visible!important;opacity:1!important;z-index:2!important}
+.hero.hero-v3 .hero-motion-stage #motionGalleryStack{
+ position:absolute!important;inset:12px!important;display:grid!important;
+ grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ grid-template-rows:repeat(4,minmax(0,1fr))!important;
+ gap:10px!important;width:auto!important;height:auto!important;
+ visibility:visible!important;opacity:1!important;overflow:hidden!important;
+}
+.hero.hero-v3 .hero-motion-stage #motionGalleryStack>.nova-auto-photo{
+ display:block!important;position:relative!important;inset:auto!important;
+ width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;
+ margin:0!important;padding:0!important;visibility:visible!important;opacity:1!important;
+ transform:none!important;overflow:hidden!important;grid-column:auto!important;grid-row:auto!important;
+}
+.hero.hero-v3 .hero-motion-stage #motionGalleryStack>.nova-auto-photo>img{
+ display:block!important;position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;max-width:none!important;
+ object-fit:cover!important;visibility:visible!important;opacity:1!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage #motionGalleryStack{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-rows:repeat(5,minmax(0,1fr))!important;gap:6px!important;inset:8px!important;
+ }
+ .hero.hero-v3 .hero-motion-stage{height:53svh!important;min-height:350px!important}
+}
 </style>
 
 </body></html>
