@@ -1104,6 +1104,57 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{animation:none!important}
 }
+/* NOVA HERO GALLERY — QUELL TIMELINE INDEX
+   Inspired by the free Quell architecture portfolio: numbered projects along a growing timeline. */
+.hero.hero-v3 .hero-motion-stage{
+ --nova-progress:5%;--nova-direction:1;
+}
+.hero.hero-v3 .hero-motion-stage:before{
+ content:"";position:absolute;z-index:8;right:4.1%;top:19%;bottom:19%;width:1px;
+ background:repeating-linear-gradient(to bottom,rgba(236,222,194,.45) 0 2px,transparent 2px 8px);
+ pointer-events:none;
+}
+.hero.hero-v3 .hero-motion-stage:after{
+ content:"";position:absolute;z-index:8;right:calc(4.1% - 1px);top:19%;height:var(--nova-progress);max-height:62%;
+ width:3px;background:#d8b77e;box-shadow:0 0 12px #d8b77e66;
+ transition:height .8s cubic-bezier(.2,.7,.2,1);pointer-events:none;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card>img{
+ opacity:1!important;z-index:1!important;object-fit:contain!important;object-position:center!important;
+}
+.hero.hero-v3 .hero-motion-stage .nova-door{display:none!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ display:block!important;visibility:visible!important;z-index:4!important;
+ animation:novaQuellIn 1.05s cubic-bezier(.2,.75,.2,1) both!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{
+ display:block!important;visibility:visible!important;z-index:3!important;
+ animation:novaQuellOut .85s ease both!important;
+}
+@keyframes novaQuellIn{
+ from{clip-path:inset(0 0 0 0);transform:translateX(calc(var(--nova-direction)*4%)) scale(.985);opacity:.25}
+ to{clip-path:inset(0 0 0 0);transform:translateX(0) scale(1);opacity:1}
+}
+@keyframes novaQuellOut{
+ from{transform:translateX(0) scale(1);opacity:1}
+ to{transform:translateX(calc(var(--nova-direction)*-2%)) scale(.99);opacity:0}
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active:after{display:none!important}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+ right:7%!important;left:7%!important;bottom:8%!important;
+ display:flex!important;justify-content:space-between!important;align-items:center!important;
+ color:#f0dfbf!important;z-index:10!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage:before{right:3.5%;top:23%;bottom:23%}
+ .hero.hero-v3 .hero-motion-stage:after{right:calc(3.5% - 1px);top:23%;max-height:54%}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card>img{object-fit:contain!important;object-position:center!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{right:8%!important;left:8%!important;bottom:7%!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-leaving{animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -1179,10 +1230,12 @@ photos.forEach((src,i)=>{
    previous.classList.remove('is-active');previous.classList.add('is-leaving');
    index=(index+1)%cards.length;
    const next=cards[index];next.classList.remove('is-leaving');next.classList.add('is-active');next.style.zIndex='80';
+   root.parentElement.style.setProperty('--nova-progress',((index+1)/cards.length*100)+'%');
+   root.parentElement.style.setProperty('--nova-direction',index%2===0?'1':'-1');
    if(count)count.textContent=String(index+1).padStart(2,'0')+' / 20';
    setTimeout(()=>{previous.classList.remove('is-leaving');cards.forEach((c,i)=>{if(i!==index)c.style.zIndex=String(40-i)})},1350);
  }
- cards[0].classList.add('is-active');if(count)count.textContent='01 / 20';
+ cards[0].classList.add('is-active');root.parentElement.style.setProperty('--nova-progress',(1/cards.length*100)+'%');root.parentElement.style.setProperty('--nova-direction','1');if(count)count.textContent='01 / 20';
  let timer=setInterval(showNext,6000);
  document.addEventListener('visibilitychange',()=>{paused=document.hidden;clearInterval(timer);if(!paused)timer=setInterval(showNext,6000)});
 })();
