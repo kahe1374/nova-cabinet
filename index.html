@@ -2385,6 +2385,27 @@ body .hero.hero-v3 .hero-motion-stage #motionGalleryStack>.nova-auto-photo.nova-
  object-fit:cover!important;transform:none!important;opacity:1!important;visibility:visible!important;
 }
 
+
+/* FIXED FEATURE PRESENTATION — overlay is separate from the grid; grid tiles never move */
+.hero.hero-v3 .hero-motion-stage{position:relative;overflow:hidden!important;isolation:isolate!important}
+.hero.hero-v3 .hero-motion-stage #motionGalleryStack{z-index:1!important}
+.hero.hero-v3 .hero-motion-stage .nova-photo-overlay{
+ position:absolute!important;inset:12px!important;z-index:10000!important;
+ display:block!important;overflow:hidden!important;opacity:0!important;
+ transform:none!important;transition:opacity .45s ease!important;
+ pointer-events:none!important;background:#d7d0c3!important;
+}
+.hero.hero-v3 .hero-motion-stage .nova-photo-overlay.is-visible{opacity:1!important}
+.hero.hero-v3 .hero-motion-stage .nova-photo-overlay-image{
+ position:absolute!important;inset:0!important;display:block!important;
+ width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+ object-fit:cover!important;object-position:center!important;transform:none!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{position:relative!important}
+ .hero.hero-v3 .hero-motion-stage .nova-photo-overlay{inset:8px!important}
+}
+
 </style>
 
 <style id="nova-optical-focus-field">
@@ -2534,16 +2555,32 @@ const root=document.getElementById('motionGalleryStack');if(!root)return;
   frame.append(img);root.appendChild(frame);
  });
  let activePhoto=0;
+ const stage=root.closest('.hero-motion-stage');
  const showNextPhoto=()=>{
-  const frames=root.querySelectorAll('.nova-auto-photo');
-  if(!frames.length)return;
-  frames.forEach(frame=>frame.classList.remove('nova-featured'));
-  frames[activePhoto].classList.add('nova-featured');
-  window.setTimeout(()=>{
-   frames[activePhoto].classList.remove('nova-featured');
+  const frames=[...root.querySelectorAll('.nova-auto-photo')];
+  if(!stage||!frames.length)return;
+  const source=frames[activePhoto].querySelector('img');
+  if(source){
+   const overlay=document.createElement('div');
+   overlay.className='nova-photo-overlay';
+   const image=source.cloneNode(false);
+   image.removeAttribute('loading');
+   image.className='nova-photo-overlay-image';
+   image.alt=source.alt;
+   overlay.appendChild(image);
+   stage.querySelectorAll('.nova-photo-overlay').forEach(el=>el.remove());
+   stage.appendChild(overlay);
+   requestAnimationFrame(()=>overlay.classList.add('is-visible'));
+   window.setTimeout(()=>{
+    overlay.classList.remove('is-visible');
+    window.setTimeout(()=>overlay.remove(),450);
+    activePhoto=(activePhoto+1)%frames.length;
+    window.setTimeout(showNextPhoto,500);
+   },6000);
+  }else{
    activePhoto=(activePhoto+1)%frames.length;
-   window.setTimeout(showNextPhoto,650);
-  },6000);
+   window.setTimeout(showNextPhoto,500);
+  }
  };
  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
   window.setTimeout(showNextPhoto,900);
