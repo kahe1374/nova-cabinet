@@ -3060,3 +3060,20 @@ h1,h2,h3,h4,.eyebrow,.hero-copy,p,.section p,.hero-index,.scroll-cue{
 </style>
 
 </body></html>
+
+
+/* NOVA COLOR SPECTRUM EXPANSION — richer, clearly shifting ambient hues */
+body:before{
+ background:
+  radial-gradient(ellipse at 14% 18%,
+   hsla(calc(28 + var(--nova-scroll-tone)*118),58%,62%,.23),transparent 43%),
+  radial-gradient(ellipse at 88% 72%,
+   hsla(calc(194 + var(--nova-scroll-tone)*112),52%,57%,.20),transparent 48%),
+  radial-gradient(ellipse at 52% 108%,
+   hsla(calc(292 + var(--nova-scroll-tone)*74),44%,52%,.13),transparent 48%),
+  linear-gradient(132deg,
+   hsl(calc(26 + var(--nova-scroll-tone)*118),24%,calc(11% + var(--nova-scroll-tone)*7%)),
+   hsl(calc(48 + var(--nova-scroll-tone)*104),22%,calc(16% + var(--nova-scroll-tone)*8%)) 48%,
+   hsl(calc(202 + var(--nova-scroll-tone)*112),23%,calc(12% + var(--nova-scroll-tone)*7%)))!important;
+ transition:background 1.35s cubic-bezier(.22,.72,.2,1)!important;
+}
