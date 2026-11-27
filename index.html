@@ -2429,7 +2429,7 @@ document.getElementById('leadForm').addEventListener('submit',e=>{e.preventDefau
  stage.addEventListener('pointerleave',()=>focus(active));
  stage.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();focus(active+1)}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();focus(active-1)}});
  stage.setAttribute('tabindex','0');focus(0);
-})();;
+})();
 </script>
 <script type="module">
 import {animate,inView} from 'https://cdn.jsdelivr.net/npm/motion@latest/+esm';
