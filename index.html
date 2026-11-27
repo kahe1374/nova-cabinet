@@ -2393,13 +2393,16 @@ body .hero.hero-v3 .hero-motion-stage #motionGalleryStack>.nova-auto-photo.nova-
  position:absolute!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;
  width:64%!important;height:68%!important;z-index:10000!important;
  display:block!important;overflow:hidden!important;opacity:0!important;
- transform:translate(-50%,-50%) scale(.96)!important;
- transform-origin:center!important;transition:opacity .45s ease,transform .45s ease!important;
+ transform:translate(-50%,-39%) scale(.975)!important;
+ transform-origin:center!important;transition:opacity 1.15s cubic-bezier(.22,.72,.2,1),transform 1.15s cubic-bezier(.22,.72,.2,1)!important;
  pointer-events:none!important;background:#d7d0c3!important;
  border:3px solid #e0c18c!important;box-shadow:0 20px 55px #0009,0 0 0 1px #fff8!important;
 }
 .hero.hero-v3 .hero-motion-stage .nova-photo-overlay.is-visible{
  opacity:1!important;transform:translate(-50%,-50%) scale(1)!important
+}
+.hero.hero-v3 .hero-motion-stage .nova-photo-overlay:not(.is-visible){
+ transform:translate(-50%,-61%) scale(.985)!important
 }
 .hero.hero-v3 .hero-motion-stage .nova-photo-overlay-image{
  position:absolute!important;inset:0!important;display:block!important;
@@ -2578,13 +2581,15 @@ const root=document.getElementById('motionGalleryStack');if(!root)return;
    overlay.appendChild(image);
    stage.querySelectorAll('.nova-photo-overlay').forEach(el=>el.remove());
    stage.appendChild(overlay);
-   requestAnimationFrame(()=>overlay.classList.add('is-visible'));
+   requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('is-visible')));
    window.setTimeout(()=>{
     overlay.classList.remove('is-visible');
-    window.setTimeout(()=>overlay.remove(),450);
-    activePhoto=(activePhoto+1)%frames.length;
-    window.setTimeout(showNextPhoto,500);
-   },6000);
+    window.setTimeout(()=>{
+     overlay.remove();
+     activePhoto=(activePhoto+1)%frames.length;
+     window.setTimeout(showNextPhoto,350);
+    },1150);
+   },5600);
   }else{
    activePhoto=(activePhoto+1)%frames.length;
    window.setTimeout(showNextPhoto,500);
@@ -2925,6 +2930,19 @@ if(!reduce){
  .hero.hero-v3 .hero-motion-stage{margin:72px auto 0!important}
  #motionGalleryStack>.nova-auto-photo.nova-featured{width:92%!important;height:92%!important;transform:translate(-50%,-50%)!important}
 }
+
+/* NOVA MOTION REFINEMENT — lower the gallery and make each featured image glide clearly */
+.hero.hero-v3 .hero-motion-stage{inset:calc(5% + 66px) 4% 29%!important}
+.hero.hero-v3 .hero-motion-stage #motionGalleryStack{inset:16px!important}
+.hero.hero-v3 .hero-motion-stage .nova-photo-overlay{will-change:transform,opacity!important}
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage{inset:calc(5% + 48px) 3% 32%!important}
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{margin:88px auto 0!important}
+ .hero.hero-v3 .hero-motion-stage #motionGalleryStack{inset:8px!important}
+}
+
 </style>
 
 </body></html>
