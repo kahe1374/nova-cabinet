@@ -2146,6 +2146,38 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{width:min(54vw,560px)!important;max-width:calc(100% - 190px)!important;height:min(46svh,350px)!important}
 }
 
+
+/* DESKTOP TOP-EDGE SAFETY: anchor every visible card from the bottom of the stage */
+@media(min-width:681px){
+ .hero.hero-v3 .hero-motion-stage{overflow:hidden!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n),
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  top:auto!important;bottom:6%!important;
+  max-height:calc(100% - 12%)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n),
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{
+  height:min(40svh,320px)!important;
+  transform:translate(-50%,0) scale(.96)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev{left:13%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{left:87%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+  height:min(46svh,370px)!important;
+  transform:translate(-50%,0) scale(1)!important;
+ }
+}
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-prev{left:10%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-next{left:90%!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{height:min(40svh,320px)!important}
+}
+
 </style>
 </head>
 <body>
