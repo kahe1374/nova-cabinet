@@ -834,6 +834,79 @@ nav{
  .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{right:9px!important;left:9px!important;bottom:6px!important;font-size:8px!important}
 }
 
+
+/* NOVA HERO GALLERY — SPLIT PROJECT SHOWCASE
+   Reference direction: free Monolith interior portfolio — one project per frame, image + information panel. */
+.hero.hero-v3 .hero-motion-stage{
+ inset:clamp(96px,12vh,120px) 5% clamp(185px,22vh,220px)!important;
+ width:auto!important;height:auto!important;overflow:hidden!important;
+ display:block!important;isolation:isolate!important;
+ border:1px solid #bda07155!important;border-radius:0!important;
+ background:linear-gradient(90deg,#25271f 0 38%,#111310 38% 100%)!important;
+ box-shadow:0 24px 70px #0006!important;perspective:none!important;
+}
+.hero.hero-v3 .hero-motion-stage:before{
+ content:"NOVA  /  PROJECT ARCHIVE";position:absolute;z-index:2;
+ left:4%;top:8%;color:#d8c49c;font:10px Georgia,serif;letter-spacing:3px;
+}
+.hero.hero-v3 .hero-motion-stage:after{
+ content:"DESIGN · CRAFT · DETAIL";position:absolute;z-index:2;
+ left:4%;bottom:17%;color:#b8ad97;font:9px Georgia,serif;letter-spacing:2px;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-stack{
+ position:absolute!important;inset:0!important;overflow:hidden!important;
+ display:block!important;transform:none!important;transform-style:flat!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+ display:none!important;position:absolute!important;inset:4% 3% 4% 41%!important;
+ left:auto!important;top:4%!important;width:56%!important;height:92%!important;
+ min-width:0!important;min-height:0!important;max-width:56%!important;max-height:92%!important;
+ margin:0!important;padding:0!important;overflow:hidden!important;
+ border:1px solid #c9ab78!important;border-radius:1px!important;
+ background:#151713!important;box-shadow:0 18px 48px #0009!important;
+ transform:none!important;opacity:0!important;visibility:hidden!important;
+ transition:opacity .8s ease!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card.is-active{
+ display:block!important;opacity:1!important;visibility:visible!important;z-index:4!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-card img{
+ display:block!important;width:100%!important;height:100%!important;
+ max-width:100%!important;max-height:100%!important;object-fit:contain!important;
+ object-position:center!important;background:#151713!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+ position:absolute!important;z-index:5!important;
+ left:4%!important;right:auto!important;top:23%!important;bottom:auto!important;
+ width:29%!important;display:flex!important;flex-direction:column!important;
+ align-items:flex-start!important;gap:12px!important;
+ color:#e7d5b4!important;text-shadow:none!important;
+ font:11px Georgia,serif!important;letter-spacing:2px!important;
+}
+.hero.hero-v3 .hero-motion-stage .motion-gallery-caption span:first-child{
+ color:#d2b47e!important;font-size:22px!important;letter-spacing:1px!important;
+}
+@media(max-width:680px){
+ .hero.hero-v3 .hero-motion-stage{
+  inset:86px 4% 245px!important;
+  background:linear-gradient(180deg,#171916 0 78%,#25271f 78% 100%)!important;
+ }
+ .hero.hero-v3 .hero-motion-stage:before{left:12px!important;top:10px!important;font-size:8px!important;letter-spacing:2px!important}
+ .hero.hero-v3 .hero-motion-stage:after{display:none!important}
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card,
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-card:nth-child(n){
+  inset:12% 3% 25% 3%!important;left:3%!important;top:12%!important;
+  width:94%!important;height:63%!important;max-width:94%!important;max-height:63%!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption{
+  left:14px!important;right:14px!important;top:auto!important;bottom:8%!important;
+  width:auto!important;flex-direction:row!important;align-items:center!important;
+  justify-content:space-between!important;font-size:8px!important;gap:6px!important;
+ }
+ .hero.hero-v3 .hero-motion-stage .motion-gallery-caption span:first-child{font-size:15px!important}
+}
+
 </style>
 </head>
 <body>
