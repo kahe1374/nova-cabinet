@@ -2390,20 +2390,28 @@ body .hero.hero-v3 .hero-motion-stage #motionGalleryStack>.nova-auto-photo.nova-
 .hero.hero-v3 .hero-motion-stage{position:relative;overflow:hidden!important;isolation:isolate!important}
 .hero.hero-v3 .hero-motion-stage #motionGalleryStack{z-index:1!important}
 .hero.hero-v3 .hero-motion-stage .nova-photo-overlay{
- position:absolute!important;inset:12px!important;z-index:10000!important;
+ position:absolute!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;
+ width:64%!important;height:68%!important;z-index:10000!important;
  display:block!important;overflow:hidden!important;opacity:0!important;
- transform:none!important;transition:opacity .45s ease!important;
+ transform:translate(-50%,-50%) scale(.96)!important;
+ transform-origin:center!important;transition:opacity .45s ease,transform .45s ease!important;
  pointer-events:none!important;background:#d7d0c3!important;
+ border:3px solid #e0c18c!important;box-shadow:0 20px 55px #0009,0 0 0 1px #fff8!important;
 }
-.hero.hero-v3 .hero-motion-stage .nova-photo-overlay.is-visible{opacity:1!important}
+.hero.hero-v3 .hero-motion-stage .nova-photo-overlay.is-visible{
+ opacity:1!important;transform:translate(-50%,-50%) scale(1)!important
+}
 .hero.hero-v3 .hero-motion-stage .nova-photo-overlay-image{
  position:absolute!important;inset:0!important;display:block!important;
  width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
  object-fit:cover!important;object-position:center!important;transform:none!important;
 }
+@media(max-width:950px) and (min-width:681px){
+ .hero.hero-v3 .hero-motion-stage .nova-photo-overlay{width:72%!important;height:70%!important}
+}
 @media(max-width:680px){
  .hero.hero-v3 .hero-motion-stage{position:relative!important}
- .hero.hero-v3 .hero-motion-stage .nova-photo-overlay{inset:8px!important}
+ .hero.hero-v3 .hero-motion-stage .nova-photo-overlay{width:78%!important;height:66%!important}
 }
 
 </style>
